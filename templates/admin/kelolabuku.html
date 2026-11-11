@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Kelola Buku - Admin Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- SIDEBAR ADMIN -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
+                </div>
+                <h3>Admin</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/admin/kelolabuku" class="active"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
+                <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
+                <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
+                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-logout-box">
+            <a href="/login" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Kelola Buku</h2>
+            </div>
+            <div style="display: flex; gap: 15px; align-items: center;">
+                <button onclick="openModalTambahBuku()" class="btn-form-blue" style="border-radius: 20px;">+ Tambah Buku</button>
+                <div class="admin-badge-top"><i class="fa-solid fa-user"></i> Admin</div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <!-- Filter Bar -->
+            <div style="display: flex; gap: 15px; margin-bottom: 25px; align-items: center;">
+                <div class="input-box-admin" style="width: 250px;">
+                    <input type="text" placeholder="Cari Buku..">
+                </div>
+            </div>
+
+            <!-- Tabel Buku (Dinamis dari Database MySQL) -->
+            <div class="table-box-container" style="border: 2px solid #0d233a;">
+                <table class="custom-table-admin" id="tableBuku">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">No</th>
+                            <th>Judul</th>
+                            <th>Penulis</th>
+                            <th>Kategori</th>
+                            <th>Tahun</th>
+                            <th>Status (Tersedia / Total)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for b in buku_list %}
+                    <tr>
+                        <td style="font-size: 16px; color: #0d233a;">{{ loop.index }}</td>
+                        <td style="font-size: 16px; color: #0d233a; font-weight: bold;">{{ b.judul }}</td>
+                        <td style="font-size: 16px; color: #0d233a;">{{ b.penulis }}</td>
+                        <td style="font-size: 16px; color: #0d233a;">{{ b.kategori }}</td>
+                        <td style="font-size: 16px; color: #0d233a;">{{ b.tahun_terbit }}</td>
+                        <td>
+                            <span style="background-color: #eab308; color: #0d233a; padding: 8px 16px; border-radius: 12px; font-weight: bold; font-size: 14px; display: inline-block;">
+                                Tersedia ({{ b.jumlah_tersedia }}/{{ b.jumlah_total }})
+                            </span>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="6" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data buku di database.</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL POP-UP TAMBAH BUKU BARU (TERPISAH) -->
+    <!-- ========================================== -->
+    <div id="modalTambahBuku" class="custom-modal-overlay" style="display: none;">
+        <div class="custom-modal-card">
+            <div class="modal-header-light">
+                <h3>Tambah Buku Baru</h3>
+                <button type="button" class="btn-close-modal" onclick="closeModalTambahBuku()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <form action="/admin/kelolabuku" method="POST">
+                <div class="custom-modal-body">
+                    <div class="form-field-group">
+                        <label>Judul Buku</label>
+                        <input type="text" name="judul" placeholder="Masukkan judul buku..." required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Penulis</label>
+                        <input type="text" name="penulis" placeholder="Masukkan nama penulis..." required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Kategori</label>
+                        <input type="text" name="kategori" placeholder="Ketik kategori (contoh: Teknologi, Novel, dll)..." required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Tahun Terbit</label>
+                        <input type="number" name="tahun_terbit" placeholder="Contoh: 2026" required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Jumlah / Stok Buku</label>
+                        <input type="number" name="jumlah" placeholder="Contoh: 5" required>
+                    </div>
+
+                    <div class="custom-modal-footer">
+                        <button type="button" class="btn-modal-cancel" onclick="closeModalTambahBuku()">Batal</button>
+                        <button type="submit" class="btn-modal-submit">Simpan Buku</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- MODAL PROFIL WHATSAPP (TERPISAH DENGAN JELAS) -->
+    <!-- ========================================== -->
+    <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil Admin</h3>
+                <button type="button" class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay"><i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i></div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
+                <div class="wa-info-group">
+                    <div class="wa-info-label">About</div>
+                    <div class="wa-info-row"><span class="wa-info-value" id="textAbout">Current mood 💻</span><i class="fa-solid fa-pen wa-edit-icon" onclick="editAbout()"></i></div>
+                </div>
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Name</div>
+                    <div class="wa-info-row"><span class="wa-info-value" id="textName">Lasut</span><i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i></div>
+                </div>
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Phone</div>
+                    <div class="wa-info-row"><span class="wa-info-value">+62 856-9571-4264</span><i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT JAVASCRIPT -->
+    <script>
+        function openModalTambahBuku() {
+            document.getElementById('modalTambahBuku').style.display = 'flex';
+        }
+
+        function closeModalTambahBuku() {
+            document.getElementById('modalTambahBuku').style.display = 'none';
+        }
+
+        // Script Profil WA
+        function openWaProfile() { 
+            document.getElementById('waProfileModal').style.display = 'flex'; 
+        }
+        function closeWaProfile() { 
+            document.getElementById('waProfileModal').style.display = 'none'; 
+        }
+
+        function previewWaImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
+            };
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+        function editAbout() { let v = prompt("Status baru:", document.getElementById('textAbout').innerText); if(v) document.getElementById('textAbout').innerText = v; }
+        function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
+        function copyPhone() { navigator.clipboard.writeText("+62 856-9571-4264"); alert("Nomor disalin!"); }
+    </script>
+</body>
+</html>

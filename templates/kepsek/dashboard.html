@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Kepala Sekolah</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=17.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- SIDEBAR KEPSEK -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user-tie text-slate-700" style="font-size: 24px;"></i>
+                </div>
+                <h3>Kepsek</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li><a href="/kepsek/dashboard" class="active"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/kepsek/laporan"><i class="fa-solid fa-file-lines"></i> Laporan Transaksi</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-logout-box">
+            <a href="/login" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Dashboard</h2>
+                <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Ringkasan Statistik Perpustakaan</p>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <h3 style="color: #0d233a; margin-bottom: 20px;">Ringkasan</h3>
+
+            <!-- GRAFIK PEMINJAM PER MINGGU -->
+            <div class="chart-container-kepsek">
+                <div class="chart-title">Peminjam per Minggu (Bulan Ini)</div>
+                <div class="weekly-bars">
+                    <div class="bar-item">
+                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">12</span>
+                        <div class="bar-fill" style="height: 60px;"></div>
+                        <span class="bar-label">Minggu 1</span>
+                    </div>
+                    <div class="bar-item">
+                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">25</span>
+                        <div class="bar-fill" style="height: 120px;"></div>
+                        <span class="bar-label">Minggu 2</span>
+                    </div>
+                    <div class="bar-item">
+                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">18</span>
+                        <div class="bar-fill" style="height: 90px;"></div>
+                        <span class="bar-label">Minggu 3</span>
+                    </div>
+                    <div class="bar-item">
+                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">30</span>
+                        <div class="bar-fill" style="height: 150px;"></div>
+                        <span class="bar-label">Minggu 4</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TABEL RINGKASAN AKTIVITAS -->
+            <div class="table-box-container" style="border: 2px solid #0d233a;">
+                <table class="custom-table-admin">
+                    <thead>
+                        <tr>
+                            <th>Peminjam</th>
+                            <th>Judul Buku</th>
+                            <th>Tgl Pinjam</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="font-weight: bold; color: #0d233a;">Nama A</td>
+                            <td style="font-weight: bold; color: #0d233a;">Laskar Pelangi</td>
+                            <td>01/10/2026</td>
+                            <td><span style="color: #2563eb; font-weight: bold;">Dipinjam</span></td>
+                        </tr>
+                        <tr>
+                            <td>Nama B</td>
+                            <td>Bumi Manusia</td>
+                            <td>20/09/2026</td>
+                            <td><span style="color: #16a34a; font-weight: bold;">Selesai</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PROFIL KEPSEK -->
+    <div id="waProfileModal" class="modal-overlay-wa">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil Kepsek</h3>
+                <button class="wa-close-btn" onclick="closeWaProfile()" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay">
+                    <i class="fa-solid fa-user-tie" style="font-size: 60px; color: #8696a0;"></i>
+                </div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Name</div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value" id="textName">Kepsek</span>
+                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
+        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+        function previewWaImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            };
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+        function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
+    </script>
+</body>
+</html>

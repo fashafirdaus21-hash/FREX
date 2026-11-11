@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Riwayat - User Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=32.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .custom-sidebar-menu { list-style: none; padding: 0 15px; margin: 0; }
+        .custom-sidebar-menu li { margin-bottom: 12px; }
+        .custom-sidebar-menu a {
+            display: flex; align-items: center; gap: 12px; color: #ffffff; text-decoration: none;
+            padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: bold;
+            border: 2px solid transparent; background-color: #0d233a; transition: all 0.2s;
+        }
+        .custom-sidebar-menu a:hover, .custom-sidebar-menu a.active { border-color: #f6c90e; color: #f6c90e; }
+        
+        /* Gaya Filter & Kartu Sesuai Desain Baru */
+        .filter-btn-group { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .filter-chip {
+            background-color: #0d233a; color: #f6c90e; border: 2px solid #1e3a5f;
+            padding: 8px 20px; border-radius: 25px; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.2s;
+        }
+        .filter-chip:hover, .filter-chip.active { background-color: #f6c90e; color: #0d233a; border-color: #f6c90e; }
+        
+        .riwayat-card-custom {
+            background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 18px; padding: 20px;
+            margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; color: white;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        .book-avatar-box {
+            width: 70px; height: 70px; border-radius: 14px; background: #10b981; display: flex;
+            align-items: center; justify-content: center; font-size: 22px; font-weight: bold; color: white; flex-shrink: 0;
+        }
+    </style>
+</head>
+<body style="background-color: #f8fafc;">
+
+    <!-- SIDEBAR KIRI -->
+    <aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
+        <div>
+            <!-- Profil Header -->
+            <div class="sidebar-profile" style="padding: 25px 20px; text-align: center; cursor: pointer;">
+                <div class="profile-img" id="sidebarAvatarPreview" style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
+                    <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
+                </div>
+                <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
+                    {{ session.get('nama', 'USER') }}<br>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                </h3>
+            </div>
+            
+            <ul class="custom-sidebar-menu">
+    <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+    <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
+    <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
+    <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
+    <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
+</ul>
+        </div>
+
+        <!-- Tombol Log Out Orisinil (Tanpa Emotikon) -->
+        <div class="sidebar-logout-box" style="padding: 0 15px;">
+            <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container" style="margin-left: 260px; padding: 30px;">
+        <header style="margin-bottom: 25px;">
+            <h2 style="color: #0d233a; margin: 0; font-size: 24px; font-weight: bold;">📜 Riwayat Peminjaman Buku</h2>
+            <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Daftar buku yang pernah Anda pinjam ✨</p>
+        </header>
+
+        <div class="content-body">
+            <!-- Search Bar -->
+            <div style="background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 20px; padding: 12px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                <i class="fa-solid fa-search" style="color: #f6c90e;"></i>
+                <input type="text" id="searchRiwayat" placeholder="Cari judul atau penulis..." onkeyup="filterRiwayat()" style="background: transparent; border: none; color: #f6c90e; outline: none; width: 100%; font-weight: bold; font-size: 13px;">
+            </div>
+
+            <!-- Filter Kategori Tombol (Semua, Sedang dipinjam, dll) -->
+            <div class="filter-btn-group">
+                <button class="filter-chip active" onclick="filterStatus('semua', this)">Semua</button>
+                <button class="filter-chip" onclick="filterStatus('dipinjam', this)">Sedang dipinjam</button>
+                <button class="filter-chip" onclick="filterStatus('dikembalikan', this)">Sudah Dikembalikan</button>
+                <button class="filter-chip" onclick="filterStatus('terlambat', this)">Terlambat</button>
+            </div>
+
+            <!-- List Card Riwayat atau Tampilan Kosong -->
+            <div id="containerRiwayat">
+                {% if riwayat_list %}
+                    {% for item in riwayat_list %}
+                    <div class="riwayat-card-custom" data-status="{{ item.status | lower }}">
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <div class="book-avatar-box">
+                                {{ item.judul[:2] | upper }}
+                            </div>
+                            <div>
+                                <h3 style="color: #f6c90e; margin: 0 0 4px 0; font-size: 16px;" class="judul-buku">📖 {{ item.judul }}</h3>
+                                <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 13px;" class="penulis-buku">✍️ {{ item.penulis }}</p>
+                                <div style="display: flex; gap: 25px; font-size: 12px; color: #cbd5e1;">
+                                    <div><span style="color: #f6c90e;">DIPINJAM:</span> {{ item.tgl_pinjam }}</div>
+                                    <div><span style="color: #f6c90e;">JATUH TEMPO:</span> {{ item.jatuh_tempo }}</div>
+                                    <div><span style="color: #f6c90e;">DIKEMBALIKAN:</span> {{ item.tgl_kembali or '-' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <span style="background-color: {% if item.status == 'dipinjam' %}#3b82f6{% elif item.status == 'terlambat' %}#ef4444{% else %}#10b981{% endif %}; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block;">
+                                {{ item.status | title }}
+                            </span>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <!-- Tampilan Kosong Sesuai Desain Kamu -->
+                    <div style="background: white; border: 2px solid #cbd5e1; border-radius: 16px; padding: 50px; text-align: center; color: #94a3b8;">
+                        <i class="fa-solid fa-clock-rotate-left" style="font-size: 45px; margin-bottom: 15px; color: #cbd5e1;"></i>
+                        <p style="margin: 0; font-weight: bold; font-size: 15px; color: #64748b;">Belum ada riwayat peminjaman buku.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Fungsi Pencarian & Filter Status Kategori
+        function filterRiwayat() {
+            let input = document.getElementById('searchRiwayat').value.toLowerCase();
+            let cards = document.getElementsByClassName('riwayat-card-custom');
+            
+            for (let i = 0; i < cards.length; i++) {
+                let judul = cards[i].querySelector('.judul-buku').textContent.toLowerCase();
+                let penulis = cards[i].querySelector('.penulis-buku').textContent.toLowerCase();
+                
+                if (judul.includes(input) || penulis.includes(input)) {
+                    cards[i].style.display = "flex";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+
+        function filterStatus(status, btn) {
+            // Ubah kelas aktif tombol filter
+            let chips = document.getElementsByClassName('filter-chip');
+            for(let c of chips) { c.classList.remove('active'); }
+            btn.classList.add('active');
+
+            let cards = document.getElementsByClassName('riwayat-card-custom');
+            for (let i = 0; i < cards.length; i++) {
+                let cardStatus = cards[i].getAttribute('data-status');
+                if (status === 'semua' || cardStatus.includes(status)) {
+                    cards[i].style.display = "flex";
+                } else {
+                    cards[i].style.display = "none";
+                }
+            }
+        }
+    </script>
+</body>
+</html>
