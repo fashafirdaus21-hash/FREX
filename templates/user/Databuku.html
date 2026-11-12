@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Buku - User Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .custom-sidebar-menu { list-style: none; padding: 0 15px; margin: 0; }
+        .custom-sidebar-menu li { margin-bottom: 12px; }
+        .custom-sidebar-menu a {
+            display: flex; align-items: center; gap: 12px; color: #ffffff; text-decoration: none;
+            padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: bold;
+            /* Ubah border default menjadi transparan agar garisnya hilang */
+            border: 2px solid transparent; 
+            background-color: #0d233a; transition: all 0.2s;
+        }
+        /* Saat hover atau active, berikan border warna kuning (#f6c90e) */
+        .custom-sidebar-menu a:hover, .custom-sidebar-menu a.active { border-color: #f6c90e; color: #f6c90e; }
+        
+        .canva-search-box {
+            background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 20px;
+            padding: 10px 20px; display: flex; align-items: center; gap: 10px; color: #f6c90e; font-weight: bold; font-size: 13px; margin-bottom: 25px;
+        }
+        .canva-search-box input { background: transparent; border: none; color: #f6c90e; outline: none; width: 100%; }
+        .canva-search-box input::placeholder { color: #f6c90e; opacity: 0.7; }
+        .ref-table-card { background-color: #ffffff; border: 2px solid #0d233a; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .ref-table { width: 100%; border-collapse: collapse; text-align: left; }
+        .ref-table th { background-color: #ffffff; color: #0d233a; padding: 18px 24px; font-size: 15px; font-weight: bold; border-bottom: 2px solid #0d233a; }
+        .ref-table td { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; color: #0d233a; font-size: 14px; }
+    </style>
+</head>
+<body style="background-color: #f8fafc;">
+
+    <aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
+        <div>
+            <div class="sidebar-profile" style="padding: 25px 20px; text-align: center; cursor: pointer;">
+                <div class="profile-img" style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
+                    <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
+                </div>
+                <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
+                    {{ session.get('nama', 'USER') }}<br>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                </h3>
+            </div>
+            
+            <ul class="custom-sidebar-menu">
+    <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+    <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
+    <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
+    <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
+    <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
+</ul>
+        </div>
+
+        <div class="sidebar-logout-box" style="padding: 0 15px;">
+            <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;">🚪 Log out</a>
+        </div>
+    </aside>
+
+    <div class="main-container" style="margin-left: 260px; padding: 30px;">
+        <header style="margin-bottom: 25px;">
+            <h2 style="color: #0d233a; margin: 0; font-size: 24px; font-weight: bold;">📚 Data Buku</h2>
+            <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Jelajahi katalog literatur perpustakaan ✨</p>
+        </header>
+
+        <div class="content-body">
+            <div class="canva-search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Cari berdasarkan judul atau penulis buku..." onkeyup="filterBuku()">
+            </div>
+
+            <div class="ref-table-card">
+                <table class="ref-table" id="tabelBuku">
+                    <thead>
+                        <tr>
+                            <th style="width: 60px;">ID</th>
+                            <th>Judul</th>
+                            <th>Penulis</th>
+                            <th>Kategori</th>
+                            <th style="width: 90px;">Tahun</th>
+                            <th style="width: 150px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if buku_list %}
+                            {% for buku in buku_list %}
+                            <tr>
+                                <td style="font-weight: bold;">{{ buku.id_buku }}</td>
+                                <td style="font-weight: bold;">{{ buku.judul }}</td>
+                                <td>{{ buku.penulis }}</td>
+                                <td>{{ buku.kategori or '-' }}</td>
+                                <td>{{ buku.tahun_terbit }}</td>
+                                <td>
+                                    <span style="background-color: #eab308; color: #0d233a; padding: 6px 18px; border-radius: 20px; font-weight: bold; display: inline-block; text-align: center;">
+                                        🟢 Tersedia ({{ buku.jumlah_tersedia }}/{{ buku.jumlah_total }})
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 25px;">Belum ada data buku.</td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterBuku() {
+            let input = document.getElementById('searchInput').value.toLowerCase();
+            let table = document.getElementById('tabelBuku');
+            let tr = table.getElementsByTagName('tr');
+            for (let i = 1; i < tr.length; i++) {
+                let tdJudul = tr[i].getElementsByTagName('td')[1];
+                let tdPenulis = tr[i].getElementsByTagName('td')[2];
+                if (tdJudul || tdPenulis) {
+                    let textJudul = tdJudul.textContent || tdJudul.innerText;
+                    let textPenulis = tdPenulis.textContent || tdPenulis.innerText;
+                    if (textJudul.toLowerCase().indexOf(input) > -1 || textPenulis.toLowerCase().indexOf(input) > -1) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
