@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Pengembalian - Admin Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- SIDEBAR ADMIN -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
+                </div>
+                <h3>Admin</h3>
+            </div>
+            
+            <ul class="sidebar-menu">
+                <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
+                <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
+                <li><a href="/admin/pengembalian" class="active"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
+                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-logout-box">
+            <a href="/login" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Pengembalian</h2>
+            </div>
+            <div class="admin-badge-top"><i class="fa-solid fa-user"></i> Admin</div>
+        </header>
+
+        <div class="content-body">
+            <div class="form-card-box">
+                <h3 style="color: #0d233a; font-size: 20px; margin-top: 0; margin-bottom: 25px;">Proses Pengembalian Buku</h3>
+
+                <form action="/admin/pengembalian" method="POST">
+                    <!-- ID Peminjaman (Dropdown Transaksi Aktif) -->
+                    <div class="form-group-admin">
+                        <label>Pilih Transaksi Peminjaman</label>
+                        <div class="input-box-admin">
+                            <select name="id_peminjaman" id="selectPeminjaman" class="custom-select-user" required style="width: 100%; border: none; background: transparent; outline: none;" onchange="hitungDendaOtomatis()">
+                                <option value="" disabled selected>-- Pilih Transaksi Aktif --</option>
+                                {% for p in peminjaman_aktif %}
+                                <option value="{{ p.id_peminjaman }}" data-jatuh-tempo="{{ p.jatuh_tempo }}">
+                                    ID: {{ p.id_peminjaman }} | {{ p.nama_anggota }} - {{ p.judul }} (Jatuh Tempo: {{ p.jatuh_tempo }})
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tanggal Kembali -->
+                    <div class="form-group-admin">
+                        <label>Tanggal Kembali</label>
+                        <div class="input-box-admin">
+                            <input type="date" name="tgl_kembali" id="tglKembali" required onchange="hitungDendaOtomatis()">
+                        </div>
+                    </div>
+
+                    <!-- Total Denda -->
+                    <div class="form-group-admin">
+                        <label>Total Denda (Rp)</label>
+                        <div class="input-box-admin">
+                            <input type="number" name="denda" id="inputDenda" value="0" required readonly style="font-weight: bold; color: #dc2626;">
+                        </div>
+                    </div>
+
+                    <!-- Kondisi Buku Pilihan -->
+                    <div class="form-group-admin">
+                        <label>Kondisi Buku</label>
+                        <div class="input-box-admin" style="margin-bottom: 10px;">
+                            <input type="text" name="kondisi_buku" id="selectedKondisi" value="Baik" readonly style="color: #f6c90e; font-weight: bold;">
+                        </div>
+                        
+                        <div class="kondisi-btn-group">
+                            <button type="button" class="kondisi-btn-option active" onclick="selectKondisi(this, 'Baik')">Baik</button>
+                            <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Rusak Ringan')">Rusak Ringan</button>
+                            <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Rusak Berat')">Rusak Berat</button>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Form -->
+                    <div class="form-actions-group">
+                        <button type="reset" class="btn-form-yellow">Batal</button>
+                        <button type="submit" class="btn-form-blue"><i class="fa-solid fa-rotate-left"></i> Proses Pengembalian</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PROFIL WHATSAPP -->
+    <div id="waProfileModal" class="modal-overlay-wa">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil Admin</h3>
+                <button class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay"><i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i></div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
+                <div class="wa-info-group">
+                    <div class="wa-info-label">About</div>
+                    <div class="wa-info-row"><span class="wa-info-value" id="textAbout">Current mood 💻</span><i class="fa-solid fa-pen wa-edit-icon" onclick="editAbout()"></i></div>
+                </div>
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Name</div>
+                    <div class="wa-info-row"><span class="wa-info-value" id="textName">Lasut</span><i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i></div>
+                </div>
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Phone</div>
+                    <div class="wa-info-row"><span class="wa-info-value">+62 856-9571-4264</span><i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set otomatis tanggal pengembalian hari ini
+        document.addEventListener("DOMContentLoaded", function() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('tglKembali').value = today;
+        });
+
+        // Mengambil data pengaturan dari database phpMyAdmin
+        const dendaTelatPerHari = parseInt("{{ settings.get('denda_telat_per_hari', 10000) }}");
+        const dendaRusakRingan = parseInt("{{ settings.get('denda_rusak_ringan', 20000) }}");
+        const dendaRusakBerat = parseInt("{{ settings.get('denda_rusak_berat', 50000) }}");
+
+        function hitungDendaOtomatis() {
+            const select = document.getElementById('selectPeminjaman');
+            const selectedOption = select.options[select.selectedIndex];
+            const tglKembaliVal = document.getElementById('tglKembali').value;
+            
+            if (!selectedOption.value || !tglKembaliVal) return;
+            
+            const jatuhTempoStr = selectedOption.getAttribute('data-jatuh-tempo');
+            const jatuhTempo = new Date(jatuhTempoStr);
+            const tglKembali = new Date(tglKembaliVal);
+            
+            let dendaKeterlambatan = 0;
+            
+            // Hitung selisih hari jika lewat jatuh tempo
+            if (tglKembali > jatuhTempo) {
+                const diffTime = Math.abs(tglKembali - jatuhTempo);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                dendaKeterlambatan = diffDays * dendaTelatPerHari;
+            }
+            
+            // Hitung denda kondisi buku
+            const kondisi = document.getElementById('selectedKondisi').value;
+            let dendaKondisi = 0;
+            if (kondisi === 'Rusak Ringan') {
+                dendaKondisi = dendaRusakRingan;
+            } else if (kondisi === 'Rusak Berat') {
+                dendaKondisi = dendaRusakBerat;
+            }
+            
+            // Total gabungan denda telat + kondisi
+            document.getElementById('inputDenda').value = dendaKeterlambatan + dendaKondisi;
+        }
+
+        function selectKondisi(btn, text) {
+            document.querySelectorAll('.kondisi-btn-option').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('selectedKondisi').value = text;
+            hitungDendaOtomatis();
+        }
+
+        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
+        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+        function previewWaImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
+            };
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+        function editAbout() { let v = prompt("Status baru:", document.getElementById('textAbout').innerText); if(v) document.getElementById('textAbout').innerText = v; }
+        function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
+        function copyPhone() { navigator.clipboard.writeText("+62 856-9571-4264"); alert("Nomor disalin!"); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Biodata - User Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=24.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <!-- SIDEBAR USER -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
+                </div>
+                <h3>
+                    {{ session.get('nama', 'USER') }}<br>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                </h3>
+            </div>
+            
+            <!-- PERBAIKAN 1: Mengubah rute menu sidebar menjadi rute USER, bukan admin -->
+            <ul class="sidebar-menu">
+                <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
+                <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
+                <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
+                <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-logout-box" style="padding: 0 15px;">
+            <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Biodata</h2>
+                <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Informasi profil dan statistik akun anggota</p>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div class="biodata-wrapper">
+                
+                <!-- KOLOM KIRI: FOTO & STATISTIK -->
+                <div class="biodata-left-card">
+                    <div class="biodata-avatar-box" id="biodataAvatarDisplay">
+                        <i class="fa-solid fa-user-graduate" style="font-size: 55px; color: #64748b;"></i>
+                    </div>
+                    <label for="uploadFotoInput" class="btn-ubah-foto" style="cursor: pointer;">Ubah Foto</label>
+                    <input type="file" id="uploadFotoInput" accept="image/*" style="display: none;" onchange="previewBiodataImage(event)">
+
+                    <div class="stat-box-container">
+                        <h4>Statistik Aktivitas</h4>
+                        <div class="stat-row-item">
+                            <span>Status Akun</span>
+                            <span style="font-weight: bold; color: #f6c90e;">{{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}</span>
+                        </div>
+                        <div class="stat-row-item">
+                            <span>Kelas</span>
+                            <span style="font-weight: bold; color: #f6c90e;">{{ biodata.kelas if biodata else '-' }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KOLOM KANAN: DETAIL BIODATA DARI DATABASE -->
+                <div class="biodata-right-card">
+                    <table class="biodata-info-table">
+                        <tr>
+                            <td class="label">Nama Lengkap</td>
+                            <td class="val" id="valNama">: {{ biodata.nama_lengkap if biodata else session.get('nama', '-') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Email</td>
+                            <td class="val" id="valEmail">: {{ biodata.email if biodata else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">No. Telepon</td>
+                            <td class="val" id="valTelepon">: {{ biodata.no_hp if biodata else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Status Keanggotaan</td>
+                            <td class="val" id="valStatus">: {{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Tanggal Bergabung</td>
+                            <td class="val" id="valGabung">: {{ biodata.tanggal_bergabung if biodata else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Masa Berlaku</td>
+                            <td class="val" id="valBerlaku">: {{ biodata.masa_berlaku if biodata else '-' }}</td>
+                        </tr>
+                        <tr>
+                            <td class="label">Kategori</td>
+                            <td class="val" id="valKategori">: Siswa / Anggota</td>
+                        </tr>
+                    </table>
+                    
+                    <div style="overflow: hidden; margin-top: 15px;">
+                        <button class="btn-edit-biodata" onclick="openEditBiodataModal()">Edit Biodata</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL POP-UP EDIT BIODATA -->
+    <div id="modalEditBiodata" class="modal-edit-biodata-overlay">
+        <div class="modal-edit-biodata-card">
+            <div class="modal-edit-header">
+                <h3>Edit Biodata Anggota</h3>
+                <button class="wa-close-btn" onclick="closeEditBiodataModal()" style="position: absolute; right: 20px; top: 18px; background:transparent; border:none; color:white; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <!-- PERBAIKAN 2: Mengarahkan form ke backend Flask (/user/update_biodata) -->
+            <form action="/user/update_biodata" method="POST">
+                <div class="modal-edit-body">
+                    <div class="modal-form-group">
+                        <label>Nama Lengkap</label>
+                        <input type="text" name="nama" id="inputNama" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>Email</label>
+                        <input type="email" name="email" id="inputEmail" required>
+                    </div>
+                    <div class="modal-form-group">
+                        <label>No. Telepon</label>
+                        <input type="text" name="telepon" id="inputTelepon" required>
+                    </div>
+
+                    <div class="modal-edit-footer">
+                        <button type="button" class="btn-modal-batal" onclick="closeEditBiodataModal()">Batal</button>
+                        <button type="submit" class="btn-modal-simpan">Simpan Perubahan</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL PROFIL WHATSAPP -->
+    <div id="waProfileModal" class="modal-overlay-wa">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil User</h3>
+                <button class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay">
+                    <i class="fa-solid fa-user-graduate" style="font-size: 60px; color: #8696a0;"></i>
+                </div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
+                <div class="wa-info-group">
+                    <div class="wa-info-label">About</div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value" id="textAbout">Semangat Belajar 📚</span>
+                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editAbout()"></i>
+                    </div>
+                </div>
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Name</div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value" id="textName">{{ session.get('nama', 'User') }}</span>
+                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT JAVASCRIPT -->
+    <script>
+        function openEditBiodataModal() {
+            document.getElementById('inputNama').value = document.getElementById('valNama').innerText.replace(': ', '').trim();
+            document.getElementById('inputEmail').value = document.getElementById('valEmail').innerText.replace(': ', '').trim();
+            document.getElementById('inputTelepon').value = document.getElementById('valTelepon').innerText.replace(': ', '').trim();
+            document.getElementById('modalEditBiodata').style.display = 'flex';
+        }
+
+        function closeEditBiodataModal() {
+            document.getElementById('modalEditBiodata').style.display = 'none';
+        }
+
+        function previewBiodataImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('biodataAvatarDisplay').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            };
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
+        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+        
+        function previewWaImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            };
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+
+        function editAbout() { 
+            let v = prompt("Status baru:", document.getElementById('textAbout').innerText); 
+            if(v) document.getElementById('textAbout').innerText = v; 
+        }
+        
+        function editName() { 
+            let v = prompt("Nama baru:", document.getElementById('textName').innerText); 
+            if(v) document.getElementById('textName').innerText = v; 
+        }
+    </script>
+</body>
+</html>

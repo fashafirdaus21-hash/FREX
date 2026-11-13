@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Peminjaman Saya - User Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .custom-sidebar-menu { list-style: none; padding: 0 15px; margin: 0; }
+        .custom-sidebar-menu li { margin-bottom: 12px; }
+        .custom-sidebar-menu a {
+            display: flex; align-items: center; gap: 12px; color: #ffffff; text-decoration: none;
+            padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: bold;
+            border: 2px solid transparent; background-color: #0d233a; transition: all 0.2s;
+        }
+        .custom-sidebar-menu a:hover, .custom-sidebar-menu a.active { border-color: #f6c90e; color: #f6c90e; }
+    </style>
+</head>
+<body style="background-color: #f8fafc;">
+
+    <aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
+        <div>
+            <div class="sidebar-profile" style="padding: 25px 20px; text-align: center; cursor: pointer;">
+                <div class="profile-img" style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
+                    <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
+                </div>
+                <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
+                    {{ session.get('nama', 'USER') }}<br>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                </h3>
+            </div>
+            
+            <ul class="custom-sidebar-menu">
+    <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+    <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
+    <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
+    <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
+    <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
+</ul>
+        </div>
+
+        <div class="sidebar-logout-box" style="padding: 0 15px;">
+            <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <div class="main-container" style="margin-left: 260px; padding: 30px;">
+        <header style="margin-bottom: 25px;">
+            <h2 style="color: #0d233a; margin: 0; font-size: 24px; font-weight: bold;">⏳ Peminjaman Saya</h2>
+            <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Daftar buku yang sedang Anda pinjam saat ini 📖</p>
+        </header>
+
+        <div class="content-body">
+            {% if peminjaman_list %}
+                {% for item in peminjaman_list %}
+                <div class="user-card-peminjaman" style="background: white; border: 2px solid #0d233a; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div class="user-card-title" style="font-weight: bold; color: #0d233a; font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>📖 {{ item.judul }}</span>
+                        <span style="font-size: 12px; background-color: #f6c90e; color: #0d233a; padding: 4px 12px; border-radius: 12px; font-weight: bold;">⏳ {{ item.status | upper }}</span>
+                    </div>
+                    <div class="user-card-grid-info" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; background: #f8fafc; padding: 12px; border-radius: 10px;">
+                        <div><span style="font-size: 11px; color: #64748b; display: block;">TANGGAL PINJAM</span><span style="font-weight: bold; color: #0d233a; font-size: 13px;">📅 {{ item.tgl_pinjam }}</span></div>
+                        <div><span style="font-size: 11px; color: #64748b; display: block;">JATUH TEMPO</span><span style="font-weight: bold; color: #0d233a; font-size: 13px;">⏰ {{ item.jatuh_tempo }}</span></div>
+                        <div><span style="font-size: 11px; color: #64748b; display: block;">STATUS</span><span style="font-weight: bold; color: #0d233a; font-size: 13px;">📌 {{ item.status }}</span></div>
+                        <div><span style="font-size: 11px; color: #64748b; display: block;">DIPROSES OLEH</span><span style="font-weight: bold; color: #0d233a; font-size: 13px;">👤 {{ item.diproses_oleh or 'Admin' }}</span></div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="background: white; padding: 40px; border-radius: 16px; text-align: center; color: #64748b; border: 2px solid #cbd5e1;">
+                    <i class="fa-solid fa-book-open" style="font-size: 40px; margin-bottom: 10px; color: #cbd5e1;"></i>
+                    <p style="margin: 0; font-weight: bold;">Belum ada buku yang sedang dipinjam saat ini 📭.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
