@@ -110,9 +110,20 @@
                     </thead>
                     <tbody>
                     {% for b in buku_list %}
-                    <tr>
+                  <tr>
                         <td style="font-size: 16px; color: #0d233a;">{{ loop.index }}</td>
-                        <td style="font-size: 16px; color: #0d233a; font-weight: bold;">{{ b.judul }}</td>
+                        
+                        <!-- TAMBAHAN BARU: Menampilkan Cover Buku di Samping Judul -->
+                        <td>
+                            <div class="book-cell-wrapper">
+                                <div class="book-cover-wrapper">
+                                    <img src="{{ url_for('static', filename='uploads/covers/' + (b.cover if b.cover else 'default_cover.jpg')) }}" 
+                                         alt="Cover {{ b.judul }}">
+                                </div>
+                                <span style="font-size: 16px; color: #0d233a; font-weight: bold;">{{ b.judul }}</span>
+                            </div>
+                        </td>
+
                         <td style="font-size: 16px; color: #0d233a;">{{ b.penulis }}</td>
                         <td style="font-size: 16px; color: #0d233a;">{{ b.kategori }}</td>
                         <td style="font-size: 16px; color: #0d233a;">{{ b.tahun_terbit }}</td>
@@ -143,11 +154,20 @@
                 <button type="button" class="btn-close-modal" onclick="closeModalTambahBuku()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
-            <form action="/admin/kelolabuku" method="POST">
+            <!-- TAMBAHAN BARU: enctype="multipart/form-data" wajib ada untuk upload file -->
+            <form action="/admin/kelolabuku" method="POST" enctype="multipart/form-data">
                 <div class="custom-modal-body">
                     <div class="form-field-group">
                         <label>Judul Buku</label>
                         <input type="text" name="judul" placeholder="Masukkan judul buku..." required>
+                    </div>
+
+                    <!-- TAMBAHAN BARU: Input untuk Upload Foto Sampul -->
+                    <div class="form-field-group">
+                        <label>Foto Sampul Buku</label>
+                        <input type="file" name="cover" accept="image/png, image/jpeg, image/webp" 
+                               style="padding: 6px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; background: #f8fafc;">
+                        <small style="color: #64748b; font-size: 11px;">Format: JPG, PNG, WEBP</small>
                     </div>
 
                     <div class="form-field-group">
