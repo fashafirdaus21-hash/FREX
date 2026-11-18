@@ -103,8 +103,18 @@
 
             <!-- Tabel Daftar Orang yang Meminjam -->
             <div class="table-box-container" style="border: 2px solid #0d233a;">
-                <h3 style="color: #0d233a; padding: 15px 20px; margin: 0; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">Daftar Peminjam Aktif</h3>
-                <table class="custom-table-admin">
+                <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">
+                    <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Peminjam Aktif</h3>
+                    
+                    <!-- Bilah Pencarian -->
+                    <div style="display: flex; align-items: center; background-color: #0d233a; padding: 8px 15px; border-radius: 20px; border: 1.5px solid #0d233a; width: 260px;">
+                        <i class="fa-solid fa-magnifying-glass" style="color: #f6c90e; margin-right: 10px; font-size: 14px;"></i>
+                        <input type="text" id="searchPeminjamInput" onkeyup="cariPeminjam()" placeholder="Cari peminjam, ID buku..." style="border: none; background: transparent; color: #ffffff; outline: none; width: 100%; font-size: 14px;">
+                    </div>
+                </div>
+
+                <table class="custom-table-admin" id="tabelPeminjamAktif">
                     <thead>
                         <tr>
                             <th style="width: 60px;">No</th>
@@ -118,7 +128,7 @@
                     </thead>
                     <tbody>
                         {% for p in peminjaman_list %}
-                        <tr>
+                        <tr class="baris-data-peminjam">
                             <td style="font-size: 16px; color: #0d233a;">{{ loop.index }}</td>
                             <td style="font-size: 16px; color: #0d233a; font-weight: bold;">{{ p.id_anggota }}</td>
                             <td style="font-size: 16px; color: #0d233a;">{{ p.id_buku }}</td>
@@ -136,6 +146,11 @@
                             <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
                         </tr>
                         {% endfor %}
+                        
+                        <!-- Baris pesan jika hasil pencarian tidak ditemukan -->
+                        <tr id="pesanTidakDitemukan" style="display: none;">
+                            <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -182,6 +197,30 @@
         function copyPhone() { 
             navigator.clipboard.writeText("+62 856-9571-4264"); 
             alert("Nomor disalin!"); 
+        }
+
+        // FUNGSI PENCARIAN REAL-TIME TABEL PEMINJAM AKTIF
+        function cariPeminjam() {
+            const input = document.getElementById("searchPeminjamInput");
+            const filter = input.value.toLowerCase();
+            const barisData = document.querySelectorAll(".baris-data-peminjam");
+            const pesanKosong = document.getElementById("pesanTidakDitemukan");
+            let adaHasil = false;
+
+            barisData.forEach(function(baris) {
+                const teksBaris = baris.textContent.toLowerCase();
+                if (teksBaris.includes(filter)) {
+                    baris.style.display = "";
+                    adaHasil = true;
+                } else {
+                    baris.style.display = "none";
+                }
+            });
+
+            // Tampilkan pesan jika tidak ada baris yang cocok (dan tabel memang memiliki data)
+            if (barisData.length > 0) {
+                pesanKosong.style.display = adaHasil ? "none" : "";
+            }
         }
     </script>
 </body>
