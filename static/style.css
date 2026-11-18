@@ -1323,3 +1323,12 @@ body {
     color: #f6c90e;
     font-weight: bold;
 }
+/* --- TAMBAHAN: WARNA KUNING PADA INPUT TANGGAL & IKON KALENDER --- */
+input[type="date"] {
+    color: #f6c90e !important;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(80%) sepia(80%) saturate(600%) hue-rotate(360deg) brightness(105%) contrast(100%);
+    cursor: pointer;
+}
