@@ -104,7 +104,7 @@ INSERT INTO kategori (id_kategori, nama_kategori) VALUES
 
 INSERT INTO users (id_user, email, password_hash, nama, role, is_active) VALUES
 ('Andika0909', 'admin@sekolah.sch.id', 'Lasut9926', 'Admin Perpustakaan', 'admin', 1),
-('Ajijah0909', 'ajijah@sekolah.sch.id', 'password123', 'Ajijah', 'admin', 1);
+('Ajijah0909', 'ajijah@sekolah.sch.id', 'password123', 'Ajijah', 'admin', 1),
 ('KEP01', 'kepsek@sekolah.sch.id', 'hash_password_kepsek', 'Kepala Sekolah', 'kepsek', 1),
 ('1001', 'budi@sekolah.sch.id', 'hash_password_siswa', 'Budi Santoso', 'siswa', 1),
 ('1002', 'siti@sekolah.sch.id', 'hash_password_siswa', 'Siti Rahma', 'siswa', 1);
