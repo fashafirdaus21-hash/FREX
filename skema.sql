@@ -117,3 +117,5 @@ INSERT INTO buku (id_buku, judul, penulis, id_kategori, tahun_terbit, jumlah_tot
 (2, 'Sejarah Indonesia Modern', 'M.C. Ricklefs', 2, 2008, 3, 3);
 
 ALTER TABLE buku ADD COLUMN cover VARCHAR(255) DEFAULT 'default_cover.jpg' AFTER judul;
+
+nifsjndnbaocaeon
