@@ -117,8 +117,4 @@ INSERT INTO buku (id_buku, judul, penulis, id_kategori, tahun_terbit, jumlah_tot
 (1, 'Fisika Dasar', 'Halliday & Resnick', 1, 2014, 5, 5),
 (2, 'Sejarah Indonesia Modern', 'M.C. Ricklefs', 2, 2008, 3, 3);
 
-<<<<<<< HEAD
 ALTER TABLE buku ADD COLUMN cover VARCHAR(255) DEFAULT 'default_cover.jpg' AFTER judul;
-=======
-ALTER TABLE buku ADD COLUMN cover VARCHAR(255) DEFAULT 'default_cover.jpg' AFTER judul;
->>>>>>> e364c75c0d5f6388a2706f303356ffbd953047b9
