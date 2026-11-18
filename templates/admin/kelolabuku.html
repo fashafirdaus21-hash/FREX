@@ -5,6 +5,49 @@
     <title>Kelola Buku - Admin Perpustakaan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+<!-- TAMBAHAN BARU: CSS untuk Efek Cover Buku Fisik -->
+    <style>
+        .book-cell-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .book-cover-wrapper {
+            position: relative;
+            width: 42px;
+            height: 60px;
+            border-radius: 2px;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 1px 3px rgba(0, 0, 0, 0.23);
+            background-color: #e2e8f0;
+        }
+        .book-cover-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+        /* Efek lipatan jilid/spine di sisi kiri buku */
+        .book-cover-wrapper::after {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                rgba(255, 255, 255, 0.35) 0%,
+                rgba(0, 0, 0, 0.18) 6%,
+                rgba(255, 255, 255, 0.25) 10%,
+                rgba(0, 0, 0, 0) 16%
+            );
+            pointer-events: none;
+        }
+    </style>
+
 </head>
 <body>
 
