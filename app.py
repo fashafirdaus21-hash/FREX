@@ -1,9 +1,23 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from datetime import datetime
 from koneksi import buat_koneksi
+import os                                   # <-- TAMBAHKAN INI
+from werkzeug.utils import secure_filename  # <-- TAMBAHKAN INI
 
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_perpustakaan'
+
+# ==========================================
+# KONFIGURASI FOLDER UPLOAD COVER BUKU
+# ==========================================
+UPLOAD_FOLDER = 'static/uploads/covers'
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 @app.route('/')
 def index():
@@ -126,6 +140,19 @@ def admin_kelolabuku():
             nama_kategori = request.form['kategori']
             tahun_terbit = request.form['tahun_terbit']
             jumlah = int(request.form['jumlah'])
+
+            # ==========================================
+            # PROSES UPLOAD FILE COVER
+            # ==========================================
+            nama_file_cover = 'default_cover.jpg'
+            if 'cover' in request.files:
+                file = request.files['cover']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    import time
+                    nama_file_cover = f"{int(time.time())}_{filename}"
+                    file.save(os.path.join(app.config['UPLOAD_FOLDER'], nama_file_cover))
+            # ==========================================
             
             cursor.execute("SELECT id_kategori FROM kategori WHERE nama_kategori = %s", (nama_kategori,))
             kat = cursor.fetchone()
@@ -135,11 +162,14 @@ def admin_kelolabuku():
                 cursor.execute("INSERT INTO kategori (nama_kategori) VALUES (%s)", (nama_kategori,))
                 conn.commit()
                 id_kategori = cursor.lastrowid
+
+
                 
+            # Tambahkan kolom 'cover' dan variabel 'nama_file_cover' ke query INSERT
             cursor.execute("""
-                INSERT INTO buku (judul, penulis, id_kategori, tahun_terbit, jumlah_total, jumlah_tersedia) 
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (judul, penulis, id_kategori, tahun_terbit, jumlah, jumlah))
+                INSERT INTO buku (judul, cover, penulis, id_kategori, tahun_terbit, jumlah_total, jumlah_tersedia) 
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """, (judul, nama_file_cover, penulis, id_kategori, tahun_terbit, jumlah, jumlah))
             conn.commit()
             
             cursor.close()
