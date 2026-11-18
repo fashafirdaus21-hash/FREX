@@ -29,17 +29,25 @@ def signup():
         input_username = request.form['username']
         input_email = request.form['email']
         input_password = request.form['password']
+        nama_lengkap = request.form.get('nama', input_username) # Opsional jika ada kolom nama
         
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
         try:
+            # 1. Simpan ke tabel users (id_user = username)
             cursor.execute(
                 "INSERT INTO users (id_user, email, password_hash, nama, role, is_active) VALUES (%s, %s, %s, %s, 'siswa', 1)",
-                (input_username, input_email, input_password, input_username)
+                (input_username, input_email, input_password, nama_lengkap)
             )
+            # 2. Buat ID Anggota otomatis untuk tabel anggota
+            cursor.execute("SELECT COUNT(*) as total FROM anggota")
+            count = cursor.fetchone()['total'] + 1
+            id_anggota_otomatis = f"AGT{count:03d}" # Hasil: AGT001, AGT002, dst.
+            
             cursor.execute(
-                "INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, status_keanggotaan) VALUES (%s, %s, '-', %s, 'aktif')",
-                (input_username, input_username, input_email)
+                """INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, status_keanggotaan) 
+                   VALUES (%s, %s, '-', %s, 'aktif')""",
+                (id_anggota_otomatis, nama_lengkap, input_email)
             )
             conn.commit()
             cursor.close()
@@ -303,24 +311,32 @@ def admin_biodataagt():
 @app.route('/admin/tambah_anggota', methods=['POST'])
 def tambah_anggota():
     if session.get('role') == 'admin':
+        username = request.form['username']
+        password = request.form['password']
+        email = request.form['email']
         nama = request.form['nama']
         kelas = request.form['kelas']
         no_hp = request.form['no_hp']
         
-        id_baru = "AGT" + datetime.now().strftime("%d%H%M")
-        email_dummy = f"{id_baru.lower()}@sekolah.sch.id"
-        
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
         try:
+            # Buat ID Anggota otomatis (misal: AGT001, AGT002, dst.)
+            cursor.execute("SELECT COUNT(*) as total FROM anggota")
+            count = cursor.fetchone()['total'] + 1
+            id_anggota_otomatis = f"AGT{count:03d}"
+            
+            # 1. Masukkan ke tabel users (Username & ID dipisah)
             cursor.execute(
-                "INSERT INTO users (id_user, email, password_hash, nama, role, is_active) VALUES (%s, %s, '123456', %s, 'siswa', 1)",
-                (id_baru, email_dummy, nama)
+                "INSERT INTO users (id_user, email, password_hash, nama, role, is_active) VALUES (%s, %s, %s, %s, 'siswa', 1)",
+                (username, email, password, nama)
             )
+            # 2. Masukkan ke tabel anggota menggunakan ID otomatis
             cursor.execute("""
                 INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, no_hp, status_keanggotaan, tanggal_bergabung) 
                 VALUES (%s, %s, %s, %s, %s, 'aktif', CURDATE())
-            """, (id_baru, nama, kelas, email_dummy, no_hp))
+            """, (id_anggota_otomatis, nama, kelas, email, no_hp))
+            
             conn.commit()
         except Exception as e:
             conn.rollback()

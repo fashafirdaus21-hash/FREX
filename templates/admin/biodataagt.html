@@ -84,27 +84,42 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
-    <!-- MODAL POP-UP TAMBAH ANGGOTA BARU (POST FLASK) -->
+   <!-- ========================================== -->
+    <!-- MODAL POP-UP TAMBAH ANGGOTA BARU (DISAMAKAN DENGAN REGISTER) -->
     <!-- ========================================== -->
     <div id="modalTambahAnggota" class="custom-modal-overlay" style="display: none;">
         <div class="custom-modal-card">
             <div class="modal-header-dark">
-                <h3>Tambah anggota baru</h3>
-                <p>Isi data anggota baru yang akan didaftarkan ke perpustakaan.</p>
+                <h3>Tambah Anggota Baru</h3>
+                <p>Isi data akun dan profil anggota baru.</p>
                 <button type="button" class="btn-close-modal" onclick="closeModalTambahAnggota()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             
             <form action="{{ url_for('tambah_anggota') }}" method="POST">
                 <div class="custom-modal-body">
                     <div class="form-field-group">
-                        <label>Nama lengkap <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="nama" placeholder="Contoh: Ahmad Fauzan" required>
+                        <label>Username (ID Login) <span style="color: #ef4444;">*</span></label>
+                        <input type="text" name="username" placeholder="Contoh: budi_santoso" required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Password <span style="color: #ef4444;">*</span></label>
+                        <input type="password" name="password" placeholder="Masukkan password akun" required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Email <span style="color: #ef4444;">*</span></label>
+                        <input type="email" name="email" placeholder="budi@sekolah.sch.id" required>
+                    </div>
+
+                    <div class="form-field-group">
+                        <label>Nama Lengkap <span style="color: #ef4444;">*</span></label>
+                        <input type="text" name="nama" placeholder="Contoh: Budi Santoso" required>
                     </div>
 
                     <div class="form-field-group">
                         <label>Kelas <span style="color: #ef4444;">*</span></label>
-                        <input type="text" name="kelas" placeholder="Contoh: XII IPA 1 / 12 RPL" required>
+                        <input type="text" name="kelas" placeholder="Contoh: XII IPA 1" required>
                     </div>
 
                     <div class="form-field-group">
@@ -114,7 +129,7 @@
 
                     <div class="custom-modal-footer">
                         <button type="button" class="btn-modal-cancel" onclick="closeModalTambahAnggota()">Batal</button>
-                        <button type="submit" class="btn-modal-submit">Simpan anggota</button>
+                        <button type="submit" class="btn-modal-submit">Simpan Anggota</button>
                     </div>
                 </div>
             </form>
