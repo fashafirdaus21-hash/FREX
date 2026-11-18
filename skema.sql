@@ -39,6 +39,7 @@ CREATE TABLE IF NOT EXISTS kategori (
 CREATE TABLE IF NOT EXISTS buku (
     id_buku INT AUTO_INCREMENT PRIMARY KEY,
     judul VARCHAR(255) NOT NULL,
+    cover VARCHAR(255) DEFAULT 'default_cover.jpg', -- <--- Tambahkan baris ini di sini
     penulis VARCHAR(255) NOT NULL,
     id_kategori INT NOT NULL,
     tahun_terbit INT NOT NULL,
@@ -113,8 +114,8 @@ INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, no_hp, status_keang
 ('1001', 'Budi Santoso', 'RS-3', 'budi@sekolah.sch.id', '081234567890', 'aktif', '2026-01-10', '2027-01-10'),
 ('1002', 'Siti Rahma', 'RT-1', 'siti@sekolah.sch.id', '089876543210', 'aktif', '2026-01-10', '2027-01-10');
 
-INSERT INTO buku (id_buku, judul, penulis, id_kategori, tahun_terbit, jumlah_total, jumlah_tersedia) VALUES
-(1, 'Fisika Dasar', 'Halliday & Resnick', 1, 2014, 5, 5),
-(2, 'Sejarah Indonesia Modern', 'M.C. Ricklefs', 2, 2008, 3, 3);
+INSERT INTO buku (id_buku, judul, cover, penulis, id_kategori, tahun_terbit, jumlah_total, jumlah_tersedia) VALUES
+(1, 'Fisika Dasar', 'fisika.jpg', 'Halliday & Resnick', 1, 2014, 5, 5),
+(2, 'Sejarah Indonesia Modern', 'sejarah.jpg', 'M.C. Ricklefs', 6, 2008, 3, 3);
 
 ALTER TABLE buku ADD COLUMN cover VARCHAR(255) DEFAULT 'default_cover.jpg' AFTER judul;
