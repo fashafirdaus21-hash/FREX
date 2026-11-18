@@ -15,7 +15,7 @@
                 <div class="profile-img" id="sidebarAvatarPreview">
                     <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
                 </div>
-                <h3>Admin</h3>
+                <h3>{{ session.get('nama', 'Admin') }}</h3>
             </div>
             
             <ul class="sidebar-menu">
@@ -38,7 +38,7 @@
             <div>
                 <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Peminjaman</h2>
             </div>
-            <div class="admin-badge-top"><i class="fa-solid fa-user"></i> Admin</div>
+            <div class="admin-badge-top"><i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}</div>
         </header>
 
         <div class="content-body">
@@ -142,33 +142,32 @@
         </div>
     </div>
 
-    <!-- MODAL PROFIL WHATSAPP -->
-    <div id="waProfileModal" class="modal-overlay-wa">
+    <!-- MODAL PROFIL WHATSAPP (TUNGGAL) -->
+    <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
         <div class="modal-card-wa">
             <div class="wa-modal-header">
                 <h3>Profil Admin</h3>
-                <button class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="wa-body">
-                <div class="wa-avatar-container" id="modalAvatarDisplay"><i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i></div>
+                <div class="wa-avatar-container" id="modalAvatarDisplay">
+                    <i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i>
+                </div>
                 <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
                 <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
-                <div class="wa-info-group">
-                    <div class="wa-info-label">About</div>
-                    <div class="wa-info-row"><span class="wa-info-value" id="textAbout">Current mood 💻</span><i class="fa-solid fa-pen wa-edit-icon" onclick="editAbout()"></i></div>
-                </div>
-                <div class="wa-info-group">
-                    <div class="wa-info-label">Name</div>
-                    <div class="wa-info-row"><span class="wa-info-value" id="textName">Lasut</span><i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i></div>
-                </div>
-                <div class="wa-info-group">
+
+                <div class="wa-info-group" style="margin-top: 20px;">
                     <div class="wa-info-label">Phone</div>
-                    <div class="wa-info-row"><span class="wa-info-value">+62 856-9571-4264</span><i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()"></i></div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value">+62 856-9571-4264</span>
+                        <i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()" title="Salin nomor"></i>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- SCRIPT JAVASCRIPT -->
     <script>
         function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
         function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
@@ -180,9 +179,10 @@
             };
             if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
         }
-        function editAbout() { let v = prompt("Status baru:", document.getElementById('textAbout').innerText); if(v) document.getElementById('textAbout').innerText = v; }
-        function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
-        function copyPhone() { navigator.clipboard.writeText("+62 856-9571-4264"); alert("Nomor disalin!"); }
+        function copyPhone() { 
+            navigator.clipboard.writeText("+62 856-9571-4264"); 
+            alert("Nomor disalin!"); 
+        }
     </script>
 </body>
 </html>

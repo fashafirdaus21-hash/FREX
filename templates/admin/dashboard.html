@@ -12,12 +12,12 @@
     <!-- SIDEBAR ADMIN -->
     <aside class="sidebar">
         <div>
-            <!-- Bagian Profil yang Bisa Diklik (Ala WhatsApp) -->
-            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk melihat profil">
+            <!-- Bagian Profil & Nama Admin (Dinamis dari Session Flask) -->
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
                 <div class="profile-img" id="sidebarAvatarPreview">
                     <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
                 </div>
-                <h3>Admin</h3>
+                <h3>{{ session.get('nama', 'Admin') }}</h3>
             </div>
             
             <ul class="sidebar-menu">
@@ -56,7 +56,7 @@
                 
                 <!-- Badge Admin Kanan Atas -->
                 <div class="admin-badge-top">
-                    <i class="fa-solid fa-user"></i> Admin
+                    <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
                 </div>
             </div>
         </header>
@@ -70,7 +70,7 @@
                     <div style="font-size: 32px;">📚</div>
                     <div class="stat-card-info">
                         <span class="stat-card-title">Total Buku</span>
-                        <span class="stat-card-value">-</span>
+                        <span class="stat-card-value">{{ total_buku }}</span>
                     </div>
                 </div>
 
@@ -78,7 +78,7 @@
                     <div style="font-size: 32px;">📖</div>
                     <div class="stat-card-info">
                         <span class="stat-card-title">Sedang Dipinjam</span>
-                        <span class="stat-card-value">-</span>
+                        <span class="stat-card-value">{{ sedang_dipinjam }}</span>
                     </div>
                 </div>
 
@@ -86,7 +86,7 @@
                     <div style="color: #f6c90e; font-size: 30px;"><i class="fa-solid fa-users"></i></div>
                     <div class="stat-card-info">
                         <span class="stat-card-title">Total Pengguna</span>
-                        <span class="stat-card-value">-</span>
+                        <span class="stat-card-value">{{ total_pengguna }}</span>
                     </div>
                 </div>
 
@@ -94,7 +94,7 @@
                     <div style="color: #f6c90e; font-size: 30px;"><i class="fa-solid fa-receipt"></i></div>
                     <div class="stat-card-info">
                         <span class="stat-card-title">Total Denda</span>
-                        <span class="stat-card-value">Rp-</span>
+                        <span class="stat-card-value">Rp{{ "{:,.0f}".format(total_denda) }}</span>
                     </div>
                 </div>
             </div>
@@ -122,9 +122,18 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for t in transaksi_terbaru %}
+                        <tr>
+                            <td>{{ t.nama_peminjam }}</td>
+                            <td>{{ t.judul }}</td>
+                            <td>{{ t.tgl_pinjam }}</td>
+                            <td>{{ t.status }}</td>
+                        </tr>
+                        {% else %}
                         <tr>
                             <td colspan="4" style="text-align: center; color: #64748b; font-style: italic;">Belum ada data transaksi peminjaman.</td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -136,39 +145,20 @@
     <!-- ========================================== -->
     <!-- MODAL POP-UP PROFIL ALA WHATSAPP -->
     <!-- ========================================== -->
-    <div id="waProfileModal" class="modal-overlay-wa">
+    <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
         <div class="modal-card-wa">
             <div class="wa-modal-header">
                 <h3>Profil Admin</h3>
-                <button class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            
             <div class="wa-body">
                 <div class="wa-avatar-container" id="modalAvatarDisplay">
                     <i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i>
                 </div>
-                <label for="waUploadInput" class="wa-upload-label">
-                    <i class="fa-solid fa-camera"></i> Ganti Foto Profil
-                </label>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
                 <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
 
-                <div class="wa-info-group">
-                    <div class="wa-info-label">About</div>
-                    <div class="wa-info-row">
-                        <span class="wa-info-value" id="textAbout">Current mood 💻</span>
-                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editAbout()"></i>
-                    </div>
-                </div>
-
-                <div class="wa-info-group">
-                    <div class="wa-info-label">Name</div>
-                    <div class="wa-info-row">
-                        <span class="wa-info-value" id="textName">Lasut</span>
-                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i>
-                    </div>
-                </div>
-
-                <div class="wa-info-group">
+                <div class="wa-info-group" style="margin-top: 20px;">
                     <div class="wa-info-label">Phone</div>
                     <div class="wa-info-row">
                         <span class="wa-info-value">+62 856-9571-4264</span>
@@ -221,20 +211,6 @@
             };
             if(event.target.files[0]) {
                 reader.readAsDataURL(event.target.files[0]);
-            }
-        }
-
-        function editAbout() {
-            let newAbout = prompt("Masukkan status/mood baru:", document.getElementById('textAbout').innerText);
-            if(newAbout !== null && newAbout.trim() !== "") {
-                document.getElementById('textAbout').innerText = newAbout;
-            }
-        }
-
-        function editName() {
-            let newName = prompt("Masukkan nama baru:", document.getElementById('textName').innerText);
-            if(newName !== null && newName.trim() !== "") {
-                document.getElementById('textName').innerText = newName;
             }
         }
 

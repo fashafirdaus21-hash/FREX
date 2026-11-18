@@ -54,7 +54,7 @@ def login():
         
         if user:
             session['id_user'] = user['id_user']
-            session['nama'] = user['nama']
+            session['nama'] = user['nama']   # <--- Nama disimpan ke session (misal: Andika)
             session['role'] = user['role']
             
             if user['role'] == 'admin':
