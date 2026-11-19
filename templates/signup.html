@@ -8,7 +8,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="flex items-center justify-center min-h-screen p-4 md:p-6 bg-gray-200">
+<body class="flex items-center justify-center min-h-screen p-4 md:p-6 bg-gray-200 relative">
+
+    <!-- POP-UP NOTIFIKASI DI BAGIAN ATAS HALAMAN (SILANG MERAH) -->
+    <div id="notifError" class="hidden fixed top-5 left-1/2 -translate-x-1/2 z-50 w-[92%] max-w-md bg-white border-l-4 border-red-500 shadow-2xl rounded-2xl px-4 py-3.5 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center font-black text-base shrink-0">
+            ✕
+        </div>
+        <div class="flex-1 text-left">
+            <p id="notifErrorPesan" class="text-xs md:text-sm font-extrabold text-gray-900">
+                Akun sudah terdaftar, ganti yang lain.
+            </p>
+        </div>
+        <button type="button" onclick="tutupNotif('notifError')" class="text-gray-400 hover:text-gray-700 font-bold text-sm px-1 cursor-pointer">
+            ✕
+        </button>
+    </div>
 
     <!-- Container Utama -->
     <div class="w-full max-w-5xl bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col md:flex-row">
@@ -77,5 +92,28 @@
 
     </div>
 
+    <script>
+        function tutupNotif(id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add("hidden");
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const params = new URLSearchParams(window.location.search);
+            const status = params.get("status");
+            const pesanEl = document.getElementById("notifErrorPesan");
+            const notifEl = document.getElementById("notifError");
+
+            if (status === "duplikat") {
+                if (pesanEl) pesanEl.textContent = "Akun sudah terdaftar, ganti yang lain.";
+                if (notifEl) notifEl.classList.remove("hidden");
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else if (status === "kosong") {
+                if (pesanEl) pesanEl.textContent = "Silakan lengkapi data pendaftaran terlebih dahulu.";
+                if (notifEl) notifEl.classList.remove("hidden");
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
+    </script>
 </body>
 </html>

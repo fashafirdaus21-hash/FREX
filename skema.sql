@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS kategori (
 CREATE TABLE IF NOT EXISTS buku (
     id_buku INT AUTO_INCREMENT PRIMARY KEY,
     judul VARCHAR(255) NOT NULL,
-    cover VARCHAR(255) DEFAULT 'default_cover.jpg', -- <--- Tambahkan baris ini di sini
+    cover VARCHAR(255) DEFAULT 'default_cover.jpg',
     penulis VARCHAR(255) NOT NULL,
     id_kategori INT NOT NULL,
     tahun_terbit INT NOT NULL,

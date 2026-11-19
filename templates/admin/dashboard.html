@@ -106,7 +106,7 @@
             <div class="chart-box-container">
                 <h3 style="color: #0d233a; font-size: 16px; font-weight: bold; margin-bottom: 15px;">Peminjam per bulan</h3>
                 <div style="height: 200px; width: 100%;">
-                    <canvas id="chartAdminDashboard"></canvas>
+                    <canvas id="chartAdminDashboard" data-bulanan='{{ data_peminjam_bulanan | default([0,0,0,0,0,0,0,0,0,0,0,0]) | tojson }}'></canvas>
                 </div>
             </div>
 
@@ -171,14 +171,17 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
-        const ctx = document.getElementById('chartAdminDashboard').getContext('2d');
+        const canvasEl = document.getElementById('chartAdminDashboard');
+        const ctx = canvasEl.getContext('2d');
+        const dataBulanan = JSON.parse(canvasEl.dataset.bulanan || '[0,0,0,0,0,0,0,0,0,0,0,0]');
+
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul'],
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
                 datasets: [{
-                    label: 'Peminjam',
-                    data: [12, 19, 25, 30, 42, 35, 50],
+                    label: 'Anggota Meminjam',
+                    data: dataBulanan,
                     backgroundColor: '#f6c90e',
                     borderRadius: 6
                 }]
@@ -188,7 +191,13 @@
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: { 
-                    y: { beginAtZero: true },
+                    y: { 
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    },
                     x: { grid: { display: false } }
                 }
             }

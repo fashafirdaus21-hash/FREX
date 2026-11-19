@@ -5,6 +5,82 @@
     <title>Biodata Anggota - Admin Perpustakaan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Styling Khusus Grid Tabel Biodata Anggota */
+        .table-grid-wrapper {
+            border: 2px solid #0d233a;
+            border-radius: 18px;
+            overflow: hidden;
+            background-color: #ffffff;
+            box-shadow: 0 6px 18px rgba(13, 35, 58, 0.08);
+        }
+
+        .custom-grid-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .custom-grid-table thead tr {
+            background-color: #0d233a !important;
+        }
+
+        .custom-grid-table thead th {
+            background-color: #0d233a !important;
+            color: #f6c90e !important;
+            font-size: 16px;
+            font-weight: 800;
+            padding: 16px 18px;
+            text-align: left;
+            border-right: 1px solid rgba(246, 201, 14, 0.25);
+        }
+
+        .custom-grid-table thead th:last-child {
+            border-right: none;
+            text-align: center;
+        }
+
+        /* Kreasi Grid Warna & Tulisan Hitam pada Isi Tabel */
+        .custom-grid-table tbody tr {
+            background-color: #ffffff;
+            transition: background-color 0.2s ease;
+        }
+
+        .custom-grid-table tbody tr:nth-child(even) {
+            background-color: #f1f5f9;
+        }
+
+        .custom-grid-table tbody tr:hover {
+            background-color: #fef9c3;
+        }
+
+        .custom-grid-table tbody td {
+            color: #000000 !important;
+            font-size: 15px;
+            padding: 14px 18px;
+            border-bottom: 1.5px solid #cbd5e1;
+            border-right: 1.5px solid #cbd5e1;
+        }
+
+        .custom-grid-table tbody td:last-child {
+            border-right: none;
+            text-align: center;
+        }
+
+        .custom-grid-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-id-grid {
+            display: inline-block;
+            background-color: #e2e8f0;
+            color: #000000;
+            border: 1px solid #94a3b8;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-weight: 800;
+            font-size: 14px;
+        }
+    </style>
 </head>
 <body>
 
@@ -46,36 +122,36 @@
         </header>
 
         <div class="content-body">
-            <!-- Tabel Biodata Anggota (Terhubung ke MySQL) -->
-            <div class="table-box-container" style="border: 2px solid #0d233a;">
-                <table class="custom-table-admin" id="tableAnggota">
+            <!-- Tabel Biodata Anggota dengan Kreasi Grid Warna -->
+            <div class="table-grid-wrapper">
+                <table class="custom-grid-table" id="tableAnggota">
                     <thead>
-                        <tr style="background-color: #0d233a;">
-                            <th style="color: #f6c90e; font-size: 18px;">ID / Nama</th>
-                            <th style="color: #f6c90e; font-size: 18px;">Nama Lengkap</th>
-                            <th style="color: #f6c90e; font-size: 18px;">Kelas</th>
-                            <th style="color: #f6c90e; font-size: 18px;">No HP</th>
-                            <th style="color: #f6c90e; font-size: 18px;">AKSI</th>
+                        <tr>
+                            <th>ID Anggota</th>
+                            <th>Nama Lengkap</th>
+                            <th>Kelas</th>
+                            <th>No HP</th>
+                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for a in anggota_list %}
                         <tr>
-                            <td style="font-weight: bold; color: #0d233a;">{{ a.id_anggota }}</td>
-                            <td style="font-weight: bold; color: #0d233a;">{{ a.nama_lengkap or a.id_anggota }}</td>
-                            <td>{{ a.kelas or '-' }}</td>
-                            <td>{{ a.no_hp or '-' }}</td>
+                            <td><span class="badge-id-grid">{{ a.id_anggota }}</span></td>
+                            <td style="font-weight: 700;">{{ a.nama_lengkap or a.id_anggota }}</td>
+                            <td style="font-weight: 600;">{{ a.kelas or '-' }}</td>
+                            <td style="font-weight: 600;">{{ a.no_hp or '-' }}</td>
                             <td>
                                 <a href="{{ url_for('hapus_anggota', id_anggota=a.id_anggota) }}" 
                                    onclick="return confirm('Yakin ingin menghapus anggota ini?');"
-                                   style="background: #ef4444; color: white; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-weight: bold; display: inline-block;">
+                                   style="background: #ef4444; color: white; text-decoration: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; display: inline-block;">
                                    Hapus
                                 </a>
                             </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="5" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data anggota di database.</td>
+                            <td colspan="5" style="text-align: center; padding: 24px; color: #000000; font-weight: 600;">Belum ada data anggota di database.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -84,8 +160,8 @@
         </div>
     </div>
 
-   <!-- ========================================== -->
-    <!-- MODAL POP-UP TAMBAH ANGGOTA BARU (DISAMAKAN DENGAN REGISTER) -->
+    <!-- ========================================== -->
+    <!-- MODAL POP-UP TAMBAH ANGGOTA BARU           -->
     <!-- ========================================== -->
     <div id="modalTambahAnggota" class="custom-modal-overlay" style="display: none;">
         <div class="custom-modal-card">
@@ -170,7 +246,6 @@
             document.getElementById('modalTambahAnggota').style.display = 'none';
         }
 
-        // Script Profil WA
         function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
         function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
         function previewWaImage(e) {
