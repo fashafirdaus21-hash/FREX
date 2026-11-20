@@ -38,9 +38,11 @@
                 <div class="profile-img" id="sidebarAvatarPreview" style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
                     <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
                 </div>
-                <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
+               <h3>
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else (kelas if kelas else '-') }}</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">
+                        {{ biodata.kelas if biodata and biodata.kelas else session.get('kelas', '-') }}
+                    </span>
                 </h3>
             </div>
             
@@ -129,15 +131,48 @@
     </div>
 
     <script>
+        const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}");
+
+        function terapkanAvatarKeSemua(dataUrl) {
+            if (!dataUrl) return;
+            const imgHtml = `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            const sidebarAvatar = document.getElementById('sidebarAvatarPreview');
+            const biodataAvatar = document.getElementById('biodataAvatarDisplay');
+            const modalAvatar = document.getElementById('modalAvatarDisplay');
+
+            if (sidebarAvatar) sidebarAvatar.innerHTML = imgHtml;
+            if (biodataAvatar) biodataAvatar.innerHTML = imgHtml;
+            if (modalAvatar) modalAvatar.innerHTML = imgHtml;
+        }
+
+        function simpanDanPreviewAvatar(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                try {
+                    localStorage.setItem(akunKey, reader.result);
+                } catch (err) {
+                    console.warn("Gagal menyimpan avatar ke localStorage:", err);
+                }
+                terapkanAvatarKeSemua(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const tersimpan = localStorage.getItem(akunKey);
+            if (tersimpan) {
+                terapkanAvatarKeSemua(tersimpan);
+            }
+        });
+
         function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
         function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+
         function previewWaImage(e) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
-            };
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+            if (e.target.files && e.target.files[0]) {
+                simpanDanPreviewAvatar(e.target.files[0]);
+            }
         }
     </script>
 </body>

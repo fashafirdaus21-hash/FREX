@@ -94,10 +94,22 @@ def login():
         conn.close()
 
         if user:
+            kelas_user = ''
+            if user['role'] in ['siswa', 'user']:
+                conn_k = buat_koneksi()
+                cursor_k = conn_k.cursor(dictionary=True)
+                cursor_k.execute("SELECT kelas FROM anggota WHERE id_anggota = %s", (user['id_user'],))
+                agt = cursor_k.fetchone()
+                cursor_k.close()
+                conn_k.close()
+                if agt and agt.get('kelas'):
+                    kelas_user = agt['kelas']
+
             session['id_user'] = user['id_user']
             session['username'] = user['username']
             session['nama'] = user['nama']
             session['role'] = user['role']
+            session['kelas'] = kelas_user
 
             if user['role'] == 'admin':
                 return redirect(url_for('admin_dashboard'))

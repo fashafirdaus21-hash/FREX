@@ -17,7 +17,9 @@
                 </div>
                 <h3>
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else '-' }}</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">
+                        {{ biodata.kelas if biodata and biodata.kelas else session.get('kelas', '-') }}
+                    </span>
                 </h3>
             </div>
             
@@ -177,6 +179,41 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
+       const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}");
+
+        function terapkanAvatarKeSemua(dataUrl) {
+            if (!dataUrl) return;
+            const imgHtml = `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            const sidebarAvatar = document.getElementById('sidebarAvatarPreview');
+            const biodataAvatar = document.getElementById('biodataAvatarDisplay');
+            const modalAvatar = document.getElementById('modalAvatarDisplay');
+
+            if (sidebarAvatar) sidebarAvatar.innerHTML = imgHtml;
+            if (biodataAvatar) biodataAvatar.innerHTML = imgHtml;
+            if (modalAvatar) modalAvatar.innerHTML = imgHtml;
+        }
+
+        function simpanDanPreviewAvatar(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                try {
+                    localStorage.setItem(akunKey, reader.result);
+                } catch (err) {
+                    console.warn("Gagal menyimpan avatar ke localStorage:", err);
+                }
+                terapkanAvatarKeSemua(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const tersimpan = localStorage.getItem(akunKey);
+            if (tersimpan) {
+                terapkanAvatarKeSemua(tersimpan);
+            }
+        });
+
         function openEditBiodataModal() {
             document.getElementById('inputNama').value = document.getElementById('valNama').innerText.replace(': ', '').trim();
             document.getElementById('inputEmail').value = document.getElementById('valEmail').innerText.replace(': ', '').trim();
@@ -189,35 +226,31 @@
         }
 
         function previewBiodataImage(e) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('biodataAvatarDisplay').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-            };
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+            if (e.target.files && e.target.files[0]) {
+                simpanDanPreviewAvatar(e.target.files[0]);
+            }
         }
 
         function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
         function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
-        
+
         function previewWaImage(e) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
-            };
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+            if (e.target.files && e.target.files[0]) {
+                simpanDanPreviewAvatar(e.target.files[0]);
+            }
         }
 
-        function editAbout() { 
-            let v = prompt("Status baru:", document.getElementById('textAbout').innerText); 
-            if(v) document.getElementById('textAbout').innerText = v; 
+        function editAbout() {
+            let v = prompt("Status baru:", document.getElementById('textAbout').innerText);
+            if (v) document.getElementById('textAbout').innerText = v;
         }
-        
-        function editName() { 
-            let v = prompt("Nama baru:", document.getElementById('textName').innerText); 
-            if(v) document.getElementById('textName').innerText = v; 
+
+        function editName() {
+            let v = prompt("Nama baru:", document.getElementById('textName').innerText);
+            if (v) document.getElementById('textName').innerText = v;
         }
+
+
     </script>
 </body>
 </html>
