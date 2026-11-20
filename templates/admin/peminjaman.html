@@ -102,15 +102,16 @@
             </div>
 
             <!-- Tabel Daftar Orang yang Meminjam -->
-            <div class="table-box-container" style="border: 2px solid #0d233a;">
-                <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
+            <div class="table-box-container" style="border: 2px solid #0d233a; overflow-x: auto;">
+
+               <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">
                     <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Pengajuan dan Peminjaman</h3>
                     
                     <!-- Bilah Pencarian -->
                     <div style="display: flex; align-items: center; background-color: #0d233a; padding: 8px 15px; border-radius: 20px; border: 1.5px solid #0d233a; width: 260px;">
                         <i class="fa-solid fa-magnifying-glass" style="color: #f6c90e; margin-right: 10px; font-size: 14px;"></i>
-                        <input type="text" id="searchPeminjamInput" onkeyup="cariPeminjam()" placeholder="Cari peminjam, ID buku..." style="border: none; background: transparent; color: #ffffff; outline: none; width: 100%; font-size: 14px;">
+                        <input type="text" id="searchPeminjamInput" onkeyup="cariPeminjam()" placeholder="Cari peminjam, judul buku..." style="border: none; background: transparent; color: #ffffff; outline: none; width: 100%; font-size: 14px;">
                     </div>
                 </div>
 
@@ -124,63 +125,22 @@
                             <th>Jatuh Tempo</th>
                             <th>Status</th>
                             <th>Diproses Oleh</th>
-                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for p in peminjaman_list %}
                         <tr class="baris-data-peminjam">
-                            <td style="font-size: 16px; color: #0d233a;">{{ loop.index }}</td>
-                            <td style="font-size: 16px; color: #0d233a; font-weight: bold;">{{ p.id_anggota }}</td>
-                            <td style="font-size: 16px; color: #0d233a;">{{ p.id_buku }}</td>
-                            <td style="font-size: 16px; color: #0d233a;">{{ p.tgl_pinjam }}</td>
-                            <td style="font-size: 16px; color: #0d233a;">{{ p.jatuh_tempo }}</td>
-                            <td>
+                            <td style="text-align: center;">{{ loop.index }}</td>
+                            <td class="nowrap-cell" style="font-weight: bold;">{{ p.id_anggota }}</td>
+                            <td class="judul-buku-cell">{{ p.judul_buku or p.id_buku }}</td>
+                            <td class="nowrap-cell">{{ p.tgl_pinjam }}</td>
+                            <td class="nowrap-cell">{{ p.jatuh_tempo }}</td>
+                            <td class="nowrap-cell" style="text-align: center;">
                                 <span style="background-color: #eab308; color: #0d233a; padding: 6px 12px; border-radius: 10px; font-weight: bold; font-size: 13px; display: inline-block;">
                                     {{ p.status }}
                                 </span>
                             </td>
                             <td style="font-size: 16px; color: #0d233a;">{{ p.diproses_oleh }}</td>
-
-<td>
-    {% if p.status == 'menunggu' %}
-
-    <div style="display:flex; gap:6px;">
-
-        <form method="POST"
-              action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}">
-
-            <button type="submit"
-                    name="aksi"
-                    value="setujui"
-                    style="background:#16a34a; color:white; border:none; padding:7px 10px; border-radius:7px; cursor:pointer;">
-                Setujui
-            </button>
-
-        </form>
-
-        <form method="POST"
-              action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}">
-
-            <button type="submit"
-                    name="aksi"
-                    value="tolak"
-                    style="background:#dc2626; color:white; border:none; padding:7px 10px; border-radius:7px; cursor:pointer;">
-                Tolak
-            </button>
-
-        </form>
-
-    </div>
-
-    {% else %}
-
-    <span style="color:#64748b;">-</span>
-
-    {% endif %}
-</td>
-
-
                         </tr>
                         {% else %}
                         <tr>
@@ -195,8 +155,6 @@
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
 
     <!-- MODAL PROFIL WHATSAPP (TUNGGAL) -->
     <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">

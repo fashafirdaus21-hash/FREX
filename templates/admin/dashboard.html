@@ -110,36 +110,41 @@
                 </div>
             </div>
 
-            <!-- Tabel Data -->
+          <!-- Tabel Data -->
             <div class="table-box-container">
                 <table class="custom-table-admin">
                     <thead>
                         <tr>
+                            <th style="width: 60px; text-align: center;">No</th>
+                            <th style="width: 120px;">ID Anggota</th>
                             <th>Peminjam</th>
-                            <th>Judul buku</th>
-                            <th>tgl Pinjam</th>
-                            <th>Status</th>
+                            <th>Judul Buku</th>
+                            <th style="width: 150px;">Tgl Pinjam</th>
+                            <th style="width: 140px; text-align: center;">Status</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for t in transaksi_terbaru %}
                         <tr>
-                            <td>{{ t.nama_peminjam }}</td>
+                            <td style="text-align: center;">{{ loop.index }}</td>
+                            <td style="font-weight: bold; white-space: nowrap;">{{ t.id_anggota }}</td>
+                            <td style="font-weight: bold;">{{ t.nama_peminjam }}</td>
                             <td>{{ t.judul }}</td>
-                            <td>{{ t.tgl_pinjam }}</td>
-                            <td>{{ t.status }}</td>
+                            <td style="white-space: nowrap;">{{ t.tgl_pinjam }}</td>
+                            <td style="text-align: center; white-space: nowrap;">
+                                <span style="background-color: #eab308; color: #0d233a; padding: 6px 12px; border-radius: 10px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                    {{ t.status }}
+                                </span>
+                            </td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="4" style="text-align: center; color: #64748b; font-style: italic;">Belum ada data transaksi peminjaman.</td>
+                            <td colspan="6" style="text-align: center; color: #64748b; font-style: italic;">Belum ada data transaksi peminjaman.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-
-        </div>
-    </div>
 
 
     <!-- ========================================== -->
