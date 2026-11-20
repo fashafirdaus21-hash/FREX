@@ -31,7 +31,7 @@ def inject_biodata():
 
         try:
             conn = buat_koneksi()
-            cursor = conn.cursor(dictionary=True)
+            cursor = conn.cursor(dictionary=True, buffered=True)
 
             cursor.execute("""
                 SELECT *
@@ -73,7 +73,7 @@ def signup():
             return redirect(url_for('signup', status='kosong'))
 
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute("SELECT id_user FROM users WHERE username = %s", (username,))
             if cursor.fetchone():
@@ -116,7 +116,7 @@ def login():
         input_password = request.form['password']
 
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute(
             "SELECT * FROM users WHERE username = %s AND password_hash = %s AND is_active = 1",
             (input_username, input_password)
@@ -129,7 +129,7 @@ def login():
             kelas_user = ''
             if user['role'] in ['siswa', 'user']:
                 conn_k = buat_koneksi()
-                cursor_k = conn_k.cursor(dictionary=True)
+                cursor_k = conn_k.cursor(dictionary=True, buffered=True)
                 cursor_k.execute("SELECT kelas FROM anggota WHERE id_anggota = %s", (user['id_user'],))
                 agt = cursor_k.fetchone()
                 cursor_k.close()
@@ -163,7 +163,7 @@ def login():
 def admin_dashboard():
     if session.get('role') == 'admin':
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
 
         cursor.execute("SELECT SUM(jumlah_total) as total FROM buku")
         res_buku = cursor.fetchone()
@@ -223,7 +223,7 @@ def admin_dashboard():
 def admin_kelolabuku():
     if session.get('role') == 'admin':
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
 
         if request.method == 'POST':
             judul = request.form['judul']
@@ -251,15 +251,15 @@ def admin_kelolabuku():
                 id_kategori = cursor.lastrowid
 
             cursor.execute("""
-    INSERT INTO buku (
-        judul, cover, penulis, penerbit, id_kategori,
-        tahun_terbit, jumlah_total, jumlah_tersedia
-    )
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-""", (
-    judul, nama_file_cover, penulis, penerbit,
-    id_kategori, tahun_terbit, jumlah, jumlah
-))
+                INSERT INTO buku (
+                    judul, cover, penulis, penerbit, id_kategori,
+                    tahun_terbit, jumlah_total, jumlah_tersedia
+                )
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """, (
+                judul, nama_file_cover, penulis, penerbit,
+                id_kategori, tahun_terbit, jumlah, jumlah
+            ))
             conn.commit()
 
             cursor.close()
@@ -284,7 +284,7 @@ def admin_kelolabuku():
 def admin_peminjaman():
     if session.get('role') == 'admin':
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
 
         if request.method == 'POST':
             id_anggota = request.form['id_anggota']
@@ -331,10 +331,8 @@ def admin_peminjaman():
     return redirect(url_for('login'))
 
 
-
 @app.route('/admin/proses_pengajuan/<int:id_peminjaman>', methods=['POST'])
 def admin_proses_pengajuan(id_peminjaman):
-
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
 
@@ -342,7 +340,7 @@ def admin_proses_pengajuan(id_peminjaman):
     admin_id = session.get('id_user')
 
     conn = buat_koneksi()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(dictionary=True, buffered=True)
 
     try:
         cursor.execute("""
@@ -364,9 +362,7 @@ def admin_proses_pengajuan(id_peminjaman):
             conn.rollback()
             return redirect(url_for('admin_peminjaman'))
 
-        # JIKA ADMIN MENYETUJUI
         if aksi == 'setujui':
-
             if pengajuan['jumlah_tersedia'] <= 0:
                 conn.rollback()
                 return redirect(url_for(
@@ -414,9 +410,7 @@ def admin_proses_pengajuan(id_peminjaman):
                 WHERE id_peminjaman = %s
             """, (admin_id, lama_pinjam, id_peminjaman))
 
-        # JIKA ADMIN MENOLAK
         elif aksi == 'tolak':
-
             cursor.execute("""
                 UPDATE peminjaman
                 SET
@@ -442,61 +436,75 @@ def admin_proses_pengajuan(id_peminjaman):
     return redirect(url_for('admin_peminjaman'))
 
 
-
 @app.route('/admin/pengembalian', methods=['GET', 'POST'])
 def admin_pengembalian():
     if session.get('role') == 'admin':
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
 
-        if request.method == 'POST':
-            id_peminjaman = request.form['id_peminjaman']
-            tgl_kembali = request.form['tgl_kembali']
-            kondisi_buku = request.form['kondisi_buku']
-            total_denda = float(request.form.get('denda', 0))
-            admin_id = session.get('id_user')
+        try:
+            if request.method == 'POST':
+                id_peminjaman = request.form['id_peminjaman']
+                tgl_kembali = request.form['tgl_kembali']
+                kondisi_buku = request.form['kondisi_buku']
+                total_denda = float(request.form.get('denda', 0))
+                admin_id = session.get('id_user')
 
-            cursor.execute("SELECT * FROM peminjaman WHERE id_peminjaman = %s", (id_peminjaman,))
-            peminjaman = cursor.fetchone()
+                cursor.execute("SELECT * FROM peminjaman WHERE id_peminjaman = %s", (id_peminjaman,))
+                peminjaman = cursor.fetchone()
 
-            if peminjaman:
-                id_buku = peminjaman['id_buku']
+                if peminjaman:
+                    id_buku = peminjaman['id_buku']
 
-                denda_telat = total_denda if kondisi_buku == 'Baik' else 0
-                denda_rusak = total_denda if kondisi_buku != 'Baik' else 0
+                    denda_telat = total_denda if kondisi_buku == 'Baik' else 0
+                    denda_rusak = total_denda if kondisi_buku != 'Baik' else 0
 
-                cursor.execute("""
-                    INSERT INTO pengembalian (id_peminjaman, tgl_kembali, kondisi_buku, denda_telat, denda_rusak, diproses_oleh)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (id_peminjaman, tgl_kembali, 'baik' if kondisi_buku=='Baik' else ('rusak ringan' if kondisi_buku=='Rusak Ringan' else 'rusak berat'), denda_telat, denda_rusak, admin_id))
+                    kondisi_enum = (
+                        'baik' if kondisi_buku == 'Baik'
+                        else ('rusak ringan' if kondisi_buku == 'Rusak Ringan' else 'rusak berat')
+                    )
 
-                cursor.execute("UPDATE peminjaman SET status = 'dikembalikan' WHERE id_peminjaman = %s", (id_peminjaman,))
-                cursor.execute("UPDATE buku SET jumlah_tersedia = jumlah_tersedia + 1 WHERE id_buku = %s", (id_buku,))
+                    cursor.execute("""
+                        INSERT INTO pengembalian (id_peminjaman, tgl_kembali, kondisi_buku, denda_telat, denda_rusak, diproses_oleh)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (id_peminjaman, tgl_kembali, kondisi_enum, denda_telat, denda_rusak, admin_id))
 
-                conn.commit()
+                    cursor.execute("UPDATE peminjaman SET status = 'dikembalikan' WHERE id_peminjaman = %s", (id_peminjaman,))
+                    cursor.execute("UPDATE buku SET jumlah_tersedia = jumlah_tersedia + 1 WHERE id_buku = %s", (id_buku,))
 
+                    conn.commit()
+
+                return redirect(url_for('admin_pengembalian'))
+
+            cursor.execute("SELECT * FROM pengaturan")
+            pengaturan_rows = cursor.fetchall()
+            settings = {row['kunci']: row['nilai'] for row in pengaturan_rows}
+
+            cursor.execute("""
+                SELECT peminjaman.*,
+                       anggota.nama_lengkap AS nama_anggota,
+                       buku.judul
+                FROM peminjaman
+                JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
+                JOIN buku ON peminjaman.id_buku = buku.id_buku
+                WHERE peminjaman.status = 'dipinjam'
+                ORDER BY peminjaman.id_peminjaman DESC
+            """)
+            peminjaman_aktif = cursor.fetchall()
+
+            return render_template('admin/pengembalian.html',
+                                   settings=settings,
+                                   peminjaman_aktif=peminjaman_aktif)
+
+        except Exception as e:
+            conn.rollback()
+            print("Gagal proses pengembalian:", e)
+            return f"Terjadi kesalahan pada proses pengembalian: {e}", 500
+
+        finally:
             cursor.close()
             conn.close()
-            return redirect(url_for('admin_pengembalian'))
 
-        cursor.execute("SELECT * FROM pengaturan")
-        pengaturan_rows = cursor.fetchall()
-        settings = {row['kunci']: row['nilai'] for row in pengaturan_rows}
-
-        cursor.execute("""
-            SELECT peminjaman.*, anggota.nama_lengkap as nama_peminjam, buku.judul
-            FROM peminjaman
-            JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
-            JOIN buku ON peminjaman.id_buku = buku.id_buku
-            ORDER BY peminjaman.id_peminjaman DESC LIMIT 5
-        """)
-
-        cursor.close()
-        conn.close()
-
-        return render_template('admin/pengembalian.html',
-                               settings=settings,
-                               peminjaman_aktif=peminjaman_aktif)
     return redirect(url_for('login'))
 
 
@@ -504,7 +512,7 @@ def admin_pengembalian():
 def admin_biodataagt():
     if session.get('role') == 'admin':
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         cursor.execute("""
             SELECT anggota.*, users.username
             FROM anggota
@@ -530,7 +538,7 @@ def tambah_anggota():
         no_hp = no_hp_raw if no_hp_raw else None
 
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         try:
             cursor.execute(
                 """INSERT INTO users (username, email, password_hash, nama, role, is_active)
@@ -559,7 +567,7 @@ def tambah_anggota():
 def hapus_anggota(id_anggota):
     if session.get('role') == 'admin':
         conn = buat_koneksi()
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         try:
             cursor.execute("DELETE FROM users WHERE id_user = %s", (id_anggota,))
             conn.commit()
@@ -581,7 +589,7 @@ def hapus_anggota(id_anggota):
 def user_dashboard():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         user_id = session.get('id_user')
 
         cursor.execute("SELECT COUNT(*) as total FROM peminjaman WHERE id_anggota = %s AND status = 'dipinjam'", (user_id,))
@@ -598,12 +606,11 @@ def user_dashboard():
     return redirect(url_for('login'))
 
 
-
 @app.route('/user/databuku')
 def user_databuku():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
 
         user_id = session.get('id_user')
 
@@ -664,7 +671,6 @@ def user_databuku():
 
 @app.route('/user/ajukan_peminjaman', methods=['POST'])
 def user_ajukan_peminjaman():
-
     if session.get('role') not in ['siswa', 'user']:
         return redirect(url_for('login'))
 
@@ -675,10 +681,9 @@ def user_ajukan_peminjaman():
         return redirect(url_for('user_databuku'))
 
     conn = buat_koneksi()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(dictionary=True, buffered=True)
 
     try:
-        # PERIKSA KETERSEDIAAN BUKU
         cursor.execute("""
             SELECT jumlah_tersedia
             FROM buku
@@ -694,7 +699,6 @@ def user_ajukan_peminjaman():
                 pinjam='stok_habis'
             ))
 
-        # PERIKSA PENGAJUAN ATAU PEMINJAMAN YANG MASIH AKTIF
         cursor.execute("""
             SELECT id_peminjaman
             FROM peminjaman
@@ -713,7 +717,6 @@ def user_ajukan_peminjaman():
                 pinjam='duplikat'
             ))
 
-        # AMBIL LAMA MASA PEMINJAMAN
         cursor.execute("""
             SELECT nilai
             FROM pengaturan
@@ -727,7 +730,6 @@ def user_ajukan_peminjaman():
             if pengaturan else 7
         )
 
-        # SIMPAN PENGAJUAN DENGAN STATUS MENUNGGU
         cursor.execute("""
             INSERT INTO peminjaman (
                 id_anggota,
@@ -768,19 +770,18 @@ def user_ajukan_peminjaman():
         conn.close()
 
 
-
 @app.route('/user/peminjaman')
 def user_peminjaman():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         user_id = session.get('id_user')
         cursor.execute("""
             SELECT peminjaman.*, buku.judul, buku.penulis
             FROM peminjaman
             JOIN buku ON peminjaman.id_buku = buku.id_buku
-           WHERE peminjaman.id_anggota = %s
-AND peminjaman.status IN ('menunggu', 'dipinjam')
+            WHERE peminjaman.id_anggota = %s
+            AND peminjaman.status IN ('menunggu', 'dipinjam')
         """, (user_id,))
         peminjaman_list = cursor.fetchall()
         cursor.close()
@@ -793,7 +794,7 @@ AND peminjaman.status IN ('menunggu', 'dipinjam')
 def user_riwayat():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         user_id = session.get('id_user')
         cursor.execute("""
             SELECT peminjaman.*, buku.judul, buku.penulis
@@ -813,7 +814,7 @@ def user_riwayat():
 def user_biodata():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
-        cursor = conn.cursor(dictionary=True)
+        cursor = conn.cursor(dictionary=True, buffered=True)
         user_id = session.get('id_user')
 
         cursor.execute("SELECT * FROM anggota WHERE id_anggota = %s", (user_id,))
@@ -849,7 +850,7 @@ def user_update_biodata():
             return redirect(url_for('user_biodata'))
 
         conn = buat_koneksi()
-        cursor = conn.cursor()
+        cursor = conn.cursor(buffered=True)
         try:
             cursor.execute(
                 "UPDATE anggota SET nama_lengkap = %s, email = %s, no_hp = %s WHERE id_anggota = %s",
