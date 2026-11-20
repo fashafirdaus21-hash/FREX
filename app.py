@@ -21,6 +21,38 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+@app.context_processor
+def inject_biodata():
+    biodata = None
+
+    if session.get('role') in ['siswa', 'user']:
+        conn = None
+        cursor = None
+
+        try:
+            conn = buat_koneksi()
+            cursor = conn.cursor(dictionary=True)
+
+            cursor.execute("""
+                SELECT *
+                FROM anggota
+                WHERE id_anggota = %s
+            """, (session.get('id_user'),))
+
+            biodata = cursor.fetchone()
+
+        except Exception as e:
+            print(f"Gagal mengambil profil: {e}")
+
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+
+    return {'biodata': biodata}
+
+
 @app.route('/')
 def index():
     return render_template('index.html')

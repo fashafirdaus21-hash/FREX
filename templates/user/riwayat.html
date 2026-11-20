@@ -40,7 +40,10 @@
     <aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
         <div>
             <!-- Profil Header -->
-            <div class="sidebar-profile" style="padding: 25px 20px; text-align: center; cursor: pointer;">
+           <div class="sidebar-profile"
+     onclick="openWaProfile()"
+     title="Klik untuk lihat profil"
+     style="padding: 25px 20px; text-align: center; cursor: pointer;">
                 <div class="profile-img" id="sidebarAvatarPreview" style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
                     <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
                 </div>
@@ -126,6 +129,61 @@
         </div>
     </div>
 
+
+
+<!-- MODAL PROFIL WHATSAPP -->
+<div id="waProfileModal" class="modal-overlay-wa">
+    <div class="modal-card-wa">
+        <div class="wa-modal-header">
+            <h3>Profil User</h3>
+            <button class="wa-close-btn" onclick="closeWaProfile()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="wa-body">
+            <div class="wa-avatar-container" id="modalAvatarDisplay">
+                <i class="fa-solid fa-user-graduate"
+                   style="font-size: 60px; color: #8696a0;"></i>
+            </div>
+
+            <label for="waUploadInput" class="wa-upload-label">
+                <i class="fa-solid fa-camera"></i> Ganti Foto Profil
+            </label>
+
+            <input type="file"
+                   id="waUploadInput"
+                   accept="image/*"
+                   style="display: none;"
+                   onchange="previewWaImage(event)">
+
+            <div class="wa-info-group">
+                <div class="wa-info-label">About</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value" id="textAbout">
+                        Semangat Belajar 📚
+                    </span>
+                    <i class="fa-solid fa-pen wa-edit-icon"
+                       onclick="editAbout()"></i>
+                </div>
+            </div>
+
+            <div class="wa-info-group">
+                <div class="wa-info-label">Name</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value" id="textName">
+                        {{ session.get('nama', 'User') }}
+                    </span>
+                    <i class="fa-solid fa-pen wa-edit-icon"
+                       onclick="editName()"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
    <script>
         let statusAktif = 'semua';
 
@@ -180,6 +238,66 @@ const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('user
         });
 
         
+// MENYIMPAN DAN MENGUBAH FOTO PROFIL
+function simpanDanPreviewAvatar(file) {
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function () {
+        try {
+            localStorage.setItem(akunKey, reader.result);
+        } catch (err) {
+            console.warn("Gagal menyimpan avatar:", err);
+        }
+
+        terapkanAvatarKeSemua(reader.result);
+    };
+
+    reader.readAsDataURL(file);
+}
+
+// MEMBUKA POPUP PROFIL
+function openWaProfile() {
+    document.getElementById('waProfileModal').style.display = 'flex';
+}
+
+// MENUTUP POPUP PROFIL
+function closeWaProfile() {
+    document.getElementById('waProfileModal').style.display = 'none';
+}
+
+// MENGGANTI FOTO PROFIL
+function previewWaImage(e) {
+    if (e.target.files && e.target.files[0]) {
+        simpanDanPreviewAvatar(e.target.files[0]);
+    }
+}
+
+// MENGUBAH ABOUT
+function editAbout() {
+    let v = prompt(
+        "Status baru:",
+        document.getElementById('textAbout').innerText
+    );
+
+    if (v) {
+        document.getElementById('textAbout').innerText = v;
+    }
+}
+
+// MENGUBAH NAMA
+function editName() {
+    let v = prompt(
+        "Nama baru:",
+        document.getElementById('textName').innerText
+    );
+
+    if (v) {
+        document.getElementById('textName').innerText = v;
+    }
+}
+
     </script>
 </body>
 </html>
