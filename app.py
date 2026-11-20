@@ -21,19 +21,6 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-def buat_id_anggota_otomatis(cursor):
-    cursor.execute("""
-        SELECT MAX(CAST(id_user AS UNSIGNED)) AS max_id
-        FROM users
-        WHERE id_user REGEXP '^[0-9]+$'
-        AND CAST(id_user AS UNSIGNED) >= 1001
-    """)
-    row = cursor.fetchone()
-    if row and row['max_id']:
-        return str(int(row['max_id']) + 1)
-    return "1001"
-
-
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -42,42 +29,43 @@ def index():
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
-        nama_raw = request.form.get('nama') or request.form.get('username') or ''
-        nama = nama_raw.strip()
+        username = request.form.get('username', '').strip()
+        nama = request.form.get('nama', '').strip()
+        kelas = request.form.get('kelas', '').strip()
         email = request.form.get('email', '').strip()
         password = request.form.get('password', '')
+        no_hp_raw = request.form.get('no_hp', '').strip()
+        no_hp = no_hp_raw if no_hp_raw else None
 
-        if not nama or not email or not password:
+        if not username or not nama or not kelas or not email or not password:
             return redirect(url_for('signup', status='kosong'))
 
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
         try:
-            # Cek apakah email sudah terdaftar di tabel users
-            cursor.execute("SELECT id_user FROM users WHERE email = %s", (email,))
-            sudah_ada = cursor.fetchone()
-            if sudah_ada:
+            cursor.execute("SELECT id_user FROM users WHERE username = %s", (username,))
+            if cursor.fetchone():
                 cursor.close()
                 conn.close()
                 return redirect(url_for('signup', status='duplikat'))
 
-            id_baru = buat_id_anggota_otomatis(cursor)
+            cursor.execute(
+                """INSERT INTO users (username, email, password_hash, nama, role, is_active)
+                   VALUES (%s, %s, %s, %s, 'siswa', 1)""",
+                (username, email, password, nama)
+            )
+            id_user_baru = cursor.lastrowid
 
             cursor.execute(
-                """INSERT INTO users (id_user, email, password_hash, nama, role, is_active)
-                   VALUES (%s, %s, %s, %s, 'siswa', 1)""",
-                (id_baru, email, password, nama)
-            )
-            cursor.execute(
-                """INSERT INTO anggota (id_anggota, nama_lengkap, email, status_keanggotaan, tanggal_bergabung)
-                   VALUES (%s, %s, %s, 'aktif', CURDATE())""",
-                (id_baru, nama, email)
+                """INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, no_hp, status_keanggotaan, tanggal_bergabung)
+                   VALUES (%s, %s, %s, %s, %s, 'aktif', CURDATE())""",
+                (id_user_baru, nama, kelas, email, no_hp)
             )
             conn.commit()
             cursor.close()
             conn.close()
 
-            return redirect(url_for('index', daftar='sukses', id_login=id_baru, nama=nama))
+            return redirect(url_for('index', daftar='sukses', username=username, nama=nama))
         except Exception as e:
             conn.rollback()
             cursor.close()
@@ -92,14 +80,14 @@ def signup():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
-        input_id = request.form['username'].strip()
+        input_username = request.form['username'].strip()
         input_password = request.form['password']
 
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
         cursor.execute(
-            "SELECT * FROM users WHERE id_user = %s AND password_hash = %s AND is_active = 1",
-            (input_id, input_password)
+            "SELECT * FROM users WHERE username = %s AND password_hash = %s AND is_active = 1",
+            (input_username, input_password)
         )
         user = cursor.fetchone()
         cursor.close()
@@ -107,6 +95,7 @@ def login():
 
         if user:
             session['id_user'] = user['id_user']
+            session['username'] = user['username']
             session['nama'] = user['nama']
             session['role'] = user['role']
 
@@ -117,7 +106,7 @@ def login():
             else:
                 return redirect(url_for('user_dashboard'))
         else:
-            return "Login Gagal! ID atau Password salah. <a href='/login'>Coba lagi</a>"
+            return "Login Gagal! Username atau Password salah. <a href='/login'>Coba lagi</a>"
 
     return render_template('index.html')
 
@@ -346,7 +335,12 @@ def admin_biodataagt():
     if session.get('role') == 'admin':
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM anggota ORDER BY CAST(id_anggota AS UNSIGNED) DESC, id_anggota DESC")
+        cursor.execute("""
+            SELECT anggota.*, users.username
+            FROM anggota
+            JOIN users ON anggota.id_anggota = users.id_user
+            ORDER BY anggota.id_anggota DESC
+        """)
         anggota_list = cursor.fetchall()
         cursor.close()
         conn.close()
@@ -357,26 +351,28 @@ def admin_biodataagt():
 @app.route('/admin/tambah_anggota', methods=['POST'])
 def tambah_anggota():
     if session.get('role') == 'admin':
+        username = request.form['username'].strip()
         nama = request.form['nama'].strip()
         email = request.form['email'].strip()
         password = request.form['password']
         kelas = request.form.get('kelas', '-').strip()
-        no_hp = request.form.get('no_hp', '').strip()
+        no_hp_raw = request.form.get('no_hp', '').strip()
+        no_hp = no_hp_raw if no_hp_raw else None
 
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
         try:
-            id_baru = buat_id_anggota_otomatis(cursor)
-
             cursor.execute(
-                """INSERT INTO users (id_user, email, password_hash, nama, role, is_active)
+                """INSERT INTO users (username, email, password_hash, nama, role, is_active)
                    VALUES (%s, %s, %s, %s, 'siswa', 1)""",
-                (id_baru, email, password, nama)
+                (username, email, password, nama)
             )
+            id_user_baru = cursor.lastrowid
+
             cursor.execute(
                 """INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, no_hp, status_keanggotaan, tanggal_bergabung)
                    VALUES (%s, %s, %s, %s, %s, 'aktif', CURDATE())""",
-                (id_baru, nama, kelas, email, no_hp)
+                (id_user_baru, nama, kelas, email, no_hp)
             )
             conn.commit()
         except Exception as e:
@@ -389,7 +385,7 @@ def tambah_anggota():
     return redirect(url_for('login'))
 
 
-@app.route('/admin/hapus_anggota/<id_anggota>')
+@app.route('/admin/hapus_anggota/<int:id_anggota>')
 def hapus_anggota(id_anggota):
     if session.get('role') == 'admin':
         conn = buat_koneksi()

@@ -259,6 +259,20 @@
             navigator.clipboard.writeText("+62 856-9571-4264"); 
             alert("Nomor disalin!"); 
         }
+
+// Tambahkan di dalam tag <script> bagian bawah:
+        const searchInput = document.querySelector('.input-box-admin input[type="text"]');
+        if (searchInput) {
+            searchInput.addEventListener('input', function () {
+                const keyword = this.value.toLowerCase().trim();
+                const rows = document.querySelectorAll('#tableBuku tbody tr');
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(keyword) ? '' : 'none';
+                });
+            });
+        }
+
     </script>
 </body>
 </html>

@@ -137,8 +137,9 @@
                     <tbody>
                         {% for a in anggota_list %}
                         <tr>
+                            <!-- Pada baris <tbody> di dalam <table id="tableAnggota"> -->
                             <td><span class="badge-id-grid">{{ a.id_anggota }}</span></td>
-                            <td style="font-weight: 700;">{{ a.nama_lengkap or a.id_anggota }}</td>
+                            <td style="font-weight: 700;">{{ a.nama_lengkap or a.username or '-' }}</td>
                             <td style="font-weight: 600;">{{ a.kelas or '-' }}</td>
                             <td style="font-weight: 600;">{{ a.no_hp or '-' }}</td>
                             <td>

@@ -41,7 +41,7 @@
                 <p class="text-xs md:text-sm text-gray-500 font-medium">Create your account to start exploring</p>
             </div>
 
-            <!-- Form Registrasi -->
+           <!-- Form Registrasi -->
             <form action="/signup" method="POST" class="space-y-4">
                 
                 <!-- Input Username -->
@@ -54,12 +54,42 @@
                     </div>
                 </div>
 
+                <!-- [TAMBAHKAN DI SINI] Input Nama Lengkap -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1">Nama Lengkap</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-gray-400">🪪</span>
+                        <input type="text" name="nama" placeholder="Enter your full name" required
+                            class="w-full pl-10 pr-4 py-3 bg-gray-100 text-gray-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    </div>
+                </div>
+
+                <!-- [TAMBAHKAN DI SINI] Input Kelas -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1">Kelas</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-gray-400">🏫</span>
+                        <input type="text" name="kelas" placeholder="Enter your class" required
+                            class="w-full pl-10 pr-4 py-3 bg-gray-100 text-gray-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    </div>
+                </div>
+
                 <!-- Input Email -->
                 <div>
                     <label class="block text-xs font-bold text-gray-800 mb-1">Email Address</label>
                     <div class="relative flex items-center">
                         <span class="absolute left-3.5 text-gray-400">✉️</span>
                         <input type="email" name="email" placeholder="you@gmail.com" required
+                            class="w-full pl-10 pr-4 py-3 bg-gray-100 text-gray-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400">
+                    </div>
+                </div>
+
+                <!-- [TAMBAHKAN DI SINI] Input No. HP (Opsional, tanpa 'required') -->
+                <div>
+                    <label class="block text-xs font-bold text-gray-800 mb-1">No. HP (Opsional)</label>
+                    <div class="relative flex items-center">
+                        <span class="absolute left-3.5 text-gray-400">📱</span>
+                        <input type="text" name="no_hp" placeholder="08xxxxxxxxxx (optional)"
                             class="w-full pl-10 pr-4 py-3 bg-gray-100 text-gray-800 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-yellow-400">
                     </div>
                 </div>
@@ -105,7 +135,7 @@
             const notifEl = document.getElementById("notifError");
 
             if (status === "duplikat") {
-                if (pesanEl) pesanEl.textContent = "Akun sudah terdaftar, ganti yang lain.";
+                if (pesanEl) pesanEl.textContent = "Username sudah digunakan, silakan ganti yang lain.";
                 if (notifEl) notifEl.classList.remove("hidden");
                 window.history.replaceState({}, document.title, window.location.pathname);
             } else if (status === "kosong") {

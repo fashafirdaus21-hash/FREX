@@ -5,8 +5,9 @@ USE db_perpustakaan;
 
 -- 2. Tabel USERS
 CREATE TABLE IF NOT EXISTS users (
-    id_user VARCHAR(50) PRIMARY KEY,
-    email VARCHAR(100) UNIQUE NOT NULL,
+    id_user INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     nama VARCHAR(100) NULL,
     role ENUM('siswa', 'admin', 'kepsek', 'programmer') NOT NULL,
@@ -17,7 +18,7 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- 3. Tabel ANGGOTA
 CREATE TABLE IF NOT EXISTS anggota (
-    id_anggota VARCHAR(50) PRIMARY KEY,
+    id_anggota INT PRIMARY KEY,
     nama_lengkap VARCHAR(100) NULL,
     kelas VARCHAR(50) NULL,
     email VARCHAR(100) NULL,
@@ -52,12 +53,12 @@ CREATE TABLE IF NOT EXISTS buku (
 -- 6. Tabel PEMINJAMAN
 CREATE TABLE IF NOT EXISTS peminjaman (
     id_peminjaman INT AUTO_INCREMENT PRIMARY KEY,
-    id_anggota VARCHAR(50) NOT NULL,
+    id_anggota INT NOT NULL,
     id_buku INT NOT NULL,
     tgl_pinjam DATE NOT NULL,
     jatuh_tempo DATE NOT NULL,
     status ENUM('menunggu', 'dipinjam', 'dikembalikan', 'ditolak') DEFAULT 'menunggu',
-    diproses_oleh VARCHAR(50) NULL,
+    diproses_oleh INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_peminjaman_anggota FOREIGN KEY (id_anggota) REFERENCES anggota(id_anggota) ON DELETE RESTRICT ON UPDATE CASCADE,
     CONSTRAINT fk_peminjaman_buku FOREIGN KEY (id_buku) REFERENCES buku(id_buku) ON DELETE RESTRICT ON UPDATE CASCADE,
@@ -72,7 +73,7 @@ CREATE TABLE IF NOT EXISTS pengembalian (
     kondisi_buku ENUM('baik', 'rusak ringan', 'rusak berat') NOT NULL,
     denda_telat DECIMAL(10,2) DEFAULT 0.00,
     denda_rusak DECIMAL(10,2) DEFAULT 0.00,
-    diproses_oleh VARCHAR(50) NULL,
+    diproses_oleh INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_pengembalian_peminjaman FOREIGN KEY (id_peminjaman) REFERENCES peminjaman(id_peminjaman) ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT fk_pengembalian_admin FOREIGN KEY (diproses_oleh) REFERENCES users(id_user) ON DELETE SET NULL ON UPDATE CASCADE
@@ -103,16 +104,16 @@ INSERT INTO kategori (id_kategori, nama_kategori) VALUES
 (5, 'Novel'),
 (6, 'Sejarah');
 
-INSERT INTO users (id_user, email, password_hash, nama, role, is_active) VALUES
-('Andika0909', 'admin@sekolah.sch.id', 'Lasut9926', 'Andika', 'admin', 1),
-('Ajijah0909', 'ajijah@sekolah.sch.id', 'password123', 'Ajijah', 'admin', 1),
-('KEP01', 'kepsek@sekolah.sch.id', 'hash_password_kepsek', 'Kepala Sekolah', 'kepsek', 1),
-('1001', 'budi@sekolah.sch.id', 'hash_password_siswa', 'Budi Santoso', 'siswa', 1),
-('1002', 'siti@sekolah.sch.id', 'hash_password_siswa', 'Siti Rahma', 'siswa', 1);
+INSERT INTO users (id_user, username, email, password_hash, nama, role, is_active) VALUES
+(1, 'Andika0909', 'admin@sekolah.sch.id', 'Lasut9926', 'Andika', 'admin', 1),
+(2, 'Ajijah0909', 'ajijah@sekolah.sch.id', 'password123', 'Ajijah', 'admin', 1),
+(3, 'KEP01', 'kepsek@sekolah.sch.id', 'hash_password_kepsek', 'Kepala Sekolah', 'kepsek', 1),
+(4, '1001', 'budi@sekolah.sch.id', 'hash_password_siswa', 'Budi Santoso', 'siswa', 1),
+(5, '1002', 'siti@sekolah.sch.id', 'hash_password_siswa', 'Siti Rahma', 'siswa', 1);
 
 INSERT INTO anggota (id_anggota, nama_lengkap, kelas, email, no_hp, status_keanggotaan, tanggal_bergabung, masa_berlaku) VALUES
-('1001', 'Budi Santoso', 'RS-3', 'budi@sekolah.sch.id', '081234567890', 'aktif', '2026-01-10', '2027-01-10'),
-('1002', 'Siti Rahma', 'RT-1', 'siti@sekolah.sch.id', '089876543210', 'aktif', '2026-01-10', '2027-01-10');
+(4, 'Budi Santoso', 'RS-3', 'budi@sekolah.sch.id', '081234567890', 'aktif', '2026-01-10', '2027-01-10'),
+(5, 'Siti Rahma', 'RT-1', 'siti@sekolah.sch.id', '089876543210', 'aktif', '2026-01-10', '2027-01-10');
 
 INSERT INTO buku (id_buku, judul, cover, penulis, id_kategori, tahun_terbit, jumlah_total, jumlah_tersedia) VALUES
 (1, 'Fisika Dasar', 'fisika.jpg', 'Halliday & Resnick', 1, 2014, 5, 5),
