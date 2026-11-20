@@ -26,7 +26,7 @@
                 </div>
                 <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else (kelas if kelas else '-') }}</span>
                 </h3>
             </div>
             

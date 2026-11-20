@@ -17,7 +17,7 @@
                 </div>
                 <h3>
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else '-' }}</span>
                 </h3>
             </div>
             
@@ -131,8 +131,8 @@
                         <input type="email" name="email" id="inputEmail" required>
                     </div>
                     <div class="modal-form-group">
-                        <label>No. Telepon</label>
-                        <input type="text" name="telepon" id="inputTelepon" required>
+                        <label>No. Telepon (Opsional)</label>
+                        <input type="text" name="telepon" id="inputTelepon">
                     </div>
 
                     <div class="modal-edit-footer">

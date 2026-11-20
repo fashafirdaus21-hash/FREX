@@ -46,7 +46,7 @@
                 </div>
                 <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else (kelas if kelas else '-') }}</span>
                 </h3>
             </div>
             
@@ -124,39 +124,35 @@
         </div>
     </div>
 
-    <script>
-        // Fungsi Pencarian & Filter Status Kategori
-        function filterRiwayat() {
-            let input = document.getElementById('searchRiwayat').value.toLowerCase();
-            let cards = document.getElementsByClassName('riwayat-card-custom');
-            
+   <script>
+        let statusAktif = 'semua';
+
+        function terapkanFilterRiwayat() {
+            const input = document.getElementById('searchRiwayat').value.toLowerCase().trim();
+            const cards = document.getElementsByClassName('riwayat-card-custom');
+
             for (let i = 0; i < cards.length; i++) {
-                let judul = cards[i].querySelector('.judul-buku').textContent.toLowerCase();
-                let penulis = cards[i].querySelector('.penulis-buku').textContent.toLowerCase();
-                
-                if (judul.includes(input) || penulis.includes(input)) {
-                    cards[i].style.display = "flex";
-                } else {
-                    cards[i].style.display = "none";
-                }
+                const judul = cards[i].querySelector('.judul-buku').textContent.toLowerCase();
+                const penulis = cards[i].querySelector('.penulis-buku').textContent.toLowerCase();
+                const cardStatus = (cards[i].getAttribute('data-status') || '').toLowerCase();
+
+                const cocokStatus = (statusAktif === 'semua') || cardStatus.includes(statusAktif);
+                const cocokCari = !input || judul.includes(input) || penulis.includes(input);
+
+                cards[i].style.display = (cocokStatus && cocokCari) ? 'flex' : 'none';
             }
         }
 
-        function filterStatus(status, btn) {
-            // Ubah kelas aktif tombol filter
-            let chips = document.getElementsByClassName('filter-chip');
-            for(let c of chips) { c.classList.remove('active'); }
-            btn.classList.add('active');
+        function filterRiwayat() {
+            terapkanFilterRiwayat();
+        }
 
-            let cards = document.getElementsByClassName('riwayat-card-custom');
-            for (let i = 0; i < cards.length; i++) {
-                let cardStatus = cards[i].getAttribute('data-status');
-                if (status === 'semua' || cardStatus.includes(status)) {
-                    cards[i].style.display = "flex";
-                } else {
-                    cards[i].style.display = "none";
-                }
-            }
+        function filterStatus(status, btn) {
+            const chips = document.getElementsByClassName('filter-chip');
+            for (let c of chips) { c.classList.remove('active'); }
+            btn.classList.add('active');
+            statusAktif = status;
+            terapkanFilterRiwayat();
         }
     </script>
 </body>

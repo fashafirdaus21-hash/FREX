@@ -29,9 +29,9 @@
             </ul>
         </div>
 
-        <!-- Tombol Log Out di Pojok Kiri Bawah Sidebar -->
+       <!-- Tombol Log Out di Pojok Kiri Bawah Sidebar -->
         <div class="sidebar-logout-box">
-            <a href="/login" class="btn-logout-sidebar">
+            <a href="/logout" class="btn-logout-sidebar">
                 <i class="fa-solid fa-right-from-bracket"></i> Log out
             </a>
         </div>
@@ -94,7 +94,7 @@
                     <div style="color: #f6c90e; font-size: 30px;"><i class="fa-solid fa-receipt"></i></div>
                     <div class="stat-card-info">
                         <span class="stat-card-title">Total Denda</span>
-                        <span class="stat-card-value">Rp{{ "{:,.0f}".format(total_denda) }}</span>
+                        <span class="stat-card-value">Rp{{ "{:,.0f}".format(total_denda or 0) }}</span>
                     </div>
                 </div>
             </div>

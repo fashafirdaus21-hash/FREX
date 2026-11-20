@@ -40,7 +40,7 @@
                 </div>
                 <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else (kelas if kelas else '-') }}</span>
                 </h3>
             </div>
             
@@ -97,7 +97,7 @@
                     <div style="font-size: 32px;">💰</div>
                     <div class="stat-card-info">
                         <span class="stat-card-title" style="color: #f6c90e; font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Total Denda</span>
-                        <span class="stat-card-value" style="color: #ffffff; font-size: 24px; font-weight: bold;">Rp 0</span>
+                        <span class="stat-card-value" style="color: #ffffff; font-size: 24px; font-weight: bold;">Rp {{ "{:,}".format(total_denda or 0).replace(",", ".") }}</span>
                     </div>
                 </div>
             </div>

@@ -73,7 +73,7 @@
         </div>
 
         <div class="sidebar-logout-box">
-            <a href="/login" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+            <a href="/logout" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
         </div>
     </aside>
 
@@ -267,6 +267,7 @@
                 const keyword = this.value.toLowerCase().trim();
                 const rows = document.querySelectorAll('#tableBuku tbody tr');
                 rows.forEach(row => {
+                    if (row.cells.length <= 1) return;
                     const text = row.textContent.toLowerCase();
                     row.style.display = text.includes(keyword) ? '' : 'none';
                 });

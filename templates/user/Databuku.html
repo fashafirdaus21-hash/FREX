@@ -40,7 +40,7 @@
                 </div>
                 <h3 style="color: #f6c90e; font-size: 15px; margin: 0; font-weight: bold;">
                     {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">KELAS</span>
+                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">{{ biodata.kelas if biodata and biodata.kelas else (kelas if kelas else '-') }}</span>
                 </h3>
             </div>
             
@@ -92,9 +92,15 @@
                                 <td>{{ buku.kategori or '-' }}</td>
                                 <td>{{ buku.tahun_terbit }}</td>
                                 <td>
+                                    {% if buku.jumlah_tersedia > 0 %}
                                     <span style="background-color: #eab308; color: #0d233a; padding: 6px 18px; border-radius: 20px; font-weight: bold; display: inline-block; text-align: center;">
                                         🟢 Tersedia ({{ buku.jumlah_tersedia }}/{{ buku.jumlah_total }})
                                     </span>
+                                    {% else %}
+                                    <span style="background-color: #e2e8f0; color: #475569; padding: 6px 18px; border-radius: 20px; font-weight: bold; display: inline-block; text-align: center;">
+                                        🔴 Habis (0/{{ buku.jumlah_total }})
+                                    </span>
+                                    {% endif %}
                                 </td>
                             </tr>
                             {% endfor %}
