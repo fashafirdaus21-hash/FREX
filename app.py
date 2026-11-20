@@ -226,9 +226,10 @@ def admin_kelolabuku():
         cursor = conn.cursor(dictionary=True)
 
         if request.method == 'POST':
-            judul = request.form['judul']
-            penulis = request.form['penulis']
-            nama_kategori = request.form['kategori']
+           judul = request.form['judul']
+penulis = request.form['penulis']
+penerbit = request.form.get('penerbit', '').strip() or None
+nama_kategori = request.form['kategori']
             tahun_terbit = request.form['tahun_terbit']
             jumlah = int(request.form['jumlah'])
 
@@ -250,9 +251,15 @@ def admin_kelolabuku():
                 id_kategori = cursor.lastrowid
 
             cursor.execute("""
-                INSERT INTO buku (judul, cover, penulis, id_kategori, tahun_terbit, jumlah_total, jumlah_tersedia)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-            """, (judul, nama_file_cover, penulis, id_kategori, tahun_terbit, jumlah, jumlah))
+    INSERT INTO buku (
+        judul, cover, penulis, penerbit, id_kategori,
+        tahun_terbit, jumlah_total, jumlah_tersedia
+    )
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+""", (
+    judul, nama_file_cover, penulis, penerbit,
+    id_kategori, tahun_terbit, jumlah, jumlah
+))
             conn.commit()
 
             cursor.close()
@@ -322,6 +329,118 @@ def admin_peminjaman():
                                buku_list=buku_list,
                                peminjaman_list=peminjaman_list)
     return redirect(url_for('login'))
+
+
+
+@app.route('/admin/proses_pengajuan/<int:id_peminjaman>', methods=['POST'])
+def admin_proses_pengajuan(id_peminjaman):
+
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    aksi = request.form.get('aksi')
+    admin_id = session.get('id_user')
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        cursor.execute("""
+            SELECT
+                peminjaman.id_peminjaman,
+                peminjaman.id_buku,
+                peminjaman.status,
+                buku.jumlah_tersedia
+            FROM peminjaman
+            JOIN buku
+            ON peminjaman.id_buku = buku.id_buku
+            WHERE peminjaman.id_peminjaman = %s
+            FOR UPDATE
+        """, (id_peminjaman,))
+
+        pengajuan = cursor.fetchone()
+
+        if not pengajuan or pengajuan['status'] != 'menunggu':
+            conn.rollback()
+            return redirect(url_for('admin_peminjaman'))
+
+        # JIKA ADMIN MENYETUJUI
+        if aksi == 'setujui':
+
+            if pengajuan['jumlah_tersedia'] <= 0:
+                conn.rollback()
+                return redirect(url_for(
+                    'admin_peminjaman',
+                    status='stok_habis'
+                ))
+
+            cursor.execute("""
+                SELECT nilai
+                FROM pengaturan
+                WHERE kunci = 'lama_pinjam_hari'
+            """)
+
+            pengaturan = cursor.fetchone()
+
+            lama_pinjam = (
+                int(pengaturan['nilai'])
+                if pengaturan else 7
+            )
+
+            cursor.execute("""
+                UPDATE buku
+                SET jumlah_tersedia = jumlah_tersedia - 1
+                WHERE id_buku = %s
+                AND jumlah_tersedia > 0
+            """, (pengajuan['id_buku'],))
+
+            if cursor.rowcount != 1:
+                conn.rollback()
+                return redirect(url_for(
+                    'admin_peminjaman',
+                    status='stok_habis'
+                ))
+
+            cursor.execute("""
+                UPDATE peminjaman
+                SET
+                    status = 'dipinjam',
+                    diproses_oleh = %s,
+                    tgl_pinjam = CURDATE(),
+                    jatuh_tempo = DATE_ADD(
+                        CURDATE(),
+                        INTERVAL %s DAY
+                    )
+                WHERE id_peminjaman = %s
+            """, (admin_id, lama_pinjam, id_peminjaman))
+
+        # JIKA ADMIN MENOLAK
+        elif aksi == 'tolak':
+
+            cursor.execute("""
+                UPDATE peminjaman
+                SET
+                    status = 'ditolak',
+                    diproses_oleh = %s
+                WHERE id_peminjaman = %s
+            """, (admin_id, id_peminjaman))
+
+        else:
+            conn.rollback()
+            return redirect(url_for('admin_peminjaman'))
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        print("Gagal memproses pengajuan:", e)
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('admin_peminjaman'))
+
 
 
 @app.route('/admin/pengembalian', methods=['GET', 'POST'])
@@ -479,22 +598,175 @@ def user_dashboard():
     return redirect(url_for('login'))
 
 
+
 @app.route('/user/databuku')
 def user_databuku():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True)
+
+        user_id = session.get('id_user')
+
         cursor.execute("""
-            SELECT buku.*, kategori.nama_kategori as kategori
+            SELECT
+                buku.*,
+                kategori.nama_kategori AS kategori,
+
+                (
+                    SELECT COUNT(DISTINCT p.id_anggota)
+                    FROM peminjaman p
+                    WHERE p.id_buku = buku.id_buku
+                    AND p.status IN ('dipinjam', 'dikembalikan')
+                ) AS total_pernah_dipinjam,
+
+                (
+                    SELECT COUNT(DISTINCT p.id_anggota)
+                    FROM peminjaman p
+                    WHERE p.id_buku = buku.id_buku
+                    AND p.status = 'dipinjam'
+                ) AS sedang_dipinjam
+
             FROM buku
-            LEFT JOIN kategori ON buku.id_kategori = kategori.id_kategori
+
+            LEFT JOIN kategori
+            ON buku.id_kategori = kategori.id_kategori
+
             ORDER BY buku.id_buku DESC
         """)
+
         buku_list = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT id_buku, status
+            FROM peminjaman
+            WHERE id_anggota = %s
+            AND status IN ('menunggu', 'dipinjam')
+        """, (user_id,))
+
+        pengajuan = cursor.fetchall()
+
+        status_peminjaman = {
+            item['id_buku']: item['status']
+            for item in pengajuan
+        }
+
         cursor.close()
         conn.close()
-        return render_template('user/Databuku.html', buku_list=buku_list)
+
+        return render_template(
+            'user/Databuku.html',
+            buku_list=buku_list,
+            status_peminjaman=status_peminjaman
+        )
+
     return redirect(url_for('login'))
+
+
+@app.route('/user/ajukan_peminjaman', methods=['POST'])
+def user_ajukan_peminjaman():
+
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
+
+    user_id = session.get('id_user')
+    id_buku = request.form.get('id_buku')
+
+    if not id_buku:
+        return redirect(url_for('user_databuku'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True)
+
+    try:
+        # PERIKSA KETERSEDIAAN BUKU
+        cursor.execute("""
+            SELECT jumlah_tersedia
+            FROM buku
+            WHERE id_buku = %s
+        """, (id_buku,))
+
+        buku = cursor.fetchone()
+
+        if not buku or buku['jumlah_tersedia'] <= 0:
+            conn.rollback()
+            return redirect(url_for(
+                'user_databuku',
+                pinjam='stok_habis'
+            ))
+
+        # PERIKSA PENGAJUAN ATAU PEMINJAMAN YANG MASIH AKTIF
+        cursor.execute("""
+            SELECT id_peminjaman
+            FROM peminjaman
+            WHERE id_anggota = %s
+            AND id_buku = %s
+            AND status IN ('menunggu', 'dipinjam')
+            LIMIT 1
+        """, (user_id, id_buku))
+
+        transaksi = cursor.fetchone()
+
+        if transaksi:
+            conn.rollback()
+            return redirect(url_for(
+                'user_databuku',
+                pinjam='duplikat'
+            ))
+
+        # AMBIL LAMA MASA PEMINJAMAN
+        cursor.execute("""
+            SELECT nilai
+            FROM pengaturan
+            WHERE kunci = 'lama_pinjam_hari'
+        """)
+
+        pengaturan = cursor.fetchone()
+
+        lama_pinjam = (
+            int(pengaturan['nilai'])
+            if pengaturan else 7
+        )
+
+        # SIMPAN PENGAJUAN DENGAN STATUS MENUNGGU
+        cursor.execute("""
+            INSERT INTO peminjaman (
+                id_anggota,
+                id_buku,
+                tgl_pinjam,
+                jatuh_tempo,
+                status,
+                diproses_oleh
+            )
+            VALUES (
+                %s,
+                %s,
+                CURDATE(),
+                DATE_ADD(CURDATE(), INTERVAL %s DAY),
+                'menunggu',
+                NULL
+            )
+        """, (user_id, id_buku, lama_pinjam))
+
+        conn.commit()
+
+        return redirect(url_for(
+            'user_databuku',
+            pinjam='berhasil'
+        ))
+
+    except Exception as e:
+        conn.rollback()
+        print("Gagal mengajukan peminjaman:", e)
+
+        return redirect(url_for(
+            'user_databuku',
+            pinjam='gagal'
+        ))
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 @app.route('/user/peminjaman')
@@ -507,7 +779,8 @@ def user_peminjaman():
             SELECT peminjaman.*, buku.judul, buku.penulis
             FROM peminjaman
             JOIN buku ON peminjaman.id_buku = buku.id_buku
-            WHERE peminjaman.id_anggota = %s AND peminjaman.status = 'dipinjam'
+           WHERE peminjaman.id_anggota = %s
+AND peminjaman.status IN ('menunggu', 'dipinjam')
         """, (user_id,))
         peminjaman_list = cursor.fetchall()
         cursor.close()

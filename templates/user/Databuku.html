@@ -28,7 +28,206 @@
         .ref-table { width: 100%; border-collapse: collapse; text-align: left; }
         .ref-table th { background-color: #ffffff; color: #0d233a; padding: 18px 24px; font-size: 15px; font-weight: bold; border-bottom: 2px solid #0d233a; }
         .ref-table td { padding: 20px 24px; border-bottom: 1px solid #e2e8f0; color: #0d233a; font-size: 14px; }
-    </style>
+   
+   
+/* KATALOG BUKU */
+.katalog-buku-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 25px;
+    padding: 15px 0;
+}
+
+.kartu-buku {
+    min-width: 0;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    text-align: left;
+    padding: 0;
+    color: #0d233a;
+    transition: transform 0.2s;
+}
+
+.kartu-buku:hover {
+    transform: translateY(-5px);
+}
+
+.cover-katalog {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 5px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    background: #e2e8f0;
+}
+
+.judul-katalog {
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.penulis-katalog {
+    font-size: 13px;
+    color: #64748b;
+    margin-top: 5px;
+}
+
+/* POPUP DETAIL BUKU */
+.detail-buku-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.detail-buku-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow-y: auto;
+    border-radius: 16px;
+    padding: 25px;
+    position: relative;
+}
+
+.detail-buku-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    color: #4054c5;
+    font-weight: bold;
+}
+
+.detail-buku-close {
+    border: none;
+    background: transparent;
+    font-size: 24px;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.detail-buku-identitas {
+    display: flex;
+    gap: 25px;
+    align-items: flex-start;
+    margin-bottom: 25px;
+}
+
+.detail-buku-cover {
+    width: 150px;
+    height: 220px;
+    object-fit: cover;
+    border-radius: 12px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+}
+
+.detail-buku-judul {
+    font-size: 22px;
+    color: #0d233a;
+    margin: 5px 0 12px;
+}
+
+.detail-buku-penulis {
+    color: #64748b;
+    font-size: 15px;
+    margin-bottom: 20px;
+}
+
+.btn-ajukan-pinjam {
+    background: #4054c5;
+    color: white;
+    border: none;
+    padding: 12px 30px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-ajukan-pinjam:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.detail-buku-statistik {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 18px;
+    margin-bottom: 25px;
+}
+
+.detail-stat-item {
+    text-align: center;
+}
+
+.detail-stat-item strong {
+    display: block;
+    color: #0d233a;
+    font-size: 20px;
+    margin-bottom: 5px;
+}
+
+.detail-stat-item span {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.detail-buku-informasi {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    padding: 10px 5px;
+}
+
+.detail-buku-informasi div {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.detail-buku-informasi span {
+    color: #64748b;
+    font-size: 12px;
+}
+
+.detail-buku-informasi strong {
+    color: #4054c5;
+    font-size: 14px;
+}
+
+@media (max-width: 600px) {
+    .detail-buku-identitas {
+        gap: 15px;
+    }
+
+    .detail-buku-cover {
+        width: 110px;
+        height: 165px;
+    }
+
+    .detail-buku-statistik {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .detail-buku-judul {
+        font-size: 17px;
+    }
+}
+
+   </style>
 </head>
 <body style="background-color: #f8fafc;">
 
@@ -83,48 +282,73 @@
                 <input type="text" id="searchInput" placeholder="Cari berdasarkan judul atau penulis buku..." onkeyup="filterBuku()">
             </div>
 
-            <div class="ref-table-card">
-                <table class="ref-table" id="tabelBuku">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">ID</th>
-                            <th>Judul</th>
-                            <th>Penulis</th>
-                            <th>Kategori</th>
-                            <th style="width: 90px;">Tahun</th>
-                            <th style="width: 150px;">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% if buku_list %}
-                            {% for buku in buku_list %}
-                            <tr>
-                                <td style="font-weight: bold;">{{ buku.id_buku }}</td>
-                                <td style="font-weight: bold;">{{ buku.judul }}</td>
-                                <td>{{ buku.penulis }}</td>
-                                <td>{{ buku.kategori or '-' }}</td>
-                                <td>{{ buku.tahun_terbit }}</td>
-                                <td>
-                                    {% if buku.jumlah_tersedia > 0 %}
-                                    <span style="background-color: #eab308; color: #0d233a; padding: 6px 18px; border-radius: 20px; font-weight: bold; display: inline-block; text-align: center;">
-                                        🟢 Tersedia ({{ buku.jumlah_tersedia }}/{{ buku.jumlah_total }})
-                                    </span>
-                                    {% else %}
-                                    <span style="background-color: #e2e8f0; color: #475569; padding: 6px 18px; border-radius: 20px; font-weight: bold; display: inline-block; text-align: center;">
-                                        🔴 Habis (0/{{ buku.jumlah_total }})
-                                    </span>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% endfor %}
-                        {% else %}
-                            <tr>
-                                <td colspan="6" style="text-align: center; color: #94a3b8; padding: 25px;">Belum ada data buku.</td>
-                            </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
+            
+{% if request.args.get('pinjam') == 'berhasil' %}
+<div style="background:#dcfce7; color:#166534; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
+    Pengajuan peminjaman berhasil dikirim. Silakan tunggu persetujuan administrator.
+</div>
+
+{% elif request.args.get('pinjam') == 'stok_habis' %}
+<div style="background:#fee2e2; color:#991b1b; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
+    Maaf, stok buku sudah habis.
+</div>
+
+{% elif request.args.get('pinjam') == 'duplikat' %}
+<div style="background:#fef3c7; color:#92400e; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
+    Kamu sudah memiliki pengajuan atau peminjaman aktif untuk buku ini.
+</div>
+
+{% elif request.args.get('pinjam') == 'gagal' %}
+<div style="background:#fee2e2; color:#991b1b; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
+    Terjadi kesalahan ketika mengajukan peminjaman. Silakan coba kembali.
+</div>
+{% endif %}
+
+{% if request.args.get('status') == 'stok_habis' %}
+<div style="background:#fee2e2; color:#991b1b; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
+    Pengajuan tidak dapat disetujui karena stok buku sudah habis.
+</div>
+{% endif %}
+
+
+<div class="katalog-buku-grid" id="katalogBuku">
+
+    {% for buku in buku_list %}
+
+    <button type="button"
+            class="kartu-buku"
+            onclick="bukaDetailBuku(this)"
+            data-id="{{ buku.id_buku }}"
+            data-judul="{{ buku.judul }}"
+            data-penulis="{{ buku.penulis }}"
+            data-penerbit="{{ buku.penerbit or '-' }}"
+            data-kategori="{{ buku.kategori or '-' }}"
+            data-tahun="{{ buku.tahun_terbit }}"
+            data-total="{{ buku.jumlah_total }}"
+            data-tersedia="{{ buku.jumlah_tersedia }}"
+            data-pernah="{{ buku.total_pernah_dipinjam }}"
+            data-sedang="{{ buku.sedang_dipinjam }}"
+            data-status="{{ status_peminjaman.get(buku.id_buku, '') }}"
+            data-cover="{{ url_for('static', filename='uploads/covers/' + (buku.cover if buku.cover else 'default_cover.jpg')) }}">
+
+        <img class="cover-katalog"
+             src="{{ url_for('static', filename='uploads/covers/' + (buku.cover if buku.cover else 'default_cover.jpg')) }}"
+             alt="Cover {{ buku.judul }}"
+             onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}'">
+
+        <div class="judul-katalog">{{ buku.judul }}</div>
+        <div class="penulis-katalog">{{ buku.penulis }}</div>
+
+    </button>
+
+    {% else %}
+
+    <p style="color:#64748b;">Belum ada buku tersedia.</p>
+
+    {% endfor %}
+
+</div>
+
         </div>
     </div>
 
@@ -183,6 +407,111 @@
 
 
 
+<!-- POPUP DETAIL BUKU -->
+<div class="detail-buku-overlay" id="modalDetailBuku"
+     onclick="tutupDetailBuku(event)">
+
+    <div class="detail-buku-card"
+         onclick="event.stopPropagation()">
+
+        <div class="detail-buku-header">
+            <span>Detail Buku</span>
+
+            <button type="button"
+                    class="detail-buku-close"
+                    onclick="tutupDetailBuku()">
+                &times;
+            </button>
+        </div>
+
+        <div class="detail-buku-identitas">
+
+            <img id="detailCover"
+                 class="detail-buku-cover"
+                 src=""
+                 alt="Cover Buku">
+
+            <div style="flex:1;">
+
+                <h2 id="detailJudul"
+                    class="detail-buku-judul"></h2>
+
+                <p id="detailPenulis"
+                   class="detail-buku-penulis"></p>
+
+                <form method="POST"
+                      action="{{ url_for('user_ajukan_peminjaman') }}"
+                      id="formAjukanPinjam">
+
+                    <input type="hidden"
+                           name="id_buku"
+                           id="detailIdBuku">
+
+                    <button type="submit"
+                            class="btn-ajukan-pinjam"
+                            id="btnPinjam">
+                        Pinjam
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+
+        <!-- STATISTIK BUKU -->
+        <div class="detail-buku-statistik">
+
+            <div class="detail-stat-item">
+                <strong id="detailTotal">0</strong>
+                <span>Total Buku</span>
+            </div>
+
+            <div class="detail-stat-item">
+                <strong id="detailTersedia">0</strong>
+                <span>Buku Tersedia</span>
+            </div>
+
+            <div class="detail-stat-item">
+                <strong id="detailPernah">0</strong>
+                <span>Pernah Dipinjam</span>
+            </div>
+
+            <div class="detail-stat-item">
+                <strong id="detailSedang">0</strong>
+                <span>Sedang Dipinjam</span>
+            </div>
+
+        </div>
+
+        <!-- INFORMASI BUKU -->
+        <div class="detail-buku-informasi">
+
+            <div>
+                <span>Nama Pengarang</span>
+                <strong id="infoPenulis"></strong>
+            </div>
+
+            <div>
+                <span>Nama Penerbit</span>
+                <strong id="infoPenerbit"></strong>
+            </div>
+
+            <div>
+                <span>Tahun Terbit</span>
+                <strong id="infoTahun"></strong>
+            </div>
+
+            <div>
+                <span>Kategori Buku</span>
+                <strong id="infoKategori"></strong>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+
     <script>
        const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}");
 
@@ -205,24 +534,69 @@
             }
         });
 
-        function filterBuku() {
-            let input = document.getElementById('searchInput').value.toLowerCase();
-            let table = document.getElementById('tabelBuku');
-            let tr = table.getElementsByTagName('tr');
-            for (let i = 1; i < tr.length; i++) {
-                let tdJudul = tr[i].getElementsByTagName('td')[1];
-                let tdPenulis = tr[i].getElementsByTagName('td')[2];
-                if (tdJudul || tdPenulis) {
-                    let textJudul = tdJudul.textContent || tdJudul.innerText;
-                    let textPenulis = tdPenulis.textContent || tdPenulis.innerText;
-                    if (textJudul.toLowerCase().indexOf(input) > -1 || textPenulis.toLowerCase().indexOf(input) > -1) {
-                        tr[i].style.display = "";
-                    } else {
-                        tr[i].style.display = "none";
-                    }
-                }
-            }
+       
+// PENCARIAN KATALOG BUKU
+function filterBuku() {
+    const input = document.getElementById('searchInput')
+        .value.toLowerCase();
+
+    const kartu = document.querySelectorAll('.kartu-buku');
+
+    kartu.forEach(function(item) {
+        const judul = item.dataset.judul.toLowerCase();
+        const penulis = item.dataset.penulis.toLowerCase();
+
+        if (judul.includes(input) || penulis.includes(input)) {
+            item.style.display = '';
+        } else {
+            item.style.display = 'none';
         }
+    });
+}
+
+// MEMBUKA DETAIL BUKU
+function bukaDetailBuku(element) {
+    const data = element.dataset;
+
+    document.getElementById('detailCover').src = data.cover;
+    document.getElementById('detailJudul').textContent = data.judul;
+    document.getElementById('detailPenulis').textContent = data.penulis;
+
+    document.getElementById('detailIdBuku').value = data.id;
+    document.getElementById('detailTotal').textContent = data.total;
+    document.getElementById('detailTersedia').textContent = data.tersedia;
+    document.getElementById('detailPernah').textContent = data.pernah;
+    document.getElementById('detailSedang').textContent = data.sedang;
+
+    document.getElementById('infoPenulis').textContent = data.penulis;
+    document.getElementById('infoPenerbit').textContent = data.penerbit;
+    document.getElementById('infoTahun').textContent = data.tahun;
+    document.getElementById('infoKategori').textContent = data.kategori;
+
+    const tombol = document.getElementById('btnPinjam');
+
+    tombol.disabled = false;
+    tombol.textContent = 'Pinjam';
+
+    if (data.status === 'menunggu') {
+        tombol.disabled = true;
+        tombol.textContent = 'Menunggu Persetujuan';
+    } else if (data.status === 'dipinjam') {
+        tombol.disabled = true;
+        tombol.textContent = 'Sedang Dipinjam';
+    } else if (parseInt(data.tersedia) <= 0) {
+        tombol.disabled = true;
+        tombol.textContent = 'Stok Habis';
+    }
+
+    document.getElementById('modalDetailBuku').style.display = 'flex';
+}
+
+// MENUTUP DETAIL BUKU
+function tutupDetailBuku(event) {
+    document.getElementById('modalDetailBuku').style.display = 'none';
+}
+
 
 
 // MENYIMPAN DAN MENGUBAH FOTO PROFIL

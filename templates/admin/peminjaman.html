@@ -106,7 +106,7 @@
 
                <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">
-                    <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Peminjam Aktif</h3>
+                    <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Pengajuan dan Peminjaman</h3>
                     
                     <!-- Bilah Pencarian -->
                     <div style="display: flex; align-items: center; background-color: #0d233a; padding: 8px 15px; border-radius: 20px; border: 1.5px solid #0d233a; width: 260px;">
@@ -118,13 +118,13 @@
                 <table class="custom-table-admin" id="tabelPeminjamAktif">
                     <thead>
                         <tr>
-                            <th style="width: 55px; text-align: center;">No</th>
-                            <th style="width: 110px;">ID Anggota</th>
-                            <th>Judul Buku</th>
-                            <th style="width: 135px;">Tgl Pinjam</th>
-                            <th style="width: 135px;">Jatuh Tempo</th>
-                            <th style="width: 115px; text-align: center;">Status</th>
-                            <th style="width: 145px;">Diproses Oleh</th>
+                            <th style="width: 60px;">No</th>
+                            <th>ID Anggota</th>
+                            <th>ID Buku</th>
+                            <th>Tgl Pinjam</th>
+                            <th>Jatuh Tempo</th>
+                            <th>Status</th>
+                            <th>Diproses Oleh</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,17 +140,17 @@
                                     {{ p.status }}
                                 </span>
                             </td>
-                            <td class="nowrap-cell">{{ p.nama_admin or p.diproses_oleh }}</td>
+                            <td style="font-size: 16px; color: #0d233a;">{{ p.diproses_oleh }}</td>
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
+                            <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
                         </tr>
                         {% endfor %}
                         
                         <!-- Baris pesan jika hasil pencarian tidak ditemukan -->
                         <tr id="pesanTidakDitemukan" style="display: none;">
-                            <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
+                            <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
                         </tr>
                     </tbody>
                 </table>

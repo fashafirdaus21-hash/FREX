@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS buku (
     judul VARCHAR(255) NOT NULL,
     cover VARCHAR(255) DEFAULT 'default_cover.jpg',
     penulis VARCHAR(255) NOT NULL,
+    penerbit VARCHAR(255) NULL,
     id_kategori INT NOT NULL,
     tahun_terbit INT NOT NULL,
     jumlah_total INT NOT NULL,
