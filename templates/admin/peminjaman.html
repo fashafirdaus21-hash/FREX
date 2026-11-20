@@ -105,7 +105,7 @@
             <div class="table-box-container" style="border: 2px solid #0d233a;">
                 <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">
-                    <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Peminjam Aktif</h3>
+                    <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Pengajuan dan Peminjaman</h3>
                     
                     <!-- Bilah Pencarian -->
                     <div style="display: flex; align-items: center; background-color: #0d233a; padding: 8px 15px; border-radius: 20px; border: 1.5px solid #0d233a; width: 260px;">
@@ -124,6 +124,7 @@
                             <th>Jatuh Tempo</th>
                             <th>Status</th>
                             <th>Diproses Oleh</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -140,16 +141,56 @@
                                 </span>
                             </td>
                             <td style="font-size: 16px; color: #0d233a;">{{ p.diproses_oleh }}</td>
+
+<td>
+    {% if p.status == 'menunggu' %}
+
+    <div style="display:flex; gap:6px;">
+
+        <form method="POST"
+              action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}">
+
+            <button type="submit"
+                    name="aksi"
+                    value="setujui"
+                    style="background:#16a34a; color:white; border:none; padding:7px 10px; border-radius:7px; cursor:pointer;">
+                Setujui
+            </button>
+
+        </form>
+
+        <form method="POST"
+              action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}">
+
+            <button type="submit"
+                    name="aksi"
+                    value="tolak"
+                    style="background:#dc2626; color:white; border:none; padding:7px 10px; border-radius:7px; cursor:pointer;">
+                Tolak
+            </button>
+
+        </form>
+
+    </div>
+
+    {% else %}
+
+    <span style="color:#64748b;">-</span>
+
+    {% endif %}
+</td>
+
+
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
+                            <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
                         </tr>
                         {% endfor %}
                         
                         <!-- Baris pesan jika hasil pencarian tidak ditemukan -->
                         <tr id="pesanTidakDitemukan" style="display: none;">
-                            <td colspan="7" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
+                            <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
                         </tr>
                     </tbody>
                 </table>
