@@ -226,10 +226,10 @@ def admin_kelolabuku():
         cursor = conn.cursor(dictionary=True)
 
         if request.method == 'POST':
-           judul = request.form['judul']
-penulis = request.form['penulis']
-penerbit = request.form.get('penerbit', '').strip() or None
-nama_kategori = request.form['kategori']
+            judul = request.form['judul']
+            penulis = request.form['penulis']
+            penerbit = request.form.get('penerbit', '').strip() or None
+            nama_kategori = request.form['kategori']
             tahun_terbit = request.form['tahun_terbit']
             jumlah = int(request.form['jumlah'])
 
