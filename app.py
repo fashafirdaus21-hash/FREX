@@ -304,7 +304,15 @@ def admin_peminjaman():
         cursor.execute("SELECT id_buku, judul, jumlah_tersedia FROM buku WHERE jumlah_tersedia > 0")
         buku_list = cursor.fetchall()
 
-        cursor.execute("SELECT * FROM peminjaman ORDER BY id_peminjaman DESC")
+        cursor.execute("""
+            SELECT peminjaman.*,
+                   buku.judul AS judul_buku,
+                   COALESCE(admin_user.nama, admin_user.username, '-') AS nama_admin
+            FROM peminjaman
+            LEFT JOIN buku ON peminjaman.id_buku = buku.id_buku
+            LEFT JOIN users AS admin_user ON peminjaman.diproses_oleh = admin_user.id_user
+            ORDER BY peminjaman.id_peminjaman DESC
+        """)
         peminjaman_list = cursor.fetchall()
 
         cursor.close()
@@ -357,13 +365,12 @@ def admin_pengembalian():
         settings = {row['kunci']: row['nilai'] for row in pengaturan_rows}
 
         cursor.execute("""
-            SELECT peminjaman.*, anggota.nama_lengkap as nama_anggota, buku.judul
+            SELECT peminjaman.*, anggota.nama_lengkap as nama_peminjam, buku.judul
             FROM peminjaman
             JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
             JOIN buku ON peminjaman.id_buku = buku.id_buku
-            WHERE peminjaman.status = 'dipinjam'
+            ORDER BY peminjaman.id_peminjaman DESC LIMIT 5
         """)
-        peminjaman_aktif = cursor.fetchall()
 
         cursor.close()
         conn.close()
@@ -555,7 +562,7 @@ def user_biodata():
         return render_template('user/biodata.html', biodata=biodata)
     return redirect(url_for('login'))
 
-# Paste di app.py (di bawah rute /user/biodata)
+
 @app.route('/user/update_biodata', methods=['POST'])
 def user_update_biodata():
     if session.get('role') in ['siswa', 'user']:
