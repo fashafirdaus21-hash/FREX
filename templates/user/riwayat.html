@@ -43,6 +43,124 @@
     flex-shrink: 0;
     box-shadow: 0 3px 8px rgba(0,0,0,0.15);
 }
+
+.riwayat-card-custom {
+    cursor: pointer;
+    transition: transform 0.2s, border-color 0.2s;
+}
+
+.riwayat-card-custom:hover {
+    transform: translateY(-3px);
+    border-color: #f6c90e;
+}
+
+/* POPUP DETAIL RIWAYAT */
+.modal-riwayat {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0,0,0,0.65);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-riwayat-card {
+    width: 100%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+.modal-riwayat-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-riwayat-header h3 {
+    margin: 0;
+    color: #0d233a;
+}
+
+.modal-riwayat-header button {
+    border: none;
+    background: none;
+    font-size: 28px;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.modal-riwayat-identitas {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 22px;
+}
+
+.modal-riwayat-identitas img {
+    width: 100px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 9px;
+}
+
+.modal-riwayat-identitas h2 {
+    color: #0d233a;
+    font-size: 19px;
+}
+
+.modal-riwayat-identitas p {
+    color: #64748b;
+    font-size: 13px;
+}
+
+.modal-riwayat-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+    background: #f1f5f9;
+    padding: 18px;
+    border-radius: 12px;
+}
+
+.modal-riwayat-grid span {
+    display: block;
+    color: #64748b;
+    font-size: 11px;
+    margin-bottom: 5px;
+}
+
+.modal-riwayat-grid strong {
+    color: #0d233a;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+.btn-tutup-riwayat {
+    width: 100%;
+    margin-top: 20px;
+    padding: 12px;
+    border: none;
+    border-radius: 9px;
+    background: #0d233a;
+    color: #f6c90e;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@media (max-width: 500px) {
+    .modal-riwayat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
     </style>
 </head>
 <body style="background-color: #f8fafc;">
@@ -107,7 +225,18 @@
             <div id="containerRiwayat">
                 {% if riwayat_list %}
                     {% for item in riwayat_list %}
-                    <div class="riwayat-card-custom" data-status="{{ item.status | lower }}">
+                    <div class="riwayat-card-custom"
+     data-status="{{ item.status | lower }}"
+     data-judul="{{ item.judul }}"
+     data-penulis="{{ item.penulis or '-' }}"
+     data-cover="{{ url_for('static', filename='uploads/covers/' ~ (item.cover if item.cover else 'default_cover.jpg')) }}"
+     data-status-detail="{{ item.status | title }}"
+     data-dibuat="{{ item.created_at or '-' }}"
+     data-pinjam="{{ item.tgl_pinjam or '-' }}"
+     data-tempo="{{ item.jatuh_tempo or '-' }}"
+     data-kembali="{{ item.tgl_kembali or '-' }}"
+     onclick="bukaDetailRiwayat(this)"
+     title="Klik untuk melihat detail riwayat">
     <div style="display: flex; align-items: center; gap: 20px;">
         <div class="book-avatar-box">
             {% if item.cover %}
@@ -127,6 +256,10 @@
                             <div>
                                 <h3 style="color: #f6c90e; margin: 0 0 4px 0; font-size: 16px;" class="judul-buku">📖 {{ item.judul }}</h3>
                                 <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 13px;" class="penulis-buku">✍️ {{ item.penulis }}</p>
+                                <p style="margin: 0 0 10px; color: #cbd5e1; font-size: 11px;">
+                                  <i class="fa-regular fa-clock"></i>
+                                  Permintaan dibuat: {{ item.created_at or '-' }}
+                                </p>
                                 <div style="display: flex; gap: 25px; font-size: 12px; color: #cbd5e1;">
                                     <div><span style="color: #f6c90e;">DIPINJAM:</span> {{ item.tgl_pinjam }}</div>
                                     <div><span style="color: #f6c90e;">JATUH TEMPO:</span> {{ item.jatuh_tempo }}</div>
@@ -153,6 +286,67 @@
     </div>
 
 
+
+<!-- MODAL DETAIL RIWAYAT -->
+<div id="modalDetailRiwayat"
+     class="modal-riwayat"
+     onclick="tutupDetailRiwayat()">
+
+    <div class="modal-riwayat-card"
+         onclick="event.stopPropagation()">
+
+        <div class="modal-riwayat-header">
+            <h3>Detail Riwayat Peminjaman</h3>
+            <button type="button" onclick="tutupDetailRiwayat()">
+                &times;
+            </button>
+        </div>
+
+        <div class="modal-riwayat-identitas">
+            <img id="riwayatDetailCover"
+                 src=""
+                 alt="Cover Buku"
+                 onerror="this.style.display='none'">
+
+            <div>
+                <h2 id="riwayatDetailJudul"></h2>
+                <p id="riwayatDetailPenulis"></p>
+                <strong id="riwayatDetailStatus"></strong>
+            </div>
+        </div>
+
+        <div class="modal-riwayat-grid">
+
+            <div>
+                <span>Permintaan Dibuat</span>
+                <strong id="riwayatDetailDibuat"></strong>
+            </div>
+
+            <div>
+                <span>Tanggal Dipinjam</span>
+                <strong id="riwayatDetailPinjam"></strong>
+            </div>
+
+            <div>
+                <span>Jatuh Tempo</span>
+                <strong id="riwayatDetailTempo"></strong>
+            </div>
+
+            <div>
+                <span>Tanggal Dikembalikan</span>
+                <strong id="riwayatDetailKembali"></strong>
+            </div>
+
+        </div>
+
+        <button type="button"
+                class="btn-tutup-riwayat"
+                onclick="tutupDetailRiwayat()">
+            Tutup Detail
+        </button>
+
+    </div>
+</div>
 
 <!-- MODAL PROFIL WHATSAPP -->
 <div id="waProfileModal" class="modal-overlay-wa">
@@ -320,6 +514,37 @@ function editName() {
         document.getElementById('textName').innerText = v;
     }
 }
+
+// MEMBUKA DETAIL RIWAYAT
+function bukaDetailRiwayat(element) {
+    const data = element.dataset;
+
+    document.getElementById('riwayatDetailCover').style.display = 'block';
+    document.getElementById('riwayatDetailCover').src = data.cover;
+
+    document.getElementById('riwayatDetailJudul').textContent = data.judul;
+    document.getElementById('riwayatDetailPenulis').textContent = data.penulis;
+    document.getElementById('riwayatDetailStatus').textContent = 'Status: ' + data.statusDetail;
+
+    document.getElementById('riwayatDetailDibuat').textContent = data.dibuat;
+    document.getElementById('riwayatDetailPinjam').textContent = data.pinjam;
+    document.getElementById('riwayatDetailTempo').textContent = data.tempo;
+    document.getElementById('riwayatDetailKembali').textContent = data.kembali;
+
+    document.getElementById('modalDetailRiwayat').style.display = 'flex';
+}
+
+// MENUTUP DETAIL RIWAYAT
+function tutupDetailRiwayat() {
+    document.getElementById('modalDetailRiwayat').style.display = 'none';
+}
+
+// MENUTUP DENGAN TOMBOL ESC
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        tutupDetailRiwayat();
+    }
+});
 
     </script>
 </body>

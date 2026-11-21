@@ -430,6 +430,14 @@
                             {{ item.penulis or '-' }}
                         </p>
 
+                        <p style="margin: 0 0 10px; color: #64748b; font-size: 12px;">
+    <i class="fa-regular fa-clock"></i>
+    Permintaan dibuat:
+    <strong style="color: #0d233a;">
+        {{ item.created_at or '-' }}
+    </strong>
+</p>
+
                         <span class="badge-status
                             {% if item.status == 'menunggu' %}
                                 status-menunggu
