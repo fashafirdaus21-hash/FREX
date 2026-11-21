@@ -1103,17 +1103,29 @@ def user_riwayat():
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
         user_id = session.get('id_user')
+
         cursor.execute("""
-            SELECT peminjaman.*, buku.judul, buku.penulis
+            SELECT
+                peminjaman.*,
+                buku.judul,
+                buku.penulis,
+                buku.cover
             FROM peminjaman
             JOIN buku ON peminjaman.id_buku = buku.id_buku
             WHERE peminjaman.id_anggota = %s
             ORDER BY peminjaman.id_peminjaman DESC
         """, (user_id,))
+
         riwayat_list = cursor.fetchall()
+
         cursor.close()
         conn.close()
-        return render_template('user/riwayat.html', riwayat_list=riwayat_list)
+
+        return render_template(
+            'user/riwayat.html',
+            riwayat_list=riwayat_list
+        )
+
     return redirect(url_for('login'))
 
 
