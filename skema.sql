@@ -146,16 +146,37 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 -- Struktur dari tabel `peminjaman`
 --
 
+
+--
+-- Struktur tabel peminjaman FREX
+--
+
 CREATE TABLE `peminjaman` (
   `id_peminjaman` int(11) NOT NULL,
   `id_anggota` int(11) NOT NULL,
   `id_buku` int(11) NOT NULL,
-  `tgl_pinjam` date NOT NULL,
-  `jatuh_tempo` date NOT NULL,
-  `status` enum('menunggu','dipinjam','dikembalikan','ditolak') DEFAULT 'menunggu',
+
+  -- Diisi setelah admin menyetujui
+  `tgl_pinjam` date DEFAULT NULL,
+  `jatuh_tempo` date DEFAULT NULL,
+
+  -- Status lengkap peminjaman
+  `status` enum(
+    'menunggu',
+    'dipinjam',
+    'dikembalikan',
+    'ditolak',
+    'dibatalkan',
+    'kedaluwarsa'
+  ) DEFAULT 'menunggu',
+
   `diproses_oleh` int(11) DEFAULT NULL,
+
+  -- Waktu pengajuan otomatis dicatat
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 
 --
 -- Dumping data untuk tabel `peminjaman`
@@ -260,11 +281,14 @@ ALTER TABLE `kategori`
 --
 -- Indeks untuk tabel `peminjaman`
 --
+
 ALTER TABLE `peminjaman`
   ADD PRIMARY KEY (`id_peminjaman`),
   ADD KEY `fk_peminjaman_anggota` (`id_anggota`),
   ADD KEY `fk_peminjaman_buku` (`id_buku`),
-  ADD KEY `fk_peminjaman_admin` (`diproses_oleh`);
+  ADD KEY `fk_peminjaman_admin` (`diproses_oleh`),
+  ADD KEY `idx_peminjaman_status_created` (`status`, `created_at`);
+
 
 --
 -- Indeks untuk tabel `pengaturan`
