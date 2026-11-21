@@ -14,7 +14,338 @@
             border: 2px solid transparent; background-color: #0d233a; transition: all 0.2s;
         }
         .custom-sidebar-menu a:hover, .custom-sidebar-menu a.active { border-color: #f6c90e; color: #f6c90e; }
-    </style>
+   
+   
+/* DAFTAR PEMINJAMAN */
+.daftar-peminjaman {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+}
+
+.kartu-peminjaman {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 2px solid #0d233a;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+}
+
+.peminjaman-identitas {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.tombol-cover-peminjaman {
+    flex-shrink: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+}
+
+.cover-peminjaman {
+    width: 105px;
+    height: 145px;
+    object-fit: cover;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+    transition: transform 0.2s;
+}
+
+.tombol-cover-peminjaman:hover .cover-peminjaman {
+    transform: scale(1.05);
+}
+
+.peminjaman-info-utama {
+    min-width: 0;
+}
+
+.peminjaman-info-utama h3 {
+    color: #0d233a;
+    font-size: 18px;
+    margin: 0 0 8px;
+    overflow-wrap: anywhere;
+}
+
+.nama-penulis {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0 0 12px;
+}
+
+.badge-status {
+    display: inline-block;
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.status-menunggu {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-dipinjam {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.petunjuk-detail {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 12px;
+}
+
+.peminjaman-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.peminjaman-data {
+    min-width: 0;
+}
+
+.peminjaman-data span {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    margin-bottom: 7px;
+}
+
+.peminjaman-data strong {
+    color: #0d233a;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.peminjaman-menunggu {
+    margin-top: 18px;
+    padding: 17px;
+    background: #fff8e1;
+    border: 1px solid #f6c90e;
+    border-radius: 12px;
+}
+
+.peminjaman-menunggu h4 {
+    margin: 0;
+    color: #92400e;
+}
+
+.peminjaman-menunggu p {
+    color: #78350f;
+    font-size: 13px;
+}
+
+.peminjaman-menunggu .hitung-mundur {
+    font-size: 23px;
+    font-weight: bold;
+    color: #b45309;
+    margin-bottom: 12px;
+}
+
+.btn-batal-peminjaman {
+    background: #dc2626;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 17px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.peminjaman-disetujui {
+    margin-top: 18px;
+    padding: 14px;
+    background: #ecfdf5;
+    color: #166534;
+    border-radius: 10px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.peminjaman-kosong {
+    background: white;
+    padding: 50px 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 16px;
+    text-align: center;
+    color: #64748b;
+}
+
+.peminjaman-kosong > i {
+    font-size: 45px;
+    margin-bottom: 15px;
+    color: #cbd5e1;
+}
+
+.peminjaman-kosong a {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 10px 18px;
+    background: #0d233a;
+    color: #f6c90e;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+@media (max-width: 900px) {
+    .peminjaman-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 550px) {
+    .peminjaman-identitas {
+        align-items: flex-start;
+        gap: 13px;
+    }
+
+    .cover-peminjaman {
+        width: 80px;
+        height: 115px;
+    }
+
+    .peminjaman-info-utama h3 {
+        font-size: 15px;
+    }
+
+    .peminjaman-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
+/* POPUP DETAIL PEMINJAMAN */
+.modal-detail-peminjaman {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    background: rgba(0,0,0,0.65);
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.modal-detail-card {
+    width: 100%;
+    max-width: 650px;
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 18px;
+    padding: 25px;
+    box-sizing: border-box;
+}
+
+.modal-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.modal-detail-header h3 {
+    color: #0d233a;
+    margin: 0;
+}
+
+.modal-detail-header button {
+    background: none;
+    border: none;
+    font-size: 30px;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.modal-detail-identitas {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 25px;
+}
+
+.modal-detail-identitas img {
+    width: 125px;
+    height: 175px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+}
+
+.modal-detail-identitas h2 {
+    color: #0d233a;
+    font-size: 21px;
+}
+
+.modal-detail-identitas p {
+    color: #64748b;
+}
+
+.detail-info-label {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.modal-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 15px;
+    background: #f1f5f9;
+    padding: 18px;
+    border-radius: 12px;
+}
+
+.modal-detail-grid span {
+    display: block;
+    font-size: 11px;
+    color: #64748b;
+    margin-bottom: 5px;
+}
+
+.modal-detail-grid strong {
+    font-size: 13px;
+    color: #0d233a;
+}
+
+.btn-tutup-detail {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    background: #0d233a;
+    color: #f6c90e;
+    border: none;
+    border-radius: 9px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+@media (max-width: 500px) {
+    .modal-detail-identitas img {
+        width: 90px;
+        height: 130px;
+    }
+
+    .modal-detail-identitas h2 {
+        font-size: 16px;
+    }
+}
+
+
+   </style>
 </head>
 <body style="background-color: #f8fafc;">
 
@@ -55,134 +386,237 @@
             <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Daftar buku yang sedang Anda pinjam saat ini 📖</p>
         </header>
 
-        <div class="content-body">
-            {% if peminjaman_list %}
-                {% for item in peminjaman_list %}
-                <div class="user-card-peminjaman" style="background: white; border: 2px solid #0d233a; border-radius: 16px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
-                    <div class="user-card-title" style="font-weight: bold; color: #0d233a; font-size: 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>📖 {{ item.judul }}</span>
-                        <span style="font-size: 12px; background-color: #f6c90e; color: #0d233a; padding: 4px 12px; border-radius: 12px; font-weight: bold;">⏳ {{ item.status | upper }}</span>
+        
+<div class="content-body">
+
+    {% if peminjaman_list %}
+
+        <div class="daftar-peminjaman">
+
+            {% for item in peminjaman_list %}
+
+            <div class="kartu-peminjaman">
+
+                <!-- INFORMASI UTAMA BUKU -->
+                <div class="peminjaman-identitas">
+
+                    <button type="button"
+                        class="tombol-cover-peminjaman"
+                        data-judul="{{ item.judul }}"
+                        data-penulis="{{ item.penulis or '-' }}"
+                        data-cover="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'default_cover.jpg')) }}"
+                        data-penerbit="{{ item.penerbit or '-' }}"
+                        data-tahun="{{ item.tahun_terbit or '-' }}"
+                        data-kategori="{{ item.kategori or '-' }}"
+                        data-total="{{ item.jumlah_total or 0 }}"
+                        data-tersedia="{{ item.jumlah_tersedia or 0 }}"
+                        onclick="bukaDetailPeminjaman(this)"
+                        title="Klik untuk melihat detail buku">
+
+                        <img
+                            src="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'default_cover.jpg')) }}"
+                            alt="Cover {{ item.judul }}"
+                            class="cover-peminjaman"
+                            onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}'">
+
+                    </button>
+
+                    <div class="peminjaman-info-utama">
+
+                        <h3>{{ item.judul }}</h3>
+
+                        <p class="nama-penulis">
+                            <i class="fa-solid fa-user-pen"></i>
+                            {{ item.penulis or '-' }}
+                        </p>
+
+                        <span class="badge-status
+                            {% if item.status == 'menunggu' %}
+                                status-menunggu
+                            {% else %}
+                                status-dipinjam
+                            {% endif %}">
+                            {{ item.status | upper }}
+                        </span>
+
+                        <p class="petunjuk-detail">
+                            <i class="fa-solid fa-hand-pointer"></i>
+                            Tekan cover untuk melihat detail buku
+                        </p>
+
                     </div>
-                    
-<div class="user-card-grid-info" style="
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 10px;
-    background: #f8fafc;
-    padding: 12px;
-    border-radius: 10px;
-">
-    <div>
-        <span style="font-size: 11px; color: #64748b; display: block;">
-            TANGGAL PINJAM
-        </span>
-        <span style="font-weight: bold; color: #0d233a; font-size: 13px;">
-            📅 {{ item.tgl_pinjam or '-' }}
-        </span>
-    </div>
 
-    <div>
-        <span style="font-size: 11px; color: #64748b; display: block;">
-            JATUH TEMPO
-        </span>
-        <span style="font-weight: bold; color: #0d233a; font-size: 13px;">
-            ⏰ {{ item.jatuh_tempo or '-' }}
-        </span>
-    </div>
+                </div>
 
-    <div>
-        <span style="font-size: 11px; color: #64748b; display: block;">
-            STATUS
-        </span>
-        <span style="font-weight: bold; color: #0d233a; font-size: 13px;">
-            📌 {{ item.status }}
-        </span>
-    </div>
+                <!-- INFORMASI PEMINJAMAN -->
+                <div class="peminjaman-grid">
 
-    <div>
-        <span style="font-size: 11px; color: #64748b; display: block;">
-            DIPROSES OLEH
-        </span>
-        <span style="font-weight: bold; color: #0d233a; font-size: 13px;">
-            👤 {{ item.diproses_oleh or 'Belum diproses' }}
-        </span>
-    </div>
-</div>
-
-{% if item.status == 'menunggu' %}
-<div style="
-    margin-top: 15px;
-    padding: 15px;
-    background: #fff8e1;
-    border: 1px solid #f6c90e;
-    border-radius: 10px;
-">
-    <div style="font-weight: bold; color: #92400e;">
-        <i class="fa-solid fa-clock"></i>
-        Menunggu Persetujuan Admin
-    </div>
-
-    <p style="font-size: 13px; color: #78350f; margin: 8px 0;">
-        Pengajuan akan kedaluwarsa setelah 24 jam jika belum diproses admin.
-    </p>
-
-    <div class="hitung-mundur"
-         data-deadline="{{ item.batas_persetujuan_ts }}"
-         style="
-            font-size: 24px;
-            font-weight: bold;
-            color: #b45309;
-            margin-bottom: 12px;
-         ">
-        Memuat waktu...
-    </div>
-
-    <form method="POST"
-          action="{{ url_for('user_batal_peminjaman', id_peminjaman=item.id_peminjaman) }}"
-          onsubmit="return confirm('Apakah kamu yakin ingin membatalkan pengajuan peminjaman ini?');">
-
-        <button type="submit" style="
-            background: #dc2626;
-            color: white;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-        ">
-            <i class="fa-solid fa-xmark"></i>
-            Batal Pinjam
-        </button>
-    </form>
-</div>
-
-{% elif item.status == 'dipinjam' %}
-<div style="
-    margin-top: 15px;
-    padding: 12px;
-    background: #ecfdf5;
-    border-radius: 10px;
-    color: #166534;
-    font-weight: bold;
-">
-    <i class="fa-solid fa-circle-check"></i>
-    Peminjaman telah disetujui. Silakan ambil buku di perpustakaan.
-</div>
-{% endif %}
-
-                        <div><span style="font-size: 11px; color: #64748b; display: block;">DIPROSES OLEH</span><span style="font-weight: bold; color: #0d233a; font-size: 13px;">👤 {{ item.diproses_oleh or 'Admin' }}</span></div>
+                    <div class="peminjaman-data">
+                        <span>TANGGAL PINJAM</span>
+                        <strong>
+                            <i class="fa-regular fa-calendar"></i>
+                            {{ item.tgl_pinjam or '-' }}
+                        </strong>
                     </div>
+
+                    <div class="peminjaman-data">
+                        <span>JATUH TEMPO</span>
+                        <strong>
+                            <i class="fa-regular fa-clock"></i>
+                            {{ item.jatuh_tempo or '-' }}
+                        </strong>
+                    </div>
+
+                    <div class="peminjaman-data">
+                        <span>STATUS</span>
+                        <strong>{{ item.status | title }}</strong>
+                    </div>
+
+                    <div class="peminjaman-data">
+                        <span>DIPROSES OLEH</span>
+                        <strong>
+                            <i class="fa-solid fa-user"></i>
+                            {{ item.diproses_oleh or 'Belum diproses' }}
+                        </strong>
+                    </div>
+
                 </div>
-                {% endfor %}
-            {% else %}
-                <div style="background: white; padding: 40px; border-radius: 16px; text-align: center; color: #64748b; border: 2px solid #cbd5e1;">
-                    <i class="fa-solid fa-book-open" style="font-size: 40px; margin-bottom: 10px; color: #cbd5e1;"></i>
-                    <p style="margin: 0; font-weight: bold;">Belum ada buku yang sedang dipinjam saat ini 📭.</p>
+
+                <!-- JIKA MASIH MENUNGGU -->
+                {% if item.status == 'menunggu' %}
+
+                <div class="peminjaman-menunggu">
+
+                    <h4>
+                        <i class="fa-solid fa-clock"></i>
+                        Menunggu Persetujuan Admin
+                    </h4>
+
+                    <p>
+                        Pengajuan akan kedaluwarsa setelah 24 jam
+                        jika belum diproses admin.
+                    </p>
+
+                    <div class="hitung-mundur"
+                        data-deadline="{{ item.batas_persetujuan_ts }}">
+                        Memuat waktu...
+                    </div>
+
+                    <form method="POST"
+                        action="{{ url_for('user_batal_peminjaman', id_peminjaman=item.id_peminjaman) }}"
+                        onsubmit="return confirm('Apakah kamu yakin ingin membatalkan pengajuan ini?');">
+
+                        <button type="submit" class="btn-batal-peminjaman">
+                            <i class="fa-solid fa-xmark"></i>
+                            Batal Pinjam
+                        </button>
+
+                    </form>
+
                 </div>
-            {% endif %}
+
+                {% elif item.status == 'dipinjam' %}
+
+                <div class="peminjaman-disetujui">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Peminjaman telah disetujui.
+                    Silakan ambil buku di perpustakaan.
+                </div>
+
+                {% endif %}
+
+            </div>
+
+            {% endfor %}
+
         </div>
-    </div>
 
+    {% else %}
+
+        <div class="peminjaman-kosong">
+            <i class="fa-solid fa-book-open"></i>
+            <p>Belum ada buku yang sedang dipinjam saat ini.</p>
+            <a href="/user/databuku">Jelajahi Katalog Buku</a>
+        </div>
+
+    {% endif %}
+
+</div>
+</div>
+
+
+
+<!-- MODAL DETAIL BUKU PEMINJAMAN -->
+<div id="modalDetailPeminjaman"
+     class="modal-detail-peminjaman"
+     onclick="tutupDetailPeminjaman(event)">
+
+    <div class="modal-detail-card"
+         onclick="event.stopPropagation()">
+
+        <div class="modal-detail-header">
+            <h3>Detail Buku</h3>
+
+            <button type="button"
+                    onclick="tutupDetailPeminjaman()">
+                &times;
+            </button>
+        </div>
+
+        <div class="modal-detail-identitas">
+
+            <img id="detailPinjamCover"
+                 src=""
+                 alt="Cover Buku">
+
+            <div>
+                <h2 id="detailPinjamJudul"></h2>
+                <p id="detailPinjamPenulis"></p>
+
+                <span class="detail-info-label">
+                    Informasi buku yang sedang kamu pinjam
+                </span>
+            </div>
+
+        </div>
+
+        <div class="modal-detail-grid">
+
+            <div>
+                <span>Penerbit</span>
+                <strong id="detailPinjamPenerbit"></strong>
+            </div>
+
+            <div>
+                <span>Tahun Terbit</span>
+                <strong id="detailPinjamTahun"></strong>
+            </div>
+
+            <div>
+                <span>Kategori</span>
+                <strong id="detailPinjamKategori"></strong>
+            </div>
+
+            <div>
+                <span>Total Buku</span>
+                <strong id="detailPinjamTotal"></strong>
+            </div>
+
+            <div>
+                <span>Buku Tersedia</span>
+                <strong id="detailPinjamTersedia"></strong>
+            </div>
+
+        </div>
+
+        <button type="button"
+                class="btn-tutup-detail"
+                onclick="tutupDetailPeminjaman()">
+            Tutup Detail
+        </button>
+
+    </div>
+</div>
 
 
 <!-- MODAL PROFIL WHATSAPP -->
@@ -373,6 +807,38 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+</script>
+
+
+
+<script>
+    // MEMBUKA DETAIL BUKU
+    function bukaDetailPeminjaman(element) {
+        const data = element.dataset;
+
+        document.getElementById('detailPinjamCover').src = data.cover;
+        document.getElementById('detailPinjamJudul').textContent = data.judul;
+        document.getElementById('detailPinjamPenulis').textContent = data.penulis;
+        document.getElementById('detailPinjamPenerbit').textContent = data.penerbit;
+        document.getElementById('detailPinjamTahun').textContent = data.tahun;
+        document.getElementById('detailPinjamKategori').textContent = data.kategori;
+        document.getElementById('detailPinjamTotal').textContent = data.total;
+        document.getElementById('detailPinjamTersedia').textContent = data.tersedia;
+
+        document.getElementById('modalDetailPeminjaman').style.display = 'flex';
+    }
+
+    // MENUTUP DETAIL BUKU
+    function tutupDetailPeminjaman(event) {
+        document.getElementById('modalDetailPeminjaman').style.display = 'none';
+    }
+
+    // MENUTUP DENGAN TOMBOL ESC
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            tutupDetailPeminjaman();
+        }
+    });
 </script>
 
 
