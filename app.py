@@ -1097,36 +1097,74 @@ def user_peminjaman():
 
 
 
+
 @app.route('/user/riwayat')
 def user_riwayat():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
-        user_id = session.get('id_user')
 
-        cursor.execute("""
-            SELECT
-                peminjaman.*,
-                buku.judul,
-                buku.penulis,
-                buku.cover
-            FROM peminjaman
-            JOIN buku ON peminjaman.id_buku = buku.id_buku
-            WHERE peminjaman.id_anggota = %s
-            ORDER BY peminjaman.id_peminjaman DESC
-        """, (user_id,))
+        try:
+            user_id = session.get('id_user')
 
-        riwayat_list = cursor.fetchall()
+            cursor.execute("""
+                SELECT
+                    peminjaman.id_peminjaman,
+                    peminjaman.id_anggota,
+                    peminjaman.status,
+                    peminjaman.created_at,
+                    peminjaman.tgl_pinjam,
+                    peminjaman.jatuh_tempo,
 
-        cursor.close()
-        conn.close()
+                    buku.judul,
+                    buku.penulis,
+                    buku.cover,
 
-        return render_template(
-            'user/riwayat.html',
-            riwayat_list=riwayat_list
-        )
+                    COALESCE(
+                        pengembalian.tgl_kembali,
+                        NULL
+                    ) AS tgl_kembali,
+
+                    CASE
+                        WHEN peminjaman.status = 'dipinjam'
+                             AND peminjaman.jatuh_tempo IS NOT NULL
+                             AND peminjaman.jatuh_tempo < CURDATE()
+                        THEN 'terlambat'
+
+                        ELSE peminjaman.status
+                    END AS status_tampilan
+
+                FROM peminjaman
+
+                JOIN buku
+                    ON peminjaman.id_buku = buku.id_buku
+
+                LEFT JOIN pengembalian
+                    ON peminjaman.id_peminjaman =
+                       pengembalian.id_peminjaman
+
+                WHERE peminjaman.id_anggota = %s
+
+                ORDER BY peminjaman.id_peminjaman DESC
+            """, (user_id,))
+
+            riwayat_list = cursor.fetchall()
+
+            return render_template(
+                'user/riwayat.html',
+                riwayat_list=riwayat_list
+            )
+
+        except Exception as e:
+            print("Gagal memuat riwayat peminjaman:", e)
+            return "Gagal memuat riwayat peminjaman.", 500
+
+        finally:
+            cursor.close()
+            conn.close()
 
     return redirect(url_for('login'))
+
 
 
 @app.route('/user/biodata')
@@ -1156,35 +1194,67 @@ def user_biodata():
     return redirect(url_for('login'))
 
 
+
 @app.route('/user/update_biodata', methods=['POST'])
 def user_update_biodata():
     if session.get('role') in ['siswa', 'user']:
+
         user_id = session.get('id_user')
+
         nama = request.form.get('nama', '').strip()
         email = request.form.get('email', '').strip()
         telepon_raw = request.form.get('telepon', '').strip()
+        kelas = request.form.get('kelas', '').strip()
+
         no_hp = None if not telepon_raw or telepon_raw == '-' else telepon_raw
 
-        if not nama or not email:
+        # Validasi input
+        if not nama or not email or not kelas:
+            return redirect(url_for('user_biodata'))
+
+        if len(kelas) > 50:
             return redirect(url_for('user_biodata'))
 
         conn = buat_koneksi()
         cursor = conn.cursor(buffered=True)
+
         try:
-            cursor.execute(
-                "UPDATE anggota SET nama_lengkap = %s, email = %s, no_hp = %s WHERE id_anggota = %s",
-                (nama, email, no_hp, user_id)
-            )
-            cursor.execute("UPDATE users SET nama = %s, email = %s WHERE id_user = %s", (nama, email, user_id))
+            # Update biodata anggota
+            cursor.execute("""
+                UPDATE anggota
+                SET
+                    nama_lengkap = %s,
+                    email = %s,
+                    no_hp = %s,
+                    kelas = %s
+                WHERE id_anggota = %s
+            """, (nama, email, no_hp, kelas, user_id))
+
+            # Sinkronisasi nama dan email pada tabel users
+            cursor.execute("""
+                UPDATE users
+                SET nama = %s, email = %s
+                WHERE id_user = %s
+            """, (nama, email, user_id))
+
             conn.commit()
+
+            # Update session
             session['nama'] = nama
+            session['kelas'] = kelas
+
         except Exception as e:
             conn.rollback()
             print(f"Error update biodata: {e}")
-        cursor.close()
-        conn.close()
+
+        finally:
+            cursor.close()
+            conn.close()
+
         return redirect(url_for('user_biodata'))
+
     return redirect(url_for('login'))
+
 
 
 @app.route('/logout')

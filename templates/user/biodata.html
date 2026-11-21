@@ -87,6 +87,10 @@
                             <td class="val" id="valTelepon">: {{ biodata.no_hp if biodata else '-' }}</td>
                         </tr>
                         <tr>
+                            <td class="label">Kelas</td>
+                              <td class="val" id="valKelas">: {{ biodata.kelas if biodata else '-' }}</td>
+                        </tr>
+                        <tr>
                             <td class="label">Status Keanggotaan</td>
                             <td class="val" id="valStatus">: {{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}</td>
                         </tr>
@@ -136,6 +140,19 @@
                         <label>No. Telepon (Opsional)</label>
                         <input type="text" name="telepon" id="inputTelepon">
                     </div>
+
+
+<div class="modal-form-group">
+    <label>Kelas</label>
+    <input
+        type="text"
+        name="kelas"
+        id="inputKelas"
+        maxlength="50"
+        placeholder="Contoh: RT-1"
+        required>
+</div>
+
 
                     <div class="modal-edit-footer">
                         <button type="button" class="btn-modal-batal" onclick="closeEditBiodataModal()">Batal</button>
@@ -214,12 +231,23 @@
             }
         });
 
-        function openEditBiodataModal() {
-            document.getElementById('inputNama').value = document.getElementById('valNama').innerText.replace(': ', '').trim();
-            document.getElementById('inputEmail').value = document.getElementById('valEmail').innerText.replace(': ', '').trim();
-            document.getElementById('inputTelepon').value = document.getElementById('valTelepon').innerText.replace(': ', '').trim();
-            document.getElementById('modalEditBiodata').style.display = 'flex';
-        }
+       
+function openEditBiodataModal() {
+    document.getElementById('inputNama').value =
+        document.getElementById('valNama').innerText.replace(': ', '').trim();
+
+    document.getElementById('inputEmail').value =
+        document.getElementById('valEmail').innerText.replace(': ', '').trim();
+
+    document.getElementById('inputTelepon').value =
+        document.getElementById('valTelepon').innerText.replace(': ', '').trim();
+
+    document.getElementById('inputKelas').value =
+        document.getElementById('valKelas').innerText.replace(': ', '').trim();
+
+    document.getElementById('modalEditBiodata').style.display = 'flex';
+}
+
 
         function closeEditBiodataModal() {
             document.getElementById('modalEditBiodata').style.display = 'none';

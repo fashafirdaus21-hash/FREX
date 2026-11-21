@@ -218,7 +218,7 @@
                 <button class="filter-chip active" onclick="filterStatus('semua', this)">Semua</button>
                 <button class="filter-chip" onclick="filterStatus('dipinjam', this)">Sedang dipinjam</button>
                 <button class="filter-chip" onclick="filterStatus('dikembalikan', this)">Sudah Dikembalikan</button>
-                <button class="filter-chip" onclick="filterStatus('terlambat', this)">Terlambat</button>
+                
             </div>
 
             <!-- List Card Riwayat atau Tampilan Kosong -->
@@ -226,20 +226,20 @@
                 {% if riwayat_list %}
                     {% for item in riwayat_list %}
                     <div class="riwayat-card-custom"
-     data-status="{{ item.status | lower }}"
-     data-judul="{{ item.judul }}"
-     data-penulis="{{ item.penulis or '-' }}"
-     data-cover="{{ url_for('static', filename='uploads/covers/' ~ (item.cover if item.cover else 'default_cover.jpg')) }}"
-     data-status-detail="{{ item.status | title }}"
-     data-dibuat="{{ item.created_at or '-' }}"
-     data-pinjam="{{ item.tgl_pinjam or '-' }}"
-     data-tempo="{{ item.jatuh_tempo or '-' }}"
-     data-kembali="{{ item.tgl_kembali or '-' }}"
-     onclick="bukaDetailRiwayat(this)"
-     title="Klik untuk melihat detail riwayat">
-    <div style="display: flex; align-items: center; gap: 20px;">
-        <div class="book-avatar-box">
-            {% if item.cover %}
+                        data-status="{{ item.status | lower }}"
+                         data-judul="{{ item.judul }}"
+                         data-penulis="{{ item.penulis or '-' }}"
+                            data-cover="{{ url_for('static', filename='uploads/covers/' ~ (item.cover if item.cover else 'default_cover.jpg')) }}"
+                     data-status-detail="{{ item.status | title }}"
+                      data-dibuat="{{ item.created_at or '-' }}"
+                  data-pinjam="{{ item.tgl_pinjam or '-' }}"
+                  data-tempo="{{ item.jatuh_tempo or '-' }}"
+                     data-kembali="{{ item.tgl_kembali or '-' }}"
+                  onclick="bukaDetailRiwayat(this)"
+                 title="Klik untuk melihat detail riwayat">
+                  <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="book-avatar-box">
+                 {% if item.cover %}
                 <img
                     src="{{ url_for('static', filename='uploads/covers/' ~ item.cover) }}"
                     alt="Cover {{ item.judul }}"
@@ -249,10 +249,10 @@
                 <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">
                     {{ item.judul[:2] | upper }}
                 </span>
-            {% else %}
+               {% else %}
                 {{ item.judul[:2] | upper }}
-            {% endif %}
-        </div>
+              {% endif %}
+               </div>
                             <div>
                                 <h3 style="color: #f6c90e; margin: 0 0 4px 0; font-size: 16px;" class="judul-buku">📖 {{ item.judul }}</h3>
                                 <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 13px;" class="penulis-buku">✍️ {{ item.penulis }}</p>
@@ -267,11 +267,55 @@
                                 </div>
                             </div>
                         </div>
-                        <div>
-                            <span style="background-color: {% if item.status == 'dipinjam' %}#3b82f6{% elif item.status == 'terlambat' %}#ef4444{% else %}#10b981{% endif %}; color: white; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 12px; display: inline-block;">
-                                {{ item.status | title }}
-                            </span>
-                        </div>
+                        
+<div>
+    <span style="
+        background-color:
+        {% if item.status == 'menunggu' %}
+            #f59e0b
+        {% elif item.status == 'dipinjam' %}
+            #3b82f6
+        {% elif item.status == 'dikembalikan' %}
+            #10b981
+        {% elif item.status == 'terlambat' %}
+            #ef4444
+        {% elif item.status == 'ditolak' %}
+            #dc2626
+        {% elif item.status == 'dibatalkan' %}
+            #64748b
+        {% elif item.status == 'kedaluwarsa' %}
+            #94a3b8
+        {% else %}
+            #64748b
+        {% endif %};
+
+        color: white;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 12px;
+        display: inline-block;
+    ">
+        {% if item.status == 'menunggu' %}
+            Menunggu
+        {% elif item.status == 'dipinjam' %}
+            Sedang Dipinjam
+        {% elif item.status == 'dikembalikan' %}
+            Dikembalikan
+        {% elif item.status == 'terlambat' %}
+            Terlambat
+        {% elif item.status == 'ditolak' %}
+            Ditolak
+        {% elif item.status == 'dibatalkan' %}
+            Dibatalkan
+        {% elif item.status == 'kedaluwarsa' %}
+            Kedaluwarsa
+        {% else %}
+            {{ item.status | title }}
+        {% endif %}
+    </span>
+</div>
+
                     </div>
                     {% endfor %}
                 {% else %}
