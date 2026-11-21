@@ -24,6 +24,90 @@
         }
         .canva-search-box input { background: transparent; border: none; color: #f6c90e; outline: none; width: 100%; }
         .canva-search-box input::placeholder { color: #f6c90e; opacity: 0.7; }
+
+/* FILTER KATALOG BUKU */
+
+.filter-katalog {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    background: #ffffff;
+    border: 1px solid #dbe3ed;
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.04);
+}
+
+.filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 0;
+}
+
+.filter-item label {
+    font-size: 12px;
+    font-weight: bold;
+    color: #0d233a;
+}
+
+.filter-item select {
+    width: 100%;
+    padding: 11px 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 9px;
+    background: #f8fafc;
+    color: #0d233a;
+    outline: none;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.filter-item select:focus {
+    border-color: #f6c90e;
+    box-shadow: 0 0 0 2px rgba(246,201,14,0.15);
+}
+
+.filter-reset {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.filter-reset button {
+    background: #0d233a;
+    color: #f6c90e;
+    border: none;
+    border-radius: 9px;
+    padding: 10px 18px;
+    font-size: 12px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.filter-reset button:hover {
+    background: #193b5c;
+}
+
+#hasilFilter {
+    color: #64748b;
+    font-size: 13px;
+    margin: 5px 0 10px;
+}
+
+@media (max-width: 900px) {
+    .filter-katalog {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 500px) {
+    .filter-katalog {
+        grid-template-columns: 1fr;
+    }
+}
+
         .ref-table-card { background-color: #ffffff; border: 2px solid #0d233a; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         .ref-table { width: 100%; border-collapse: collapse; text-align: left; }
         .ref-table th { background-color: #ffffff; color: #0d233a; padding: 18px 24px; font-size: 15px; font-weight: bold; border-bottom: 2px solid #0d233a; }
@@ -283,6 +367,53 @@
             </div>
 
             
+
+<!-- PANEL FILTER KATALOG -->
+
+<div class="filter-katalog">
+
+    <div class="filter-item">
+        <label for="filterStok">Ketersediaan Buku</label>
+        <select id="filterStok" onchange="filterBuku()">
+            <option value="">Semua Buku</option>
+            <option value="tersedia">Tersedia untuk Dipinjam</option>
+            <option value="habis">Tidak Tersedia</option>
+        </select>
+    </div>
+
+    <div class="filter-item">
+        <label for="filterKategori">Kategori Buku</label>
+        <select id="filterKategori" onchange="filterBuku()">
+            <option value="">Semua Kategori</option>
+        </select>
+    </div>
+
+    <div class="filter-item">
+        <label for="filterTahun">Tahun Terbit</label>
+        <select id="filterTahun" onchange="filterBuku()">
+            <option value="">Semua Tahun</option>
+        </select>
+    </div>
+
+    <div class="filter-item">
+        <label for="filterPenulis">Nama Penulis</label>
+        <select id="filterPenulis" onchange="filterBuku()">
+            <option value="">Semua Penulis</option>
+        </select>
+    </div>
+
+    <div class="filter-reset">
+        <button type="button" onclick="resetFilterBuku()">
+            <i class="fa-solid fa-rotate-left"></i>
+            Reset Filter
+        </button>
+    </div>
+
+</div>
+
+<p id="hasilFilter"></p>
+
+
 {% if request.args.get('pinjam') == 'berhasil' %}
 <div style="background:#dcfce7; color:#166534; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
     Pengajuan peminjaman berhasil dikirim. Silakan tunggu persetujuan administrator.
@@ -536,23 +667,173 @@
 
        
 // PENCARIAN KATALOG BUKU
-function filterBuku() {
-    const input = document.getElementById('searchInput')
-        .value.toLowerCase();
 
-    const kartu = document.querySelectorAll('.kartu-buku');
+// ==========================================
+// FILTER DAN PENCARIAN KATALOG BUKU
+// ==========================================
+
+// Mengisi pilihan filter secara otomatis
+document.addEventListener("DOMContentLoaded", function () {
+
+    const kartu = document.querySelectorAll(".kartu-buku");
+
+    const kategori = new Set();
+    const tahun = new Set();
+    const penulis = new Set();
 
     kartu.forEach(function(item) {
-        const judul = item.dataset.judul.toLowerCase();
-        const penulis = item.dataset.penulis.toLowerCase();
+        if (item.dataset.kategori) {
+            kategori.add(item.dataset.kategori);
+        }
 
-        if (judul.includes(input) || penulis.includes(input)) {
-            item.style.display = '';
-        } else {
-            item.style.display = 'none';
+        if (item.dataset.tahun) {
+            tahun.add(item.dataset.tahun);
+        }
+
+        if (item.dataset.penulis) {
+            penulis.add(item.dataset.penulis);
         }
     });
+
+    isiPilihanFilter("filterKategori", kategori);
+    isiPilihanFilter("filterTahun", tahun);
+    isiPilihanFilter("filterPenulis", penulis);
+});
+
+
+// Membuat pilihan dropdown secara otomatis
+function isiPilihanFilter(id, daftar) {
+
+    const select = document.getElementById(id);
+
+    if (!select) return;
+
+    const pilihan = Array.from(daftar).sort(
+        (a, b) => a.localeCompare(b, "id", {
+            numeric: true
+        })
+    );
+
+    pilihan.forEach(function(nilai) {
+
+        const option = document.createElement("option");
+
+        option.value = nilai;
+        option.textContent = nilai;
+
+        select.appendChild(option);
+    });
 }
+
+
+// Menjalankan semua filter sekaligus
+function filterBuku() {
+
+    const pencarian = document
+        .getElementById("searchInput")
+        .value.toLowerCase()
+        .trim();
+
+    const stok = document.getElementById("filterStok").value;
+    const kategori = document.getElementById("filterKategori").value;
+    const tahun = document.getElementById("filterTahun").value;
+    const penulis = document.getElementById("filterPenulis").value;
+
+    const kartu = document.querySelectorAll(".kartu-buku");
+
+    let jumlahTampil = 0;
+
+    kartu.forEach(function(item) {
+
+        const judulBuku = item.dataset.judul.toLowerCase();
+        const namaPenulis = item.dataset.penulis.toLowerCase();
+
+        const kategoriBuku = item.dataset.kategori;
+        const tahunBuku = item.dataset.tahun;
+
+        const stokBuku = parseInt(item.dataset.tersedia) || 0;
+
+        // Filter pencarian
+        const cocokPencarian =
+            judulBuku.includes(pencarian) ||
+            namaPenulis.includes(pencarian);
+
+        // Filter ketersediaan
+        let cocokStok = true;
+
+        if (stok === "tersedia") {
+            cocokStok = stokBuku > 0;
+        } else if (stok === "habis") {
+            cocokStok = stokBuku <= 0;
+        }
+
+        // Filter kategori
+        const cocokKategori =
+            kategori === "" || kategoriBuku === kategori;
+
+        // Filter tahun
+        const cocokTahun =
+            tahun === "" || tahunBuku === tahun;
+
+        // Filter penulis
+        const cocokPenulis =
+            penulis === "" || item.dataset.penulis === penulis;
+
+        // Gabungkan seluruh filter
+        const tampil =
+            cocokPencarian &&
+            cocokStok &&
+            cocokKategori &&
+            cocokTahun &&
+            cocokPenulis;
+
+        item.style.display = tampil ? "" : "none";
+
+        if (tampil) {
+            jumlahTampil++;
+        }
+
+    });
+
+    // Informasi hasil filter
+    const hasil = document.getElementById("hasilFilter");
+
+    if (hasil) {
+        hasil.textContent =
+            "Menampilkan " + jumlahTampil +
+            " dari " + kartu.length + " buku.";
+    }
+
+    // Pesan jika tidak ada hasil
+    let pesanKosong = document.getElementById("pesanBukuKosong");
+
+    if (!pesanKosong) {
+        pesanKosong = document.createElement("p");
+        pesanKosong.id = "pesanBukuKosong";
+        pesanKosong.style.color = "#64748b";
+        pesanKosong.style.padding = "20px 0";
+        pesanKosong.textContent = "Buku yang kamu cari tidak ditemukan.";
+
+        document.getElementById("katalogBuku").appendChild(pesanKosong);
+    }
+
+    pesanKosong.style.display =
+        jumlahTampil === 0 ? "block" : "none";
+}
+
+
+// Menghapus semua filter
+function resetFilterBuku() {
+
+    document.getElementById("searchInput").value = "";
+    document.getElementById("filterStok").value = "";
+    document.getElementById("filterKategori").value = "";
+    document.getElementById("filterTahun").value = "";
+    document.getElementById("filterPenulis").value = "";
+
+    filterBuku();
+}
+
 
 // MEMBUKA DETAIL BUKU
 function bukaDetailBuku(element) {
