@@ -853,11 +853,14 @@ def user_peminjaman():
             conn.commit()
 
             cursor.execute("""
-                SELECT
-                    peminjaman.*,
-                    buku.judul,
-                    buku.penulis
-                FROM peminjaman
+               SELECT
+    peminjaman.*,
+    buku.judul,
+    buku.penulis,
+    UNIX_TIMESTAMP(
+        DATE_ADD(peminjaman.created_at, INTERVAL 24 HOUR)
+    ) AS batas_persetujuan_ts
+FROM peminjaman
                 JOIN buku
                     ON peminjaman.id_buku = buku.id_buku
                 WHERE peminjaman.id_anggota = %s
