@@ -5,38 +5,203 @@
     <title>Biodata - User Perpustakaan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=24.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+    /* ==========================================
+       SIDEBAR USER - SAMAKAN DENGAN HALAMAN LAIN
+    ========================================== */
+
+    .custom-sidebar-menu {
+        list-style: none;
+        padding: 0 15px;
+        margin: 0;
+    }
+
+    .custom-sidebar-menu li {
+        margin-bottom: 12px;
+    }
+
+    .custom-sidebar-menu a {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #ffffff;
+        text-decoration: none;
+        padding: 12px 18px;
+        border-radius: 16px;
+        font-size: 13px;
+        font-weight: bold;
+        border: 2px solid transparent;
+        background-color: #0d233a;
+        box-sizing: border-box;
+        transition: all 0.2s;
+    }
+
+    .custom-sidebar-menu a:hover,
+    .custom-sidebar-menu a.active {
+        border-color: #f6c90e;
+        color: #f6c90e;
+        background: linear-gradient(
+            90deg,
+            rgba(255, 204, 0, 0.15),
+            transparent
+        );
+    }
+
+    /* Pastikan sidebar Biodata memiliki ukuran yang sama */
+    .sidebar {
+        background-color: #0c2340 !important;
+        width: 260px !important;
+        height: 100vh;
+        position: fixed;
+        left: 0;
+        top: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding-bottom: 20px;
+        box-sizing: border-box;
+    }
+
+    /* Posisi konten utama mengikuti sidebar 260px */
+    .main-container {
+        margin-left: 260px;
+        padding: 30px;
+        box-sizing: border-box;
+    }
+</style>
 </head>
 <body>
 
     <!-- SIDEBAR USER -->
-    <aside class="sidebar">
-        <div>
-            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
-                <div class="profile-img" id="sidebarAvatarPreview">
-                    <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
-                </div>
-                <h3>
-                    {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">
-                        {{ biodata.kelas if biodata and biodata.kelas else session.get('kelas', '-') }}
-                    </span>
-                </h3>
+<aside class="sidebar"
+       style="background-color: #0c2340;
+              width: 260px;
+              height: 100vh;
+              position: fixed;
+              left: 0;
+              top: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              padding-bottom: 20px;">
+
+    <div>
+
+        <!-- PROFIL USER -->
+        <div class="sidebar-profile"
+             onclick="openWaProfile()"
+             title="Klik untuk lihat/edit profil"
+             style="padding: 25px 20px;
+                    text-align: center;
+                    cursor: pointer;">
+
+            <div class="profile-img"
+                 id="sidebarAvatarPreview"
+                 style="width: 65px;
+                        height: 65px;
+                        border-radius: 50%;
+                        margin: 0 auto 10px auto;
+                        background: #e2e8f0;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border: 2px solid #f6c90e;
+                        overflow: hidden;">
+
+                <i class="fa-solid fa-user-graduate text-slate-700"
+                   style="font-size: 24px;">
+                </i>
+
             </div>
-            
-            <!-- PERBAIKAN 1: Mengubah rute menu sidebar menjadi rute USER, bukan admin -->
-            <ul class="sidebar-menu">
-                <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
-                <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
-                <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
-                <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
-                <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
-            </ul>
+
+            <h3>
+                {{ session.get('nama', 'USER') }}<br>
+
+                <span style="font-size: 11px;
+                             color: #f6c90e;
+                             font-weight: normal;">
+
+                    {{ biodata.kelas if biodata and biodata.kelas
+                       else session.get('kelas', '-') }}
+
+                </span>
+            </h3>
+
         </div>
 
-        <div class="sidebar-logout-box" style="padding: 0 15px;">
-            <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
-        </div>
-    </aside>
+        <!-- MENU SIDEBAR -->
+        <ul class="custom-sidebar-menu">
+
+            <li>
+                <a href="/user/dashboard"
+                   class="{% if request.path == '/user/dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/databuku"
+                   class="{% if request.path == '/user/databuku' %}active{% endif %}">
+                    <i class="fa-solid fa-book"></i>
+                    Data Buku
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/peminjaman"
+                   class="{% if request.path == '/user/peminjaman' %}active{% endif %}">
+                    <i class="fa-solid fa-hand-holding-hand"></i>
+                    Peminjaman Saya
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/riwayat"
+                   class="{% if request.path == '/user/riwayat' %}active{% endif %}">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Riwayat
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/biodata"
+                   class="{% if request.path == '/user/biodata' %}active{% endif %}">
+                    <i class="fa-solid fa-users"></i>
+                    Biodata
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+    <!-- LOGOUT -->
+    <div class="sidebar-logout-box"
+         style="padding: 0 15px;">
+
+        <a href="/logout"
+           class="btn-logout-sidebar"
+           style="display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 8px;
+                  background-color: #f6c90e;
+                  color: #0d233a;
+                  padding: 10px;
+                  border-radius: 12px;
+                  font-weight: bold;
+                  text-decoration: none;
+                  font-size: 13px;">
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Log out
+
+        </a>
+
+    </div>
+
+</aside>
 
     <!-- MAIN CONTAINER -->
     <div class="main-container">
@@ -58,17 +223,61 @@
                     <label for="uploadFotoInput" class="btn-ubah-foto" style="cursor: pointer;">Ubah Foto</label>
                     <input type="file" id="uploadFotoInput" accept="image/*" style="display: none;" onchange="previewBiodataImage(event)">
 
-                    <div class="stat-box-container">
-                        <h4>Statistik Aktivitas</h4>
-                        <div class="stat-row-item">
-                            <span>Status Akun</span>
-                            <span style="font-weight: bold; color: #f6c90e;">{{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}</span>
-                        </div>
-                        <div class="stat-row-item">
-                            <span>Kelas</span>
-                            <span style="font-weight: bold; color: #f6c90e;">{{ biodata.kelas if biodata else '-' }}</span>
-                        </div>
-                    </div>
+                    
+<div class="stat-box-container">
+
+    <h4>Statistik Aktivitas</h4>
+
+    <!-- STATUS AKUN -->
+    <div class="stat-row-item">
+        <span>Status Akun</span>
+        <strong style="color: #10b981;">
+            {{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}
+        </strong>
+    </div>
+
+    <!-- KELAS -->
+    <div class="stat-row-item">
+        <span>Kelas</span>
+        <strong style="color: #f6c90e;">
+            {{ biodata.kelas if biodata and biodata.kelas else '-' }}
+        </strong>
+    </div>
+
+    <!-- TOTAL PEMINJAMAN -->
+    <div class="stat-row-item">
+        <span>Total Peminjaman</span>
+        <strong style="color: #60a5fa;">
+            {{ statistik.total_peminjaman or 0 }}
+        </strong>
+    </div>
+
+    <!-- SEDANG DIPINJAM -->
+    <div class="stat-row-item">
+        <span>Sedang Dipinjam</span>
+        <strong style="color: #38bdf8;">
+            {{ statistik.sedang_dipinjam or 0 }}
+        </strong>
+    </div>
+
+    <!-- TOTAL DIKEMBALIKAN -->
+    <div class="stat-row-item">
+        <span>Total Dikembalikan</span>
+        <strong style="color: #34d399;">
+            {{ statistik.total_dikembalikan or 0 }}
+        </strong>
+    </div>
+
+    <!-- PEMINJAMAN TERLAMBAT -->
+    <div class="stat-row-item">
+        <span>Peminjaman Terlambat</span>
+        <strong style="color: #f87171;">
+            {{ statistik.peminjaman_terlambat or 0 }}
+        </strong>
+    </div>
+
+</div>
+
                 </div>
 
                 <!-- KOLOM KANAN: DETAIL BIODATA DARI DATABASE -->
@@ -108,9 +317,14 @@
                         </tr>
                     </table>
                     
-                    <div style="overflow: hidden; margin-top: 15px;">
-                        <button class="btn-edit-biodata" onclick="openEditBiodataModal()">Edit Biodata</button>
-                    </div>
+                    
+<div style="overflow: hidden; margin-top: 15px;">
+    <button class="btn-edit-biodata"
+            onclick="openEditProfileModal()">
+        Edit Biodata
+    </button>
+</div>
+
                 </div>
 
             </div>
@@ -163,36 +377,11 @@
         </div>
     </div>
 
-    <!-- MODAL PROFIL WHATSAPP -->
-    <div id="waProfileModal" class="modal-overlay-wa">
-        <div class="modal-card-wa">
-            <div class="wa-modal-header">
-                <h3>Profil User</h3>
-                <button class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            <div class="wa-body">
-                <div class="wa-avatar-container" id="modalAvatarDisplay">
-                    <i class="fa-solid fa-user-graduate" style="font-size: 60px; color: #8696a0;"></i>
-                </div>
-                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
-                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
-                <div class="wa-info-group">
-                    <div class="wa-info-label">About</div>
-                    <div class="wa-info-row">
-                        <span class="wa-info-value" id="textAbout">Semangat Belajar 📚</span>
-                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editAbout()"></i>
-                    </div>
-                </div>
-                <div class="wa-info-group">
-                    <div class="wa-info-label">Name</div>
-                    <div class="wa-info-row">
-                        <span class="wa-info-value" id="textName">{{ session.get('nama', 'User') }}</span>
-                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+   
+<!-- MODAL PROFIL DAN EDIT BIODATA -->
+{% include 'user/_modal_profil.html' %}
+{% include 'user/_modal_edit_biodata.html' %}
+
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
@@ -280,5 +469,8 @@ function openEditBiodataModal() {
 
 
     </script>
+
+<script src="{{ url_for('static', filename='js/user-profile.js') }}?v=1"></script>
+
 </body>
 </html>

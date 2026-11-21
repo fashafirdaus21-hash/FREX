@@ -1,0 +1,100 @@
+
+<!-- MODAL EDIT BIODATA USER -->
+<div id="modalEditBiodata" class="modal-edit-biodata-overlay">
+
+    <div class="modal-edit-biodata-card">
+
+        <div class="modal-edit-header">
+            <h3>Edit Biodata Anggota</h3>
+
+            <button type="button"
+                    class="wa-close-btn"
+                    onclick="closeEditProfileModal()"
+                    style="position:absolute; right:20px; top:18px; background:transparent; border:none; color:white; font-size:18px; cursor:pointer;">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <form action="{{ url_for('user_update_biodata') }}" method="POST">
+
+            <input type="hidden" name="next" value="{{ request.path }}">
+
+            <div class="modal-edit-body">
+
+                <!-- NAMA -->
+                <div class="modal-form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text"
+                           name="nama"
+                           value="{{ biodata.nama_lengkap if biodata else session.get('nama', '') }}"
+                           maxlength="100"
+                           required>
+                </div>
+
+                <!-- KELAS -->
+                <div class="modal-form-group">
+                    <label>Kelas</label>
+                    <input type="text"
+                           name="kelas"
+                           value="{{ biodata.kelas if biodata and biodata.kelas else '' }}"
+                           maxlength="50"
+                           placeholder="Masukkan kelas"
+                           required>
+                </div>
+
+                <!-- TELEPON -->
+                <div class="modal-form-group">
+                    <label>No. Telepon</label>
+                    <input type="text"
+                           name="telepon"
+                           value="{{ biodata.no_hp if biodata and biodata.no_hp else '' }}"
+                           maxlength="20"
+                           placeholder="Masukkan nomor telepon">
+                </div>
+
+                <!-- EMAIL -->
+                <div class="modal-form-group">
+                    <label>Email</label>
+                    <input type="email"
+                           name="email"
+                           value="{{ biodata.email if biodata and biodata.email else '' }}"
+                           maxlength="100"
+                           required>
+                </div>
+
+                <!-- KATEGORI (INFORMASI SAJA) -->
+                <div class="modal-form-group">
+                    <label>Kategori</label>
+                    <input type="text"
+                           value="Siswa / Anggota"
+                           readonly>
+                </div>
+
+                <!-- STATUS (INFORMASI SAJA) -->
+                <div class="modal-form-group">
+                    <label>Status Keanggotaan</label>
+                    <input type="text"
+                           value="{{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}"
+                           readonly>
+                </div>
+
+                <!-- TOMBOL -->
+                <div class="modal-edit-footer">
+
+                    <button type="button"
+                            class="btn-modal-batal"
+                            onclick="closeEditProfileModal()">
+                        Batal
+                    </button>
+
+                    <button type="submit"
+                            class="btn-modal-simpan">
+                        Simpan Perubahan
+                    </button>
+
+                </div>
+
+            </div>
+        </form>
+    </div>
+</div>

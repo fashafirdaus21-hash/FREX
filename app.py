@@ -221,7 +221,7 @@ def admin_dashboard():
             FROM peminjaman
             JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
             JOIN buku ON peminjaman.id_buku = buku.id_buku
-            ORDER BY peminjaman.id_peminjaman DESC LIMIT 5
+            ORDER BY peminjaman.id_peminjaman DESC LIMIT 10
         """)
         transaksi_terbaru = cursor.fetchall()
 
@@ -703,21 +703,182 @@ def hapus_anggota(id_anggota):
 @app.route('/user/dashboard')
 def user_dashboard():
     if session.get('role') in ['siswa', 'user']:
+
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
+
         user_id = session.get('id_user')
 
-        cursor.execute("SELECT COUNT(*) as total FROM peminjaman WHERE id_anggota = %s AND status = 'dipinjam'", (user_id,))
-        res1 = cursor.fetchone()
-        jml_dipinjam = res1['total'] if res1 else 0
+        try:
 
-        cursor.execute("SELECT COUNT(*) as total FROM peminjaman WHERE id_anggota = %s AND status = 'menunggu'", (user_id,))
-        res2 = cursor.fetchone()
-        jml_menunggu = res2['total'] if res2 else 0
+            # ==========================================
+            # 1. STATISTIK DASHBOARD
+            # ==========================================
 
-        cursor.close()
-        conn.close()
-        return render_template('user/dashboard.html', jml_dipinjam=jml_dipinjam, jml_menunggu=jml_menunggu)
+            cursor.execute("""
+                SELECT COUNT(*) AS total
+                FROM peminjaman
+                WHERE id_anggota = %s
+                AND status = 'dipinjam'
+            """, (user_id,))
+
+            res1 = cursor.fetchone()
+            jml_dipinjam = res1['total'] if res1 else 0
+
+
+            cursor.execute("""
+                SELECT COUNT(*) AS total
+                FROM peminjaman
+                WHERE id_anggota = %s
+                AND status = 'menunggu'
+            """, (user_id,))
+
+            res2 = cursor.fetchone()
+            jml_menunggu = res2['total'] if res2 else 0
+
+
+            # ==========================================
+            # 2. BUKU TERBANYAK DIPINJAM
+            # ==========================================
+            cursor.execute("""
+                SELECT
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at,
+                    COUNT(p.id_peminjaman) AS jumlah_peminjaman
+                FROM buku b
+                LEFT JOIN peminjaman p
+                    ON b.id_buku = p.id_buku
+                    AND p.status IN ('dipinjam', 'dikembalikan')
+                GROUP BY
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at
+                HAVING jumlah_peminjaman > 0
+                ORDER BY jumlah_peminjaman DESC, b.judul ASC
+                LIMIT 5
+            """)
+
+            buku_terbanyak = cursor.fetchall()
+
+
+            # ==========================================
+            # 3. BUKU SEDANG TREND
+            #    30 HARI TERAKHIR
+            # ==========================================
+            cursor.execute("""
+                SELECT
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at,
+                    COUNT(p.id_peminjaman) AS jumlah_peminjaman
+                FROM buku b
+                INNER JOIN peminjaman p
+                    ON b.id_buku = p.id_buku
+                WHERE
+                    p.status IN ('dipinjam', 'dikembalikan')
+                    AND p.created_at >= NOW() - INTERVAL 30 DAY
+                GROUP BY
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at
+                ORDER BY jumlah_peminjaman DESC, p.created_at DESC
+                LIMIT 5
+            """)
+
+            buku_tren = cursor.fetchall()
+
+
+            # ==========================================
+            # 4. PALING SERING SAYA PINJAM
+            # ==========================================
+            cursor.execute("""
+                SELECT
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at,
+                    COUNT(p.id_peminjaman) AS jumlah_peminjaman
+                FROM buku b
+                INNER JOIN peminjaman p
+                    ON b.id_buku = p.id_buku
+                WHERE
+                    p.id_anggota = %s
+                    AND p.status IN ('dipinjam', 'dikembalikan')
+                GROUP BY
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at
+                ORDER BY jumlah_peminjaman DESC, b.judul ASC
+                LIMIT 5
+            """, (user_id,))
+
+            buku_favorit = cursor.fetchall()
+
+
+            # ==========================================
+            # 5. BUKU TERBARU
+            # ==========================================
+            cursor.execute("""
+                SELECT
+                    b.id_buku,
+                    b.judul,
+                    b.penulis,
+                    b.cover,
+                    b.created_at
+                FROM buku b
+                ORDER BY b.created_at DESC
+                LIMIT 5
+            """)
+
+            buku_terbaru = cursor.fetchall()
+
+
+            # ==========================================
+            # RENDER DASHBOARD
+            # ==========================================
+            return render_template(
+                'user/dashboard.html',
+
+                jml_dipinjam=jml_dipinjam,
+                jml_menunggu=jml_menunggu,
+
+                buku_terbanyak=buku_terbanyak,
+                buku_tren=buku_tren,
+                buku_favorit=buku_favorit,
+                buku_terbaru=buku_terbaru
+            )
+
+        except Exception as e:
+
+            print("Gagal mengambil data dashboard:", e)
+
+            return render_template(
+                'user/dashboard.html',
+                jml_dipinjam=jml_dipinjam,
+                jml_menunggu=jml_menunggu,
+                buku_terbanyak=[],
+                buku_tren=[],
+                buku_favorit=[],
+                buku_terbaru=[]
+            )
+
+        finally:
+
+            cursor.close()
+            conn.close()
+
     return redirect(url_for('login'))
 
 
@@ -1167,93 +1328,191 @@ def user_riwayat():
 
 
 
+
 @app.route('/user/biodata')
 def user_biodata():
     if session.get('role') in ['siswa', 'user']:
+
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
         user_id = session.get('id_user')
 
-        cursor.execute("SELECT * FROM anggota WHERE id_anggota = %s", (user_id,))
-        biodata = cursor.fetchone()
-
-        if not biodata:
-            biodata = {
-                'nama_lengkap': session.get('nama', '-'),
-                'email': '-',
-                'no_hp': '-',
-                'status_keanggotaan': 'Aktif',
-                'tanggal_bergabung': '-',
-                'masa_berlaku': '-',
-                'kelas': '-'
-            }
-
-        cursor.close()
-        conn.close()
-        return render_template('user/biodata.html', biodata=biodata)
-    return redirect(url_for('login'))
-
-
-
-@app.route('/user/update_biodata', methods=['POST'])
-def user_update_biodata():
-    if session.get('role') in ['siswa', 'user']:
-
-        user_id = session.get('id_user')
-
-        nama = request.form.get('nama', '').strip()
-        email = request.form.get('email', '').strip()
-        telepon_raw = request.form.get('telepon', '').strip()
-        kelas = request.form.get('kelas', '').strip()
-
-        no_hp = None if not telepon_raw or telepon_raw == '-' else telepon_raw
-
-        # Validasi input
-        if not nama or not email or not kelas:
-            return redirect(url_for('user_biodata'))
-
-        if len(kelas) > 50:
-            return redirect(url_for('user_biodata'))
-
-        conn = buat_koneksi()
-        cursor = conn.cursor(buffered=True)
-
         try:
-            # Update biodata anggota
+            # =================================
+            # 1. MENGAMBIL DATA BIODATA ANGGOTA
+            # =================================
             cursor.execute("""
-                UPDATE anggota
-                SET
-                    nama_lengkap = %s,
-                    email = %s,
-                    no_hp = %s,
-                    kelas = %s
+                SELECT *
+                FROM anggota
                 WHERE id_anggota = %s
-            """, (nama, email, no_hp, kelas, user_id))
+            """, (user_id,))
 
-            # Sinkronisasi nama dan email pada tabel users
+            biodata = cursor.fetchone()
+
+            if not biodata:
+                biodata = {
+                    'nama_lengkap': session.get('nama', '-'),
+                    'email': '-',
+                    'no_hp': '-',
+                    'status_keanggotaan': 'aktif',
+                    'tanggal_bergabung': '-',
+                    'masa_berlaku': '-',
+                    'kelas': '-'
+                }
+
+            # =================================
+            # 2. MENGHITUNG STATISTIK PEMINJAMAN
+            # =================================
             cursor.execute("""
-                UPDATE users
-                SET nama = %s, email = %s
-                WHERE id_user = %s
-            """, (nama, email, user_id))
+                SELECT
+                    COUNT(
+                        CASE
+                            WHEN status IN ('dipinjam', 'dikembalikan')
+                            THEN 1
+                        END
+                    ) AS total_peminjaman,
 
-            conn.commit()
+                    COUNT(
+                        CASE
+                            WHEN status = 'dipinjam'
+                            THEN 1
+                        END
+                    ) AS sedang_dipinjam,
 
-            # Update session
-            session['nama'] = nama
-            session['kelas'] = kelas
+                    COUNT(
+                        CASE
+                            WHEN status = 'dikembalikan'
+                            THEN 1
+                        END
+                    ) AS total_dikembalikan,
+
+                    COUNT(
+                        CASE
+                            WHEN status = 'dipinjam'
+                            AND jatuh_tempo IS NOT NULL
+                            AND jatuh_tempo < CURDATE()
+                            THEN 1
+                        END
+                    ) AS peminjaman_terlambat
+
+                FROM peminjaman
+                WHERE id_anggota = %s
+            """, (user_id,))
+
+            statistik = cursor.fetchone()
+
+            # Jika hasil statistik kosong, gunakan nilai 0
+            if not statistik:
+                statistik = {
+                    'total_peminjaman': 0,
+                    'sedang_dipinjam': 0,
+                    'total_dikembalikan': 0,
+                    'peminjaman_terlambat': 0
+                }
+
+            return render_template(
+                'user/biodata.html',
+                biodata=biodata,
+                statistik=statistik
+            )
 
         except Exception as e:
-            conn.rollback()
-            print(f"Error update biodata: {e}")
+            print("Gagal memuat biodata dan statistik:", e)
+            return "Gagal memuat biodata dan statistik.", 500
 
         finally:
             cursor.close()
             conn.close()
 
-        return redirect(url_for('user_biodata'))
-
     return redirect(url_for('login'))
+
+
+
+
+
+@app.route('/user/update_biodata', methods=['POST'])
+def user_update_biodata():
+
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
+
+    user_id = session.get('id_user')
+
+    nama = request.form.get('nama', '').strip()
+    kelas = request.form.get('kelas', '').strip()
+    email = request.form.get('email', '').strip()
+    telepon_raw = request.form.get('telepon', '').strip()
+
+    no_hp = telepon_raw if telepon_raw else None
+
+    # Tujuan kembali ke halaman sebelumnya
+    next_url = request.form.get('next', '')
+
+    if not next_url.startswith('/user/') or next_url.startswith('//'):
+        next_url = url_for('user_biodata')
+
+    # Validasi data
+    if not nama or not kelas or not email:
+        return redirect(next_url)
+
+    if len(nama) > 100 or len(kelas) > 50:
+        return redirect(next_url)
+
+    if len(email) > 100 or (no_hp and len(no_hp) > 20):
+        return redirect(next_url)
+
+    conn = None
+    cursor = None
+
+    try:
+        conn = buat_koneksi()
+        cursor = conn.cursor(buffered=True)
+
+        # Update tabel anggota
+        cursor.execute("""
+            UPDATE anggota
+            SET
+                nama_lengkap = %s,
+                kelas = %s,
+                email = %s,
+                no_hp = %s
+            WHERE id_anggota = %s
+        """, (nama, kelas, email, no_hp, user_id))
+
+        # Sinkronisasi nama dan email tabel users
+        cursor.execute("""
+            UPDATE users
+            SET
+                nama = %s,
+                email = %s
+            WHERE id_user = %s
+        """, (nama, email, user_id))
+
+        conn.commit()
+
+        # Perbarui session
+        session['nama'] = nama
+        session['kelas'] = kelas
+
+        print("Biodata anggota berhasil diperbarui.")
+
+    except Exception as e:
+
+        if conn:
+            conn.rollback()
+
+        print("Gagal memperbarui biodata:", e)
+
+    finally:
+
+        if cursor:
+            cursor.close()
+
+        if conn:
+            conn.close()
+
+    return redirect(next_url)
+
 
 
 

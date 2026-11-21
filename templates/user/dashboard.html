@@ -5,61 +5,349 @@
     <title>Dashboard - User Perpustakaan</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=32.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <style>
-        .custom-sidebar-menu { list-style: none; padding: 0 15px; margin: 0; }
-        .custom-sidebar-menu li { margin-bottom: 12px; }
-        .custom-sidebar-menu a {
-            display: flex; align-items: center; gap: 12px; color: #ffffff; text-decoration: none;
-            padding: 12px 18px; border-radius: 16px; font-size: 13px; font-weight: bold;
-            border: 2px solid transparent; background-color: #0d233a; box-sizing: border-box; transition: all 0.2s;
-        }
-        .custom-sidebar-menu a:hover, .custom-sidebar-menu a.active { 
-            border-color: #f6c90e; 
-            color: #f6c90e; 
-            background: linear-gradient(90deg, rgba(255, 204, 0, 0.15), transparent);
-        }
-        
-        .stat-card-link {
-            text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: block;
-        }
-        .stat-card-link:hover {
-            transform: translateY(-4px);
-        }
-    </style>
+  <style>
+
+/* =====================================================
+   CSS SIDEBAR
+===================================================== */
+
+.custom-sidebar-menu {
+    list-style: none;
+    padding: 0 15px;
+    margin: 0;
+}
+
+.custom-sidebar-menu li {
+    margin-bottom: 12px;
+}
+
+.custom-sidebar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    color: #ffffff;
+    text-decoration: none;
+
+    padding: 12px 18px;
+
+    border-radius: 16px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    border: 2px solid transparent;
+
+    background-color: #0d233a;
+
+    box-sizing: border-box;
+
+    transition: all 0.2s;
+}
+
+.custom-sidebar-menu a:hover,
+.custom-sidebar-menu a.active {
+    border-color: #f6c90e;
+    color: #f6c90e;
+
+    background: linear-gradient(
+        90deg,
+        rgba(255,204,0,0.15),
+        transparent
+    );
+}
+
+
+/* =====================================================
+   REKOMENDASI BUKU
+===================================================== */
+
+.rekomendasi-section {
+    width: 100%;
+
+    margin-top: 32px;
+    margin-bottom: 35px;
+
+    box-sizing: border-box;
+}
+
+/* Judul kategori */
+.rekomendasi-header {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    margin-bottom: 18px;
+
+    box-sizing: border-box;
+}
+
+.rekomendasi-header h3 {
+    margin: 0;
+
+    color: #0d233a;
+
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.rekomendasi-header span {
+    color: #64748b;
+
+    font-size: 12px;
+}
+
+/* AREA BUKU */
+.rekomendasi-list {
+    width: 100%;
+
+    display: grid;
+
+    grid-template-columns: repeat(5, 150px);
+
+    justify-content: center;
+
+    gap: 28px 24px;
+
+    box-sizing: border-box;
+}
+
+/* CARD */
+.rekomendasi-card {
+    width: 150px;
+
+    min-width: 0;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    transition: transform 0.2s ease;
+}
+
+.rekomendasi-card:hover {
+    transform: translateY(-4px);
+}
+
+/* COVER */
+.rekomendasi-cover {
+    width: 150px;
+    height: 210px;
+
+    overflow: hidden;
+
+    border-radius: 3px;
+
+    background: #e2e8f0;
+
+    box-shadow:
+        0 2px 7px rgba(15, 23, 42, 0.20);
+}
+
+.rekomendasi-cover img {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+/* INFO */
+.rekomendasi-info {
+    padding-top: 9px;
+}
+
+.rekomendasi-judul {
+    margin: 0 0 4px 0;
+
+    color: #1e293b;
+
+    font-size: 14px;
+    font-weight: 600;
+
+    line-height: 1.3;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.rekomendasi-penulis {
+    margin: 0;
+
+    color: #64748b;
+
+    font-size: 12px;
+
+    white-space: nowrap;
+
+    overflow: hidden;
+
+    text-overflow: ellipsis;
+}
+
+.rekomendasi-meta {
+    margin-top: 5px;
+
+    color: #94a3b8;
+
+    font-size: 10px;
+}
+
+/* DATA KOSONG */
+.rekomendasi-empty {
+    grid-column: 1 / -1;
+
+    width: 100%;
+
+    min-height: 80px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: center;
+
+    color: #94a3b8;
+
+    font-size: 13px;
+
+    background: #f8fafc;
+
+    border-radius: 8px;
+}
+
+
+/* =====================================================
+   RESPONSIVE
+===================================================== */
+
+@media (max-width: 1200px) {
+
+    .rekomendasi-list {
+        grid-template-columns: repeat(4, 150px);
+    }
+
+}
+
+@media (max-width: 950px) {
+
+    .rekomendasi-list {
+        grid-template-columns: repeat(3, 150px);
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .rekomendasi-list {
+        grid-template-columns: repeat(2, 150px);
+    }
+
+}
+
+@media (max-width: 430px) {
+
+    .rekomendasi-list {
+        grid-template-columns: 150px;
+    }
+
+}
+
+</style>
 </head>
 <body style="background-color: #f8fafc;">
 
     <!-- SIDEBAR USER -->
-    <aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
-        <div>
-            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat/edit profil" style="padding: 25px 20px; text-align: center; cursor: pointer;">
-                <div class="profile-img" id="sidebarAvatarPreview" style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
-                    <i class="fa-solid fa-user-graduate text-slate-700" style="font-size: 24px;"></i>
-                </div>
-               <h3>
-                    {{ session.get('nama', 'USER') }}<br>
-                    <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">
-                        {{ biodata.kelas if biodata and biodata.kelas else session.get('kelas', '-') }}
-                    </span>
-                </h3>
+<aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
+    <div>
+        <div class="sidebar-profile"
+             onclick="openWaProfile()"
+             title="Klik untuk lihat/edit profil"
+             style="padding: 25px 20px; text-align: center; cursor: pointer;">
+
+            <div class="profile-img"
+                 id="sidebarAvatarPreview"
+                 style="width: 65px; height: 65px; border-radius: 50%; margin: 0 auto 10px auto; background: #e2e8f0; display: flex; align-items: center; justify-content: center; border: 2px solid #f6c90e; overflow: hidden;">
+
+                <i class="fa-solid fa-user-graduate text-slate-700"
+                   style="font-size: 24px;"></i>
+
             </div>
-            
-            <!-- MENU SIDEBAR YANG SUDAH BERSIH DARI DUPLIKASI -->
-            <ul class="custom-sidebar-menu">
-                <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
-                <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
-                <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
-                <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
-                <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
-            </ul>
+
+            <h3>
+                {{ session.get('nama', 'USER') }}<br>
+
+                <span style="font-size: 11px; color: #f6c90e; font-weight: normal;">
+                    {{ biodata.kelas if biodata and biodata.kelas else session.get('kelas', '-') }}
+                </span>
+            </h3>
         </div>
 
-        <div class="sidebar-logout-box" style="padding: 0 15px;">
-            <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
-        </div>
-    </aside>
+        <!-- MENU SIDEBAR -->
+        <ul class="custom-sidebar-menu">
+
+            <li>
+                <a href="/user/dashboard"
+                   class="{% if request.path == '/user/dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/databuku"
+                   class="{% if request.path == '/user/databuku' %}active{% endif %}">
+                    <i class="fa-solid fa-book"></i>
+                    Data Buku
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/peminjaman"
+                   class="{% if request.path == '/user/peminjaman' %}active{% endif %}">
+                    <i class="fa-solid fa-hand-holding-hand"></i>
+                    Peminjaman Saya
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/riwayat"
+                   class="{% if request.path == '/user/riwayat' %}active{% endif %}">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Riwayat
+                </a>
+            </li>
+
+            <li>
+                <a href="/user/biodata"
+                   class="{% if request.path == '/user/biodata' %}active{% endif %}">
+                    <i class="fa-solid fa-users"></i>
+                    Biodata
+                </a>
+            </li>
+
+        </ul>
+    </div>
+
+    <div class="sidebar-logout-box" style="padding: 0 15px;">
+
+        <a href="/logout"
+           class="btn-logout-sidebar"
+           style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;">
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+            Log out
+
+        </a>
+
+    </div>
+</aside>
 
     <!-- MAIN CONTAINER -->
     <div class="main-container" style="margin-left: 260px; padding: 30px;">
@@ -106,59 +394,252 @@
         </div>
     </div>
 
-    
-<!-- MODAL PROFIL WHATSAPP -->
-<div id="waProfileModal" class="modal-overlay-wa">
-    <div class="modal-card-wa">
-        <div class="wa-modal-header">
-            <h3>Profil User</h3>
-            <button class="wa-close-btn" onclick="closeWaProfile()">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
+    <!-- ==========================================
+     REKOMENDASI BUKU
+========================================== -->
 
-        <div class="wa-body">
-            <div class="wa-avatar-container" id="modalAvatarDisplay">
-                <i class="fa-solid fa-user-graduate"
-                   style="font-size: 60px; color: #8696a0;"></i>
-            </div>
+<!-- 1. TERBANYAK DIPINJAM -->
+<section class="rekomendasi-section">
 
-            <label for="waUploadInput" class="wa-upload-label">
-                <i class="fa-solid fa-camera"></i> Ganti Foto Profil
-            </label>
-
-            <input type="file"
-                   id="waUploadInput"
-                   accept="image/*"
-                   style="display: none;"
-                   onchange="previewWaImage(event)">
-
-            <div class="wa-info-group">
-                <div class="wa-info-label">About</div>
-                <div class="wa-info-row">
-                    <span class="wa-info-value" id="textAbout">
-                        Semangat Belajar 📚
-                    </span>
-                    <i class="fa-solid fa-pen wa-edit-icon"
-                       onclick="editAbout()"></i>
-                </div>
-            </div>
-
-            <div class="wa-info-group">
-                <div class="wa-info-label">Name</div>
-                <div class="wa-info-row">
-                    <span class="wa-info-value" id="textName">
-                        {{ session.get('nama', 'User') }}
-                    </span>
-                    <i class="fa-solid fa-pen wa-edit-icon"
-                       onclick="editName()"></i>
-                </div>
-            </div>
-        </div>
+    <div class="rekomendasi-header">
+        <h3>🔥 Terbanyak Dipinjam</h3>
+        <span>Populer sepanjang waktu</span>
     </div>
-</div>
 
-    <script>
+    <div class="rekomendasi-list">
+
+        {% if buku_terbanyak %}
+
+            {% for buku in buku_terbanyak %}
+
+            <div class="rekomendasi-card"
+                 onclick="window.location.href='/user/databuku'">
+
+                <div class="rekomendasi-cover">
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
+                        alt="Cover {{ buku.judul }}"
+                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
+
+                </div>
+
+                <div class="rekomendasi-info">
+
+                    <p class="rekomendasi-judul">
+                        {{ buku.judul }}
+                    </p>
+
+                    <p class="rekomendasi-penulis">
+                        {{ buku.penulis or '-' }}
+                    </p>
+
+                    <div class="rekomendasi-meta">
+                        📚 {{ buku.jumlah_peminjaman }} kali dipinjam
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="rekomendasi-empty">
+                Belum ada data peminjaman.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+<!-- 2. SEDANG TREND -->
+<section class="rekomendasi-section">
+
+    <div class="rekomendasi-header">
+        <h3>📈 Sedang Tren</h3>
+        <span>Populer dalam 30 hari terakhir</span>
+    </div>
+
+    <div class="rekomendasi-list">
+
+        {% if buku_tren %}
+
+            {% for buku in buku_tren %}
+
+            <div class="rekomendasi-card"
+                 onclick="window.location.href='/user/databuku'">
+
+                <div class="rekomendasi-cover">
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
+                        alt="Cover {{ buku.judul }}"
+                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
+
+                </div>
+
+                <div class="rekomendasi-info">
+
+                    <p class="rekomendasi-judul">
+                        {{ buku.judul }}
+                    </p>
+
+                    <p class="rekomendasi-penulis">
+                        {{ buku.penulis or '-' }}
+                    </p>
+
+                    <div class="rekomendasi-meta">
+                        🔥 {{ buku.jumlah_peminjaman }} peminjaman / 30 hari
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="rekomendasi-empty">
+                Belum ada buku yang sedang tren.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+<!-- 3. PALING SERING SAYA PINJAM -->
+<section class="rekomendasi-section">
+
+    <div class="rekomendasi-header">
+        <h3>❤️ Paling Sering Saya Pinjam</h3>
+        <span>Berdasarkan riwayat kamu</span>
+    </div>
+
+    <div class="rekomendasi-list">
+
+        {% if buku_favorit %}
+
+            {% for buku in buku_favorit %}
+
+            <div class="rekomendasi-card"
+                 onclick="window.location.href='/user/databuku'">
+
+                <div class="rekomendasi-cover">
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
+                        alt="Cover {{ buku.judul }}"
+                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
+
+                </div>
+
+                <div class="rekomendasi-info">
+
+                    <p class="rekomendasi-judul">
+                        {{ buku.judul }}
+                    </p>
+
+                    <p class="rekomendasi-penulis">
+                        {{ buku.penulis or '-' }}
+                    </p>
+
+                    <div class="rekomendasi-meta">
+                        ❤️ Dipinjam {{ buku.jumlah_peminjaman }} kali
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="rekomendasi-empty">
+                Kamu belum memiliki riwayat peminjaman.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+
+
+<!-- 4. BUKU TERBARU -->
+<section class="rekomendasi-section">
+
+    <div class="rekomendasi-header">
+        <h3>🆕 Buku Terbaru</h3>
+        <span>Baru ditambahkan ke perpustakaan</span>
+    </div>
+
+    <div class="rekomendasi-list">
+
+        {% if buku_terbaru %}
+
+            {% for buku in buku_terbaru %}
+
+            <div class="rekomendasi-card"
+                 onclick="window.location.href='/user/databuku'">
+
+                <div class="rekomendasi-cover">
+
+                    <img
+                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
+                        alt="Cover {{ buku.judul }}"
+                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
+
+                </div>
+
+                <div class="rekomendasi-info">
+
+                    <p class="rekomendasi-judul">
+                        {{ buku.judul }}
+                    </p>
+
+                    <p class="rekomendasi-penulis">
+                        {{ buku.penulis or '-' }}
+                    </p>
+
+                    <div class="rekomendasi-meta">
+                        🆕 Buku baru
+                    </div>
+
+                </div>
+
+            </div>
+
+            {% endfor %}
+
+        {% else %}
+
+            <div class="rekomendasi-empty">
+                Belum ada buku baru.
+            </div>
+
+        {% endif %}
+
+    </div>
+
+</section>
+    
+
+<!-- MODAL PROFIL DAN EDIT BIODATA -->
+{% include 'user/_modal_profil.html' %}
+{% include 'user/_modal_edit_biodata.html' %}
+
+
+     <script>
         const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}");
 
         function terapkanAvatarKeSemua(dataUrl) {
@@ -204,26 +685,29 @@
         }
 
         function editAbout() {
-    let v = prompt(
+      let v = prompt(
         "Status baru:",
         document.getElementById('textAbout').innerText
-    );
+      );
 
-    if (v) {
+      if (v) {
         document.getElementById('textAbout').innerText = v;
+      }
     }
-}
 
-function editName() {
-    let v = prompt(
-        "Nama baru:",
+      function editName() {
+     let v = prompt(
+         "Nama baru:",
         document.getElementById('textName').innerText
-    );
+      );
 
-    if (v) {
+      if (v) {
         document.getElementById('textName').innerText = v;
-    }
-}
-    </script>
-</body>
+     }
+     } 
+     </script>
+
+<script src="{{ url_for('static', filename='js/user-profile.js') }}?v=1"></script>
+
+     </body>
 </html>

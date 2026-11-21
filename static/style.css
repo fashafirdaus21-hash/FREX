@@ -870,17 +870,28 @@ body {
     color: #ffffff;
 }
 
+
 .biodata-avatar-box {
     width: 130px;
     height: 130px;
-    background-color: #cbd5e1;
-    border-radius: 12px;
+    background-color: transparent;
+    border-radius: 50%;
     margin: 0 auto 15px auto;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
 }
+
+/* Foto profil berbentuk lingkaran sempurna */
+.biodata-avatar-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+}
+
 
 .biodata-avatar-box img {
     width: 100%;
@@ -913,13 +924,24 @@ body {
     margin-bottom: 10px;
 }
 
+
 .stat-row-item {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 10px;
     font-size: 13px;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
     color: #cbd5e1;
 }
+
+.stat-row-item strong {
+    font-size: 13px;
+    font-weight: bold;
+    text-align: right;
+    white-space: nowrap;
+}
+
 
 /* Card Kanan (Tabel Informasi) */
 .biodata-right-card {
@@ -1403,4 +1425,61 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .judul-buku-cell {
     min-width: 180px;
     line-height: 1.4;
+}
+
+
+/* ==========================================
+   PROFIL USER GLOBAL FREX
+========================================== */
+
+/* Membuat modal profil bisa di-scroll */
+.modal-card-wa {
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+/* Tombol edit biodata di profil */
+.wa-edit-profile-btn {
+    width: 100%;
+    padding: 11px 15px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 8px;
+    background: #00a884;
+    color: white;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.wa-edit-profile-btn:hover {
+    background: #008f70;
+}
+
+/* Informasi profil */
+.wa-info-value {
+    overflow-wrap: anywhere;
+}
+
+/* Responsif untuk layar kecil */
+@media (max-width: 480px) {
+
+    .modal-card-wa {
+        width: calc(100% - 30px);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+    .modal-edit-biodata-card {
+        width: calc(100% - 30px);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+
+}
+
+/* Hilangkan ikon pensil pada modal Profil User */
+.wa-info-row .wa-edit-icon {
+    display: none !important;
 }

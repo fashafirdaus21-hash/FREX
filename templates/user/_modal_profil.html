@@ -1,0 +1,121 @@
+
+<!-- MODAL PROFIL USER -->
+<div id="waProfileModal" class="modal-overlay-wa">
+    <div class="modal-card-wa">
+
+        <div class="wa-modal-header">
+            <h3>Profil User</h3>
+            <button class="wa-close-btn" onclick="closeWaProfile()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="wa-body">
+
+            <!-- FOTO PROFIL -->
+            <div class="wa-avatar-container" id="modalAvatarDisplay">
+                <i class="fa-solid fa-user-graduate"
+                   style="font-size: 60px; color: #8696a0;"></i>
+            </div>
+
+            <label for="waUploadInput" class="wa-upload-label">
+                <i class="fa-solid fa-camera"></i> Ganti Foto Profil
+            </label>
+
+            <input type="file"
+                   id="waUploadInput"
+                   accept="image/*"
+                   style="display:none;"
+                   onchange="previewWaImage(event)">
+
+            <!-- ABOUT -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">About</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value" id="textAbout">
+                        Semangat Belajar 📚
+                    </span>
+                    <i class="fa-solid fa-pen wa-edit-icon"
+                       onclick="editAbout()"></i>
+                </div>
+            </div>
+
+            <!-- NAMA -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">Nama Lengkap</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value" id="textName">
+                        {{ biodata.nama_lengkap if biodata else session.get('nama', 'User') }}
+                    </span>
+                    <i class="fa-solid fa-pen wa-edit-icon"
+                       onclick="openEditProfileModal()"></i>
+                </div>
+            </div>
+
+            <!-- KELAS -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">Kelas</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value">
+                        {{ biodata.kelas if biodata and biodata.kelas else '-' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- TELEPON -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">No. Telepon</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value">
+                        {{ biodata.no_hp if biodata and biodata.no_hp else '-' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- EMAIL -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">Email</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value">
+                        {{ biodata.email if biodata and biodata.email else '-' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- KATEGORI -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">Kategori</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value">Siswa / Anggota</span>
+                </div>
+            </div>
+
+            <!-- STATUS KEANGGOTAAN -->
+            <div class="wa-info-group">
+                <div class="wa-info-label">Status Keanggotaan</div>
+                <div class="wa-info-row">
+                    <span class="wa-info-value"
+                          style="color:
+                          {% if biodata and biodata.status_keanggotaan == 'aktif' %}
+                              #00a884
+                          {% elif biodata and biodata.status_keanggotaan == 'ditangguhkan' %}
+                              #f87171
+                          {% else %}
+                              #f6c90e
+                          {% endif %};">
+                        {{ biodata.status_keanggotaan | title if biodata else 'Aktif' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- TOMBOL EDIT -->
+            <button type="button"
+                    class="wa-edit-profile-btn"
+                    onclick="openEditProfileModal()">
+                <i class="fa-solid fa-pen"></i>
+                Edit Biodata
+            </button>
+
+        </div>
+    </div>
+</div>

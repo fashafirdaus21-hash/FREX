@@ -493,56 +493,10 @@
 
 
 
-<!-- MODAL PROFIL WHATSAPP -->
-<div id="waProfileModal" class="modal-overlay-wa">
-    <div class="modal-card-wa">
-        <div class="wa-modal-header">
-            <h3>Profil User</h3>
-            <button class="wa-close-btn" onclick="closeWaProfile()">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
 
-        <div class="wa-body">
-            <div class="wa-avatar-container" id="modalAvatarDisplay">
-                <i class="fa-solid fa-user-graduate"
-                   style="font-size: 60px; color: #8696a0;"></i>
-            </div>
-
-            <label for="waUploadInput" class="wa-upload-label">
-                <i class="fa-solid fa-camera"></i> Ganti Foto Profil
-            </label>
-
-            <input type="file"
-                   id="waUploadInput"
-                   accept="image/*"
-                   style="display: none;"
-                   onchange="previewWaImage(event)">
-
-            <div class="wa-info-group">
-                <div class="wa-info-label">About</div>
-                <div class="wa-info-row">
-                    <span class="wa-info-value" id="textAbout">
-                        Semangat Belajar 📚
-                    </span>
-                    <i class="fa-solid fa-pen wa-edit-icon"
-                       onclick="editAbout()"></i>
-                </div>
-            </div>
-
-            <div class="wa-info-group">
-                <div class="wa-info-label">Name</div>
-                <div class="wa-info-row">
-                    <span class="wa-info-value" id="textName">
-                        {{ session.get('nama', 'User') }}
-                    </span>
-                    <i class="fa-solid fa-pen wa-edit-icon"
-                       onclick="editName()"></i>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- MODAL PROFIL DAN EDIT BIODATA -->
+{% include 'user/_modal_profil.html' %}
+{% include 'user/_modal_edit_biodata.html' %}
 
 
 
@@ -949,5 +903,8 @@ function editName() {
 }
 
     </script>
+
+<script src="{{ url_for('static', filename='js/user-profile.js') }}?v=1"></script>
+
 </body>
 </html>
