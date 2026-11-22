@@ -13,7 +13,7 @@
 
 .custom-sidebar-menu {
     list-style: none;
-    padding: 0 15px;
+    padding: 0 15px;        
     margin: 0;
 }
 
@@ -392,246 +392,451 @@
                 </div>
             </div>
         </div>
-    </div>
+    
 
-    <!-- ==========================================
-     REKOMENDASI BUKU
-========================================== -->
-
-<!-- 1. TERBANYAK DIPINJAM -->
+   <!-- DUMMY REKOMENDASI 40 BUKU - COVER LOKAL FREX -->
 <section class="rekomendasi-section">
-
-    <div class="rekomendasi-header">
-        <h3>🔥 Terbanyak Dipinjam</h3>
-        <span>Populer sepanjang waktu</span>
+  <div class="rekomendasi-header">
+    <h3>🔥 Terbanyak Dipinjam</h3>
+    <span>10 buku dengan jumlah peminjaman tertinggi</span>
+  </div>
+  <div class="rekomendasi-list">
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}" alt="Fisika Dasar" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Fisika Dasar</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 35 kali dipinjam</div>
+      </div>
     </div>
-
-    <div class="rekomendasi-list">
-
-        {% if buku_terbanyak %}
-
-            {% for buku in buku_terbanyak %}
-
-            <div class="rekomendasi-card"
-                 onclick="window.location.href='/user/databuku'">
-
-                <div class="rekomendasi-cover">
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
-                        alt="Cover {{ buku.judul }}"
-                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
-
-                </div>
-
-                <div class="rekomendasi-info">
-
-                    <p class="rekomendasi-judul">
-                        {{ buku.judul }}
-                    </p>
-
-                    <p class="rekomendasi-penulis">
-                        {{ buku.penulis or '-' }}
-                    </p>
-
-                    <div class="rekomendasi-meta">
-                        📚 {{ buku.jumlah_peminjaman }} kali dipinjam
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        {% else %}
-
-            <div class="rekomendasi-empty">
-                Belum ada data peminjaman.
-            </div>
-
-        {% endif %}
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_2.jpg') }}" alt="Sejarah Indonesia Modern" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Sejarah Indonesia Modern</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 33 kali dipinjam</div>
+      </div>
     </div>
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_3.jpg') }}" alt="Jejak Peradaban Nusantara" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Jejak Peradaban Nusantara</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 31 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_4.jpg') }}" alt="Sejarah Indonesia Modern" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Sejarah Indonesia Modern</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 29 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_5.jpg') }}" alt="Catatan dari Masa Kolonial" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Catatan dari Masa Kolonial</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 27 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_6.jpg') }}" alt="Kerajaan Besar Nusantara" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Kerajaan Besar Nusantara</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 25 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_7.jpg') }}" alt="Perjalanan Bangsa Indonesia" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Perjalanan Bangsa Indonesia</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 23 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_8.jpg') }}" alt="Senja di Kota Hujan" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Senja di Kota Hujan</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 21 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_9.jpg') }}" alt="Langit yang Berbeda" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Langit yang Berbeda</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 19 kali dipinjam</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_10.jpg') }}" alt="Rahasia di Balik Jendela" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Rahasia di Balik Jendela</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">📚 17 kali dipinjam</div>
+      </div>
+    </div>
+  </div>
 </section>
 
-
-<!-- 2. SEDANG TREND -->
 <section class="rekomendasi-section">
-
-    <div class="rekomendasi-header">
-        <h3>📈 Sedang Tren</h3>
-        <span>Populer dalam 30 hari terakhir</span>
+  <div class="rekomendasi-header">
+    <h3>📈 Sedang Tren</h3>
+    <span>10 buku yang sedang banyak diminati</span>
+  </div>
+  <div class="rekomendasi-list">
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_11.jpg') }}" alt="Rumah di Ujung Jalan" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Rumah di Ujung Jalan</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 15 peminjaman / 30 hari</div>
+      </div>
     </div>
-
-    <div class="rekomendasi-list">
-
-        {% if buku_tren %}
-
-            {% for buku in buku_tren %}
-
-            <div class="rekomendasi-card"
-                 onclick="window.location.href='/user/databuku'">
-
-                <div class="rekomendasi-cover">
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
-                        alt="Cover {{ buku.judul }}"
-                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
-
-                </div>
-
-                <div class="rekomendasi-info">
-
-                    <p class="rekomendasi-judul">
-                        {{ buku.judul }}
-                    </p>
-
-                    <p class="rekomendasi-penulis">
-                        {{ buku.penulis or '-' }}
-                    </p>
-
-                    <div class="rekomendasi-meta">
-                        🔥 {{ buku.jumlah_peminjaman }} peminjaman / 30 hari
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        {% else %}
-
-            <div class="rekomendasi-empty">
-                Belum ada buku yang sedang tren.
-            </div>
-
-        {% endif %}
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_12.jpg') }}" alt="Sebelum Waktu Berakhir" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Sebelum Waktu Berakhir</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 14 peminjaman / 30 hari</div>
+      </div>
     </div>
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_13.jpg') }}" alt="Dasar-Dasar Manajemen" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Dasar-Dasar Manajemen</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 13 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_14.jpg') }}" alt="Manajemen Pemasaran" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Manajemen Pemasaran</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 12 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_15.jpg') }}" alt="Strategi Bisnis Modern" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Strategi Bisnis Modern</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 11 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_16.jpg') }}" alt="Pengantar Administrasi Bisnis" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Pengantar Administrasi Bisnis</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 10 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_17.jpg') }}" alt="Kepemimpinan dan Organisasi" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Kepemimpinan dan Organisasi</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 9 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_18.jpg') }}" alt="Belajar Pemrograman Python" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Belajar Pemrograman Python</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 8 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_19.jpg') }}" alt="Dasar-Dasar Jaringan Komputer" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Dasar-Dasar Jaringan Komputer</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 7 peminjaman / 30 hari</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_20.jpg') }}" alt="Pengantar Kecerdasan Buatan" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Pengantar Kecerdasan Buatan</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🔥 6 peminjaman / 30 hari</div>
+      </div>
+    </div>
+  </div>
 </section>
 
-
-<!-- 3. PALING SERING SAYA PINJAM -->
 <section class="rekomendasi-section">
-
-    <div class="rekomendasi-header">
-        <h3>❤️ Paling Sering Saya Pinjam</h3>
-        <span>Berdasarkan riwayat kamu</span>
+  <div class="rekomendasi-header">
+    <h3>❤️ Paling Sering Saya Pinjam</h3>
+    <span>Berdasarkan riwayat peminjaman (dummy)</span>
+  </div>
+  <div class="rekomendasi-list">
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_21.jpg') }}" alt="Membangun Website Modern" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Membangun Website Modern</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 10 kali</div>
+      </div>
     </div>
-
-    <div class="rekomendasi-list">
-
-        {% if buku_favorit %}
-
-            {% for buku in buku_favorit %}
-
-            <div class="rekomendasi-card"
-                 onclick="window.location.href='/user/databuku'">
-
-                <div class="rekomendasi-cover">
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
-                        alt="Cover {{ buku.judul }}"
-                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
-
-                </div>
-
-                <div class="rekomendasi-info">
-
-                    <p class="rekomendasi-judul">
-                        {{ buku.judul }}
-                    </p>
-
-                    <p class="rekomendasi-penulis">
-                        {{ buku.penulis or '-' }}
-                    </p>
-
-                    <div class="rekomendasi-meta">
-                        ❤️ Dipinjam {{ buku.jumlah_peminjaman }} kali
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        {% else %}
-
-            <div class="rekomendasi-empty">
-                Kamu belum memiliki riwayat peminjaman.
-            </div>
-
-        {% endif %}
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_22.jpg') }}" alt="Basis Data untuk Pemula" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Basis Data untuk Pemula</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 9 kali</div>
+      </div>
     </div>
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_23.jpg') }}" alt="Fisika Dasar" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Fisika Dasar</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 8 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_24.jpg') }}" alt="Pengantar Ilmu Matematika" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Pengantar Ilmu Matematika</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 7 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_25.jpg') }}" alt="Biologi Kehidupan" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Biologi Kehidupan</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 6 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_26.jpg') }}" alt="Dasar-Dasar Ekonomi" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Dasar-Dasar Ekonomi</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 5 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_27.jpg') }}" alt="Metode Penelitian Kuantitatif" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Metode Penelitian Kuantitatif</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 4 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/fisika.jpg') }}" alt="Fisika" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Fisika</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 3 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}" alt="Fisika Dasar" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Fisika Dasar</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 2 kali</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_2.jpg') }}" alt="Sejarah Indonesia Modern" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Sejarah Indonesia Modern</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">❤️ Dipinjam 1 kali</div>
+      </div>
+    </div>
+  </div>
 </section>
 
-
-<!-- 4. BUKU TERBARU -->
 <section class="rekomendasi-section">
-
-    <div class="rekomendasi-header">
-        <h3>🆕 Buku Terbaru</h3>
-        <span>Baru ditambahkan ke perpustakaan</span>
+  <div class="rekomendasi-header">
+    <h3>🆕 Buku Terbaru</h3>
+    <span>10 koleksi terbaru (dummy)</span>
+  </div>
+  <div class="rekomendasi-list">
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_19.jpg') }}" alt="Dasar-Dasar Jaringan Komputer" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Dasar-Dasar Jaringan Komputer</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
     </div>
-
-    <div class="rekomendasi-list">
-
-        {% if buku_terbaru %}
-
-            {% for buku in buku_terbaru %}
-
-            <div class="rekomendasi-card"
-                 onclick="window.location.href='/user/databuku'">
-
-                <div class="rekomendasi-cover">
-
-                    <img
-                        src="{{ url_for('static', filename='uploads/covers/' ~ (buku.cover if buku.cover else 'default_cover.jpg')) }}"
-                        alt="Cover {{ buku.judul }}"
-                        onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}';">
-
-                </div>
-
-                <div class="rekomendasi-info">
-
-                    <p class="rekomendasi-judul">
-                        {{ buku.judul }}
-                    </p>
-
-                    <p class="rekomendasi-penulis">
-                        {{ buku.penulis or '-' }}
-                    </p>
-
-                    <div class="rekomendasi-meta">
-                        🆕 Buku baru
-                    </div>
-
-                </div>
-
-            </div>
-
-            {% endfor %}
-
-        {% else %}
-
-            <div class="rekomendasi-empty">
-                Belum ada buku baru.
-            </div>
-
-        {% endif %}
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_20.jpg') }}" alt="Pengantar Kecerdasan Buatan" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Pengantar Kecerdasan Buatan</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
     </div>
-
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_21.jpg') }}" alt="Membangun Website Modern" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Membangun Website Modern</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_22.jpg') }}" alt="Basis Data untuk Pemula" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Basis Data untuk Pemula</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_23.jpg') }}" alt="Fisika Dasar" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Fisika Dasar</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_24.jpg') }}" alt="Pengantar Ilmu Matematika" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Pengantar Ilmu Matematika</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_25.jpg') }}" alt="Biologi Kehidupan" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Biologi Kehidupan</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_26.jpg') }}" alt="Dasar-Dasar Ekonomi" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Dasar-Dasar Ekonomi</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/frex_cover_27.jpg') }}" alt="Metode Penelitian Kuantitatif" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Metode Penelitian Kuantitatif</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+    <div class="rekomendasi-card">
+      <div class="rekomendasi-cover">
+        <img src="{{ url_for('static', filename='uploads/covers/fisika.jpg') }}" alt="Fisika" loading="lazy" onerror="this.onerror=null;this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}';">
+      </div>
+      <div class="rekomendasi-info">
+        <p class="rekomendasi-judul">Fisika</p>
+        <p class="rekomendasi-penulis">Koleksi FREX</p>
+        <div class="rekomendasi-meta">🆕 Koleksi terbaru</div>
+      </div>
+    </div>
+  </div>
 </section>
+
+<!-- AKHIR DUMMY REKOMENDASI 40 BUKU -->
+
+    </div>
+    <!-- AKHIR MAIN CONTAINER -->
+
+
     
 
 <!-- MODAL PROFIL DAN EDIT BIODATA -->
