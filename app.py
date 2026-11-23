@@ -882,6 +882,50 @@ def user_dashboard():
     return redirect(url_for('login'))
 
 
+
+@app.route('/user/laporan', methods=['GET', 'POST'])
+def user_laporan():
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        user_id = session.get('id_user')
+        jenis = request.form.get('jenis', '').strip()
+        judul = request.form.get('judul', '').strip()
+        isi_laporan = request.form.get('isi_laporan', '').strip()
+
+        # Validasi input
+        if jenis not in ['bug', 'saran'] or not judul or not isi_laporan:
+            return redirect(url_for('user_laporan', status='tidak_valid'))
+
+        if len(judul) > 150:
+            return redirect(url_for('user_laporan', status='judul_panjang'))
+
+        conn = buat_koneksi()
+        cursor = conn.cursor()
+
+        try:
+            cursor.execute("""
+                INSERT INTO laporan_masukan
+                    (id_user, jenis, judul, isi_laporan)
+                VALUES (%s, %s, %s, %s)
+            """, (user_id, jenis, judul, isi_laporan))
+
+            conn.commit()
+            return redirect(url_for('user_laporan', status='berhasil'))
+
+        except Exception as e:
+            conn.rollback()
+            print("Gagal mengirim laporan:", e)
+            return redirect(url_for('user_laporan', status='gagal'))
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    return render_template('user/laporan.html')
+
+
 @app.route('/user/databuku')
 def user_databuku():
     if session.get('role') in ['siswa', 'user']:

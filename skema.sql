@@ -311,6 +311,36 @@ ALTER TABLE `users`
   ADD PRIMARY KEY (`id_user`),
   ADD UNIQUE KEY `username` (`username`);
 
+
+-- ==========================================
+-- TABEL LAPORAN BUG DAN SARAN
+-- ==========================================
+
+CREATE TABLE `laporan_masukan` (
+    `id_laporan` int(11) NOT NULL AUTO_INCREMENT,
+    `id_user` int(11) NOT NULL,
+    `jenis` enum('bug', 'saran') NOT NULL,
+    `judul` varchar(150) NOT NULL,
+    `isi_laporan` text NOT NULL,
+    `status` enum('baru', 'diproses', 'selesai') NOT NULL DEFAULT 'baru',
+    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+    `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
+        ON UPDATE current_timestamp(),
+
+    PRIMARY KEY (`id_laporan`),
+    KEY `idx_laporan_user` (`id_user`),
+    KEY `idx_laporan_status_created` (`status`, `created_at`),
+
+    CONSTRAINT `fk_laporan_user`
+        FOREIGN KEY (`id_user`)
+        REFERENCES `users` (`id_user`)
+        ON UPDATE CASCADE
+        ON DELETE RESTRICT
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+
+
 --
 -- AUTO_INCREMENT untuk tabel yang dibuang
 --
