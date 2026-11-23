@@ -3,8 +3,18 @@ from koneksi import buat_koneksi
 import os
 import time
 from werkzeug.utils import secure_filename
+import uuid
 
 app = Flask(__name__)
+
+app.config['LAPORAN_UPLOAD_FOLDER'] = os.path.join(
+    app.root_path, 'static', 'uploads', 'laporan'
+)
+
+app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024
+
+os.makedirs(app.config['LAPORAN_UPLOAD_FOLDER'], exist_ok=True)
+
 app.secret_key = 'kunci_rahasia_perpustakaan'
 
 # ==========================================
@@ -883,6 +893,7 @@ def user_dashboard():
 
 
 
+
 @app.route('/user/laporan', methods=['GET', 'POST'])
 def user_laporan():
     if session.get('role') not in ['siswa', 'user']:
@@ -901,29 +912,82 @@ def user_laporan():
         if len(judul) > 150:
             return redirect(url_for('user_laporan', status='judul_panjang'))
 
-        conn = buat_koneksi()
-        cursor = conn.cursor()
+        # Persiapan foto
+        foto = request.files.get('foto')
+        foto_path = None
+        lokasi_file = None
+
+        if foto and foto.filename:
+            ekstensi = os.path.splitext(foto.filename)[1].lower()
+            ekstensi_diizinkan = ['.jpg', '.jpeg', '.png', '.webp']
+
+            if ekstensi not in ekstensi_diizinkan:
+                return redirect(url_for('user_laporan', status='format_foto'))
+
+            nama_file = f"{uuid.uuid4().hex}{ekstensi}"
+
+            lokasi_file = os.path.join(
+                app.config['LAPORAN_UPLOAD_FOLDER'],
+                nama_file
+            )
+
+            foto_path = f"uploads/laporan/{nama_file}"
+
+        conn = None
+        cursor = None
 
         try:
+            # Simpan foto jika ada
+            if lokasi_file:
+                foto.save(lokasi_file)
+
+            conn = buat_koneksi()
+            cursor = conn.cursor()
+
             cursor.execute("""
                 INSERT INTO laporan_masukan
-                    (id_user, jenis, judul, isi_laporan)
-                VALUES (%s, %s, %s, %s)
-            """, (user_id, jenis, judul, isi_laporan))
+                    (id_user, jenis, judul, isi_laporan, foto)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                jenis,
+                judul,
+                isi_laporan,
+                foto_path
+            ))
 
             conn.commit()
-            return redirect(url_for('user_laporan', status='berhasil'))
+
+            return redirect(url_for(
+                'user_laporan',
+                status='berhasil'
+            ))
 
         except Exception as e:
-            conn.rollback()
+            if conn:
+                conn.rollback()
+
+            # Hapus foto jika penyimpanan laporan gagal
+            if lokasi_file and os.path.exists(lokasi_file):
+                os.remove(lokasi_file)
+
             print("Gagal mengirim laporan:", e)
-            return redirect(url_for('user_laporan', status='gagal'))
+
+            return redirect(url_for(
+                'user_laporan',
+                status='gagal'
+            ))
 
         finally:
-            cursor.close()
-            conn.close()
+            if cursor:
+                cursor.close()
 
+            if conn:
+                conn.close()
+
+    # Biodata sudah disediakan oleh inject_biodata()
     return render_template('user/laporan.html')
+
 
 
 @app.route('/user/databuku')

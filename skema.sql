@@ -322,6 +322,7 @@ CREATE TABLE `laporan_masukan` (
     `jenis` enum('bug', 'saran') NOT NULL,
     `judul` varchar(150) NOT NULL,
     `isi_laporan` text NOT NULL,
+    `foto` varchar(255) DEFAULT NULL,
     `status` enum('baru', 'diproses', 'selesai') NOT NULL DEFAULT 'baru',
     `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
     `updated_at` timestamp NOT NULL DEFAULT current_timestamp()

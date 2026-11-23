@@ -1,0 +1,342 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Bug & Saran - FREX</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        .custom-sidebar-menu {
+            list-style: none;
+            padding: 0 15px;
+            margin: 0;
+        }
+
+        .custom-sidebar-menu li {
+            margin-bottom: 12px;
+        }
+
+        .custom-sidebar-menu a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #ffffff;
+            text-decoration: none;
+            padding: 12px 18px;
+            border-radius: 16px;
+            font-size: 13px;
+            font-weight: bold;
+            border: 2px solid transparent;
+            background-color: #0d233a;
+            transition: all 0.2s;
+        }
+
+        .custom-sidebar-menu a:hover,
+        .custom-sidebar-menu a.active {
+            border-color: #f6c90e;
+            color: #f6c90e;
+        }
+
+        .laporan-card {
+            background: #ffffff;
+            border: 1px solid #dbe3ed;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.04);
+            max-width: 850px;
+        }
+
+        .laporan-info {
+            background: #eff6ff;
+            color: #1e40af;
+            padding: 15px 18px;
+            border-radius: 10px;
+            font-size: 13px;
+            line-height: 1.7;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #0d233a;
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 9px;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 13px 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #0d233a;
+            background: #f8fafc;
+            outline: none;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 170px;
+            resize: vertical;
+            line-height: 1.6;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #f6c90e;
+            box-shadow: 0 0 0 3px rgba(246,201,14,0.15);
+        }
+
+        .form-hint {
+            color: #64748b;
+            font-size: 11px;
+            margin-top: 7px;
+        }
+
+        .btn-kirim-laporan {
+            background: #0d233a;
+            color: #f6c90e;
+            border: none;
+            border-radius: 10px;
+            padding: 13px 24px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-kirim-laporan:hover {
+            background: #193b5c;
+            transform: translateY(-2px);
+        }
+
+        .alert-laporan {
+            padding: 14px 18px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .alert-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        @media (max-width: 600px) {
+            .laporan-card {
+                padding: 18px;
+            }
+        }
+    </style>
+</head>
+
+<body style="background-color: #f8fafc;">
+
+    <aside class="sidebar"
+        style="background-color:#0c2340; width:260px; height:100vh; position:fixed; left:0; top:0; display:flex; flex-direction:column; justify-content:space-between; padding-bottom:20px;">
+
+        <div>
+            <div class="sidebar-profile"
+                onclick="openWaProfile()"
+                title="Klik untuk lihat profil"
+                style="padding:25px 20px; text-align:center; cursor:pointer;">
+
+                <div class="profile-img"
+                    id="sidebarAvatarPreview"
+                    style="width:65px; height:65px; border-radius:50%; margin:0 auto 10px; background:#e2e8f0; display:flex; align-items:center; justify-content:center; border:2px solid #f6c90e; overflow:hidden;">
+
+                    <i class="fa-solid fa-user-graduate"
+                        style="font-size:24px; color:#0d233a;"></i>
+                </div>
+
+                <h3>
+                    {{ biodata.nama_lengkap if biodata and biodata.nama_lengkap else session.get('nama', 'USER') }}
+                    <br>
+                    <span style="font-size:11px; color:#f6c90e; font-weight:normal;">
+                        {{ biodata.kelas if biodata and biodata.kelas else '-' }}
+                    </span>
+                </h3>
+            </div>
+
+            <ul class="custom-sidebar-menu">
+                <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
+                <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
+                <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
+                <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
+                <li><a href="/user/laporan" class="{% if request.path == '/user/laporan' %}active{% endif %}"><i class="fa-solid fa-comment-dots"></i> Laporan Bug & Saran</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-logout-box" style="padding:0 15px;">
+            <a href="/logout"
+                class="btn-logout-sidebar"
+                style="display:flex; align-items:center; justify-content:center; gap:8px; background:#f6c90e; color:#0d233a; padding:10px; border-radius:12px; font-weight:bold; text-decoration:none; font-size:13px;">
+                <i class="fa-solid fa-right-from-bracket"></i> Log out
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-container" style="margin-left:260px; padding:30px;">
+
+        <header style="margin-bottom:25px;">
+            <h2 style="color:#0d233a; margin:0; font-size:24px; font-weight:bold;">
+                <i class="fa-solid fa-comment-dots"></i> Laporan Bug & Saran
+            </h2>
+            <p style="color:#475569; margin:5px 0 0; font-size:13px;">
+                Sampaikan kendala atau ide pengembangan untuk perpustakaan FREX.
+            </p>
+        </header>
+
+        <div class="laporan-card">
+
+            <div class="laporan-info">
+                <i class="fa-solid fa-circle-info"></i>
+                <strong>Informasi:</strong>
+                Laporan yang kamu kirim akan tersimpan dan nantinya dapat ditinjau oleh Kepala Sekolah melalui dashboard khusus.
+                Sampaikan laporan dengan jelas agar lebih mudah ditindaklanjuti.
+            </div>
+
+            {% if request.args.get('status') == 'berhasil' %}
+                <div class="alert-laporan alert-success">
+                    <i class="fa-solid fa-circle-check"></i>
+                    Laporan berhasil dikirim. Terima kasih atas masukanmu!
+                </div>
+
+            {% elif request.args.get('status') == 'tidak_valid' %}
+                <div class="alert-laporan alert-error">
+                    Jenis laporan, judul, dan isi laporan wajib diisi dengan benar.
+                </div>
+
+            {% elif request.args.get('status') == 'judul_panjang' %}
+                <div class="alert-laporan alert-error">
+                    Judul laporan maksimal 150 karakter.
+                </div>
+
+            {% elif request.args.get('status') == 'gagal' %}
+                <div class="alert-laporan alert-error">
+                    Laporan gagal dikirim. Silakan coba kembali.
+                </div>
+            {% endif %}
+
+            {% elif request.args.get('status') == 'format_foto' %}
+    <div class="alert alert-danger">
+        Format foto tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.
+    </div>
+
+            <form method="POST"
+      action="{{ url_for('user_laporan') }}"
+      enctype="multipart/form-data">
+
+                <div class="form-group">
+                    <label for="jenis">Jenis Laporan</label>
+                    <select name="jenis" id="jenis" required>
+                        <option value="">-- Pilih Jenis Laporan --</option>
+                        <option value="bug">Laporan Bug / Kesalahan Sistem</option>
+                        <option value="saran">Saran / Ide Pengembangan</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="judul">Judul Laporan</label>
+                    <input
+                        type="text"
+                        name="judul"
+                        id="judul"
+                        maxlength="150"
+                        placeholder="Contoh: Tombol peminjaman tidak berfungsi"
+                        required>
+                    <div class="form-hint">Maksimal 150 karakter.</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="isi_laporan">Penjelasan Laporan</label>
+                    <textarea
+                        name="isi_laporan"
+                        id="isi_laporan"
+                        placeholder="Jelaskan masalah atau saran yang ingin kamu sampaikan secara terperinci..."
+                        required></textarea>
+                </div>
+
+                <div class="form-group">
+    <label for="foto">Foto Bukti Bug (Opsional)</label>
+
+    <input
+        type="file"
+        id="foto"
+        name="foto"
+        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
+    >
+
+    <small>
+        Unggah screenshot atau foto masalah.
+        Format JPG, JPEG, PNG, atau WEBP. Maksimal 5 MB.
+    </small>
+</div>
+
+                <button type="submit" class="btn-kirim-laporan">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    Kirim Laporan
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    {% include 'user/_modal_profil.html' %}
+    {% include 'user/_modal_edit_biodata.html' %}
+
+    <script>
+        const akunKey = "userAvatar_" + (
+            "{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}"
+        );
+
+        function terapkanAvatarKeSemua(dataUrl) {
+            if (!dataUrl) return;
+
+            const imgHtml = `<img src="${dataUrl}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+
+            const sidebarAvatar = document.getElementById('sidebarAvatarPreview');
+            const biodataAvatar = document.getElementById('biodataAvatarDisplay');
+            const modalAvatar = document.getElementById('modalAvatarDisplay');
+
+            if (sidebarAvatar) sidebarAvatar.innerHTML = imgHtml;
+            if (biodataAvatar) biodataAvatar.innerHTML = imgHtml;
+            if (modalAvatar) modalAvatar.innerHTML = imgHtml;
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const tersimpan = localStorage.getItem(akunKey);
+            if (tersimpan) {
+                terapkanAvatarKeSemua(tersimpan);
+            }
+        });
+
+        function openWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+    </script>
+
+    <script src="{{ url_for('static', filename='js/user-profile.js') }}?v=1"></script>
+
+</body>
+</html>
