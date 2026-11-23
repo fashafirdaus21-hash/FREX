@@ -215,6 +215,7 @@
                 Sampaikan laporan dengan jelas agar lebih mudah ditindaklanjuti.
             </div>
 
+            
             {% if request.args.get('status') == 'berhasil' %}
                 <div class="alert-laporan alert-success">
                     <i class="fa-solid fa-circle-check"></i>
@@ -235,12 +236,13 @@
                 <div class="alert-laporan alert-error">
                     Laporan gagal dikirim. Silakan coba kembali.
                 </div>
-            {% endif %}
 
             {% elif request.args.get('status') == 'format_foto' %}
-    <div class="alert alert-danger">
-        Format foto tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.
-    </div>
+                <div class="alert-laporan alert-error">
+                    Format foto tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.
+                </div>
+            {% endif %}
+
 
             <form method="POST"
       action="{{ url_for('user_laporan') }}"
