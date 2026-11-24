@@ -247,86 +247,17 @@ def admin_dashboard():
 
         return render_template(
             'admin/dashboard.html',
-
             total_buku=total_buku,
-
             sedang_dipinjam=sedang_dipinjam,
-
             total_pengguna=total_pengguna,
-
             total_denda=total_denda,
-
             jumlah_pembayaran_menunggu=jumlah_pembayaran_menunggu,
-
             transaksi_terbaru=transaksi_terbaru,
-
             data_peminjam_bulanan=data_peminjam_bulanan
         )
 
     return redirect(url_for('login'))
 
-
-@app.route('/admin/verifikasi_pembayaran/<int:id_pembayaran>', methods=['POST'])
-def verifikasi_pembayaran(id_pembayaran):
-
-    if session.get('role') != 'admin':
-        return redirect(url_for('login'))
-
-    aksi = request.form.get('aksi')
-
-    conn = buat_koneksi()
-    cursor = conn.cursor(dictionary=True, buffered=True)
-
-    try:
-
-        if aksi == 'verifikasi':
-
-            cursor.execute("""
-                UPDATE pembayaran_denda
-                SET
-                    status_pembayaran = 'berhasil',
-                    paid_at = NOW(),
-                    dikonfirmasi_oleh = %s
-                WHERE id_pembayaran = %s
-            """, (
-                session.get('id_user'),
-                id_pembayaran
-            ))
-
-            conn.commit()
-
-        elif aksi == 'tolak':
-
-            cursor.execute("""
-                UPDATE pembayaran_denda
-                SET
-                    status_pembayaran = 'gagal',
-                    dikonfirmasi_oleh = %s
-                WHERE id_pembayaran = %s
-            """, (
-                session.get('id_user'),
-                id_pembayaran
-            ))
-
-            conn.commit()
-
-        return redirect(url_for('admin_pembayaran'))
-
-    except Exception as e:
-
-        conn.rollback()
-
-        print("Gagal memproses pembayaran:", e)
-
-        return (
-            "Gagal memproses pembayaran.",
-            500
-        )
-
-    finally:
-
-        cursor.close()
-        conn.close()
 
 @app.route('/admin/kelolabuku', methods=['GET', 'POST'])
 def admin_kelolabuku():
@@ -602,7 +533,10 @@ def admin_pengembalian():
                     )
 
                     cursor.execute("""
-                        INSERT INTO pengembalian (id_peminjaman, tgl_kembali, kondisi_buku, denda_telat, denda_rusak, diproses_oleh)
+                        INSERT INTO pengembalian (
+                            id_peminjaman, tgl_kembali, kondisi_buku,
+                            denda_telat, denda_rusak, diproses_oleh
+                        )
                         VALUES (%s, %s, %s, %s, %s, %s)
                     """, (id_peminjaman, tgl_kembali, kondisi_enum, denda_telat, denda_rusak, admin_id))
 
@@ -724,7 +658,6 @@ def hapus_anggota(id_anggota):
 
 @app.route('/admin/pembayaran')
 def admin_pembayaran():
-
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
 
@@ -732,41 +665,49 @@ def admin_pembayaran():
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     try:
-
         cursor.execute("""
             SELECT
+                pg.id_pengembalian,
+                pg.id_peminjaman,
+                pm.id_anggota,
+                pg.tgl_kembali,
+                pg.kondisi_buku,
+                COALESCE(pg.denda_telat, 0) AS denda_telat,
+                COALESCE(pg.denda_rusak, 0) AS denda_rusak,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                a.nama_lengkap,
+                a.kelas,
+                b.judul AS judul_buku,
                 pd.id_pembayaran,
-                pd.id_anggota,
-                pd.order_id,
-                pd.transaction_id,
-                pd.metode_pembayaran,
-                pd.jumlah_bayar,
-                pd.status_pembayaran,
-                pd.gateway_status,
-                pd.qr_url,
-                pd.expired_at,
-                pd.paid_at,
-                pd.dikonfirmasi_oleh,
-                pd.created_at,
-
-                a.nama_lengkap
-
-            FROM pembayaran_denda pd
-
+                COALESCE(pd.jumlah_bayar, 0) AS jumlah_bayar,
+                COALESCE(pd.metode_pembayaran, 'qris') AS metode_pembayaran,
+                pd.tanggal_bayar,
+                CASE
+                    WHEN pd.status_pembayaran = 'lunas'
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                    THEN 'lunas'
+                    ELSE 'belum_lunas'
+                END AS status_pembayaran
+            FROM pengembalian pg
+            JOIN peminjaman pm
+                ON pg.id_peminjaman = pm.id_peminjaman
             LEFT JOIN anggota a
-                ON pd.id_anggota = a.id_anggota
-
+                ON pm.id_anggota = a.id_anggota
+            LEFT JOIN buku b
+                ON pm.id_buku = b.id_buku
+            LEFT JOIN pembayaran_denda pd
+                ON pd.id_pengembalian = pg.id_pengembalian
+            WHERE (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+               OR pd.id_pembayaran IS NOT NULL
             ORDER BY
                 CASE
-                    WHEN pd.status_pembayaran = 'menunggu'
-                    THEN 0
-                    ELSE 1
+                    WHEN pd.status_pembayaran = 'lunas'
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                    THEN 1
+                    ELSE 0
                 END,
-
-                pd.created_at DESC
-
+                pg.id_pengembalian DESC
         """)
-
         pembayaran_list = cursor.fetchall()
 
         return render_template(
@@ -775,116 +716,127 @@ def admin_pembayaran():
         )
 
     except Exception as e:
-
         print("Gagal memuat pembayaran admin:", e)
-
-        return (
-            "Gagal memuat halaman pembayaran admin.",
-            500
-        )
+        return f"Gagal memuat halaman pembayaran admin: {e}", 500
 
     finally:
-
         cursor.close()
         conn.close()
 
-@app.route(
-    '/admin/verifikasi_pembayaran/<int:id_pembayaran>',
-    methods=['POST']
-)
-def admin_verifikasi_pembayaran(id_pembayaran):
 
+@app.route('/admin/bayar_pengembalian/<int:id_pengembalian>', methods=['POST'])
+def admin_bayar_pengembalian(id_pengembalian):
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
 
-    aksi = request.form.get('aksi')
+    metode = request.form.get('metode_pembayaran', 'qris').strip().lower()
+    if metode not in ['qris', 'tunai']:
+        metode = 'qris'
 
-    if aksi not in ['verifikasi', 'tolak']:
-        return redirect(url_for('admin_pembayaran'))
+    nominal_raw = request.form.get('nominal_bayar', '').strip()
 
     conn = buat_koneksi()
     cursor = conn.cursor(dictionary=True, buffered=True)
 
     try:
-
-        # Ambil data pembayaran
         cursor.execute("""
             SELECT
-                id_pembayaran,
-                id_pengembalian,
-                status_pembayaran
-            FROM pembayaran_denda
-            WHERE id_pembayaran = %s
+                pg.id_pengembalian,
+                pg.id_peminjaman,
+                pm.id_anggota,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda
+            FROM pengembalian pg
+            JOIN peminjaman pm
+                ON pg.id_peminjaman = pm.id_peminjaman
+            WHERE pg.id_pengembalian = %s
             FOR UPDATE
-        """, (id_pembayaran,))
+        """, (id_pengembalian,))
+        pg = cursor.fetchone()
 
-        pembayaran = cursor.fetchone()
-
-        if not pembayaran:
+        if not pg:
             return redirect(url_for('admin_pembayaran'))
 
-        # Jangan proses transaksi yang sudah selesai
-        if pembayaran['status_pembayaran'] != 'menunggu':
-            return redirect(url_for('admin_pembayaran'))
+        tagihan = float(pg['total_denda'] or 0)
 
-        # ==========================
-        # VERIFIKASI
-        # ==========================
+        if metode == 'tunai':
+            try:
+                nominal_bayar = float(nominal_raw) if nominal_raw != '' else tagihan
+            except ValueError:
+                conn.rollback()
+                return redirect(url_for('admin_pembayaran'))
 
-        if aksi == 'verifikasi':
+            if nominal_bayar <= 0:
+                conn.rollback()
+                return redirect(url_for('admin_pembayaran'))
+        else:
+            nominal_bayar = tagihan
 
+        status_baru = 'lunas' if nominal_bayar >= tagihan else 'belum_lunas'
+
+        cursor.execute("""
+            SELECT id_pembayaran
+            FROM pembayaran_denda
+            WHERE id_pengembalian = %s
+            FOR UPDATE
+        """, (id_pengembalian,))
+        existing = cursor.fetchone()
+
+        if existing:
             cursor.execute("""
                 UPDATE pembayaran_denda
-                SET status_pembayaran = 'berhasil'
+                SET
+                    jumlah_denda = %s,
+                    jumlah_bayar = %s,
+                    tanggal_bayar = NOW(),
+                    metode_pembayaran = %s,
+                    status_pembayaran = %s,
+                    diproses_oleh = %s
                 WHERE id_pembayaran = %s
-            """, (id_pembayaran,))
-
+            """, (
+                tagihan,
+                nominal_bayar,
+                metode,
+                status_baru,
+                session.get('id_user'),
+                existing['id_pembayaran']
+            ))
+        else:
             cursor.execute("""
-                UPDATE pengembalian
-                SET status_denda = 'lunas'
-                WHERE id_pengembalian = %s
-            """, (pembayaran['id_pengembalian'],))
-
-        # ==========================
-        # TOLAK
-        # ==========================
-
-        elif aksi == 'tolak':
-
-            cursor.execute("""
-                UPDATE pembayaran_denda
-                SET status_pembayaran = 'ditolak'
-                WHERE id_pembayaran = %s
-            """, (id_pembayaran,))
-
-            cursor.execute("""
-                UPDATE pengembalian
-                SET status_denda = 'belum_lunas'
-                WHERE id_pengembalian = %s
-            """, (pembayaran['id_pengembalian'],))
+                INSERT INTO pembayaran_denda (
+                    id_pengembalian,
+                    id_peminjaman,
+                    id_anggota,
+                    jumlah_denda,
+                    jumlah_bayar,
+                    tanggal_bayar,
+                    metode_pembayaran,
+                    status_pembayaran,
+                    diproses_oleh
+                )
+                VALUES (%s, %s, %s, %s, %s, NOW(), %s, %s, %s)
+            """, (
+                pg['id_pengembalian'],
+                pg['id_peminjaman'],
+                pg['id_anggota'],
+                tagihan,
+                nominal_bayar,
+                metode,
+                status_baru,
+                session.get('id_user')
+            ))
 
         conn.commit()
-
         return redirect(url_for('admin_pembayaran'))
 
     except Exception as e:
-
         conn.rollback()
-
-        print(
-            "Gagal memproses pembayaran:",
-            e
-        )
-
-        return (
-            "Gagal memproses pembayaran.",
-            500
-        )
+        print("Gagal memproses pembayaran:", e)
+        return f"Gagal memproses pembayaran: {e}", 500
 
     finally:
-
         cursor.close()
         conn.close()
+
 
 # ==========================================================
 # ===================== DASHBOARD USER ======================
@@ -1114,6 +1066,7 @@ def user_riwayat():
         return render_template('user/riwayat.html', riwayat_list=riwayat_list)
     return redirect(url_for('login'))
 
+
 @app.route('/user/pembayaran')
 def user_pembayaran():
     if session.get('role') in ['siswa', 'user']:
@@ -1143,16 +1096,16 @@ def user_pembayaran():
                 JOIN buku b
                     ON p.id_buku = b.id_buku
                 WHERE p.id_anggota = %s
-AND pg.status_denda IN ('belum_lunas', 'menunggu')
+                AND pg.status_denda IN ('belum_lunas', 'menunggu')
                 ORDER BY pg.tgl_kembali DESC
             """, (user_id,))
 
             daftar_denda = cursor.fetchall()
 
             total_denda = sum(
-    int(d['total_denda'] or 0)
-    for d in daftar_denda
-)
+                int(d['total_denda'] or 0)
+                for d in daftar_denda
+            )
 
             cursor.execute("""
                 SELECT *
@@ -1180,6 +1133,8 @@ AND pg.status_denda IN ('belum_lunas', 'menunggu')
             conn.close()
 
     return redirect(url_for('login'))
+
+
 @app.route('/user/ajukan_pembayaran', methods=['POST'])
 def ajukan_pembayaran():
 
@@ -1198,7 +1153,6 @@ def ajukan_pembayaran():
         if not id_pengembalian or not metode_pembayaran:
             return redirect(url_for('user_pembayaran'))
 
-        # Pastikan denda memang milik user yang sedang login
         cursor.execute("""
             SELECT
                 pg.id_pengembalian,
@@ -1217,12 +1171,7 @@ def ajukan_pembayaran():
         if not denda:
             return redirect(url_for('user_pembayaran'))
 
-        # Jangan membuat pembayaran baru jika sudah lunas
-        if denda['status_denda'] == 'lunas':
-            return redirect(url_for('user_pembayaran'))
-
-        # Jangan membuat pembayaran baru jika masih menunggu
-        if denda['status_denda'] == 'menunggu':
+        if denda['status_denda'] in ['lunas', 'menunggu']:
             return redirect(url_for('user_pembayaran'))
 
         jumlah_bayar = (
@@ -1230,7 +1179,6 @@ def ajukan_pembayaran():
             float(denda['denda_rusak'] or 0)
         )
 
-        # Simpan transaksi pembayaran
         cursor.execute("""
             INSERT INTO pembayaran_denda
             (
@@ -1248,7 +1196,6 @@ def ajukan_pembayaran():
             metode_pembayaran
         ))
 
-        # Ubah status denda menjadi menunggu verifikasi
         cursor.execute("""
             UPDATE pengembalian
             SET status_denda = 'menunggu'
@@ -1269,8 +1216,6 @@ def ajukan_pembayaran():
         conn.close()
 
 
-
-
 @app.route('/user/biodata')
 def user_biodata():
     if session.get('role') in ['siswa', 'user']:
@@ -1281,10 +1226,6 @@ def user_biodata():
         user_id = session.get('id_user')
 
         try:
-            # ======================================
-            # 1. AMBIL DATA BIODATA
-            # ======================================
-
             cursor.execute("""
                 SELECT *
                 FROM anggota
@@ -1303,10 +1244,6 @@ def user_biodata():
                     'masa_berlaku': '-',
                     'kelas': '-'
                 }
-
-            # ======================================
-            # 2. AMBIL STATISTIK PEMINJAMAN
-            # ======================================
 
             cursor.execute("""
                 SELECT
@@ -1358,15 +1295,12 @@ def user_biodata():
     return redirect(url_for('login'))
 
 
-
 @app.route('/user/laporan')
 def user_laporan():
     if session.get('role') not in ['siswa', 'user']:
         return redirect(url_for('login'))
 
     return render_template('user/laporan.html')
-
-
 
 
 @app.route('/user/batal-peminjaman/<int:id_peminjaman>', methods=['POST'])

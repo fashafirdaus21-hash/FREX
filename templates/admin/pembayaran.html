@@ -3,301 +3,258 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>Pembayaran - Admin FREX</title>
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f6fa;
-            margin: 0;
-            padding: 30px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-        }
-
-        .header h1 {
-            margin: 0;
-        }
-
-        .btn-kembali {
-            text-decoration: none;
-            background: #555;
-            color: white;
-            padding: 10px 16px;
-            border-radius: 6px;
-        }
-
-        .card {
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th,
-        td {
-            padding: 13px;
-            border-bottom: 1px solid #ddd;
-            text-align: left;
-            white-space: nowrap;
-        }
-
-        th {
-            background: #f1f2f6;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        .status-menunggu {
-            background: #fff3cd;
-            color: #856404;
-        }
-
-        .status-berhasil {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-gagal,
-        .status-dibatalkan,
-        .status-kedaluwarsa {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .btn-verifikasi {
-            border: none;
-            background: #28a745;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .btn-tolak {
-            border: none;
-            background: #dc3545;
-            color: white;
-            padding: 8px 12px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .tidak-ada {
-            text-align: center;
-            padding: 30px;
-            color: #777;
-        }
-    </style>
+    <title>Pembayaran - Admin Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 </head>
-
 <body>
 
-<div class="container">
+    <!-- SIDEBAR ADMIN -->
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
+                </div>
+                <h3>{{ session.get('nama', 'Admin') }}</h3>
+            </div>
 
-    <div class="header">
+            <ul class="sidebar-menu">
+                <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
+                <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
+                <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
+                <li><a href="/admin/pembayaran" class="active"><i class="fa-solid fa-money-bill-wave"></i> Pembayaran</a></li>
+                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
+            </ul>
+        </div>
 
-        <h1>Pembayaran</h1>
+        <div class="sidebar-logout-box">
+            <a href="/logout" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
 
-        <a href="{{ url_for('admin_dashboard') }}" class="btn-kembali">
-            Kembali ke Dashboard
-        </a>
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Pembayaran</h2>
+            </div>
+            <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
+                <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
+            </div>
+        </header>
 
+        <div class="content-body">
+
+            <!-- Daftar Pengembalian & Denda -->
+            <div class="section-title">Daftar Pengembalian &amp; Denda</div>
+            <div class="table-box-container" style="border: 2px solid #0d233a; margin-bottom: 28px;">
+                <table class="custom-table-admin">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Anggota</th>
+                            <th>Buku</th>
+                            <th>Denda</th>
+                            <th>Jalur</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in pembayaran_list %}
+                        <tr id="row-{{ item.id_pengembalian }}">
+                            <td style="color: #0d233a;">#{{ item.id_pengembalian }}</td>
+                            <td style="color: #0d233a;">{{ item.nama_lengkap or '-' }}</td>
+                            <td style="color: #0d233a;">{{ item.judul_buku or '-' }}</td>
+                            <td style="color: #0d233a;">Rp {{ "{:,.0f}".format(item.total_denda or 0).replace(',', '.') }}</td>
+                            <td style="color: #0d233a;">{{ (item.metode_pembayaran or '-')|upper }}</td>
+                            <td>
+                                {% if item.status_pembayaran == 'lunas' %}
+                                    <span style="background-color: #dcfce7; color: #166534; padding: 6px 14px; border-radius: 12px; font-weight: bold; font-size: 13px; display: inline-block;">Sudah Dibayar</span>
+                                {% else %}
+                                    <span style="background-color: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 12px; font-weight: bold; font-size: 13px; display: inline-block;">Belum Dibayar</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button
+                                    type="button"
+                                    class="btn-form-blue"
+                                    style="padding: 7px 14px; font-size: 12px; border-radius: 10px;"
+                                    data-id="{{ item.id_pengembalian }}"
+                                    data-anggota="{{ item.nama_lengkap or '-' }}"
+                                    data-buku="{{ item.judul_buku or '-' }}"
+                                    data-denda="{{ item.total_denda or 0 }}"
+                                    data-metode="{{ item.metode_pembayaran or 'qris' }}"
+                                    onclick="pilihPengembalian(this)"
+                                >
+                                    Pilih
+                                </button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; padding: 24px; color: #64748b;">
+                                Belum ada data pengembalian berdenda.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Jalur Transaksi Pembayaran -->
+            <div class="section-title">Jalur Transaksi Pembayaran</div>
+            <div class="form-card-box">
+                <p id="infoDipilih" style="margin: 0 0 20px 0; color: #0d233a; font-size: 14px; line-height: 1.5;">
+                    Pilih baris pengembalian berdenda pada tabel di atas.
+                </p>
+
+                <form id="formBayarSamping" method="POST" action="">
+                    <div class="form-group-admin">
+                        <label for="metodeSelect">Jalur Transaksi</label>
+                        <div class="input-box-admin">
+                            <select name="metode_pembayaran" id="metodeSelect" class="custom-select-user" style="width: 100%; border: none; background: transparent; outline: none;" onchange="ubahJalur()">
+                                <option value="qris" selected>QRIS</option>
+                                <option value="tunai">Tunai</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="stat-card-item" id="boxQris" style="max-width: 380px; margin-bottom: 20px;">
+                        <div style="color: #f6c90e; font-size: 30px;"><i class="fa-solid fa-qrcode"></i></div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-title">QRIS</span>
+                            <span class="stat-card-value" id="nominalQrisText">Rp 0</span>
+                        </div>
+                    </div>
+                    <p id="ketQris" style="font-size: 12.5px; color: #475569; margin: -8px 0 20px 0;">
+                        Tampilkan QRIS &amp; konfirmasi pembayaran sesuai nominal denda.
+                    </p>
+
+                    <div class="form-group-admin" id="boxTunai" style="display: none;">
+                        <label for="nominalBayarInput">Nominal Pembayaran Tunai (Rp)</label>
+                        <div class="input-box-admin">
+                            <input
+                                type="number"
+                                step="100"
+                                min="0"
+                                name="nominal_bayar"
+                                id="nominalBayarInput"
+                                placeholder="Masukkan nominal pembayaran"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-actions-group">
+                        <button type="submit" class="btn-form-blue" id="btnKonfirmasiBayar" disabled>
+                            <i class="fa-solid fa-check"></i> Konfirmasi Sudah Dibayar
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+        </div>
     </div>
 
-    <div class="card">
+    <!-- MODAL PROFIL WHATSAPP -->
+    <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil Admin</h3>
+                <button type="button" class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay">
+                    <i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i>
+                </div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
 
-        <table>
-
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>Anggota</th>
-                    <th>Order ID</th>
-                    <th>Jumlah Bayar</th>
-                    <th>Metode</th>
-                    <th>Status</th>
-                    <th>Gateway</th>
-                    <th>Tanggal</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-
-            <tbody>
-
-                {% for p in pembayaran_list %}
-
-                <tr>
-
-                    <td>
-                        {{ p.id_pembayaran }}
-                    </td>
-
-                    <td>
-                        {{ p.nama_lengkap or '-' }}
-                    </td>
-
-                    <td>
-                        {{ p.order_id or '-' }}
-                    </td>
-
-                    <td>
-                        Rp {{ "{:,.0f}".format(p.jumlah_bayar).replace(',', '.') }}
-                    </td>
-
-                    <td>
-                        {{ p.metode_pembayaran }}
-                    </td>
-
-                    <td>
-
-                        {% if p.status_pembayaran == 'menunggu' %}
-
-                            <span class="status status-menunggu">
-                                Menunggu
-                            </span>
-
-                        {% elif p.status_pembayaran == 'berhasil' %}
-
-                            <span class="status status-berhasil">
-                                Berhasil
-                            </span>
-
-                        {% elif p.status_pembayaran == 'gagal' %}
-
-                            <span class="status status-gagal">
-                                Gagal
-                            </span>
-
-                        {% elif p.status_pembayaran == 'dibatalkan' %}
-
-                            <span class="status status-dibatalkan">
-                                Dibatalkan
-                            </span>
-
-                        {% elif p.status_pembayaran == 'kedaluwarsa' %}
-
-                            <span class="status status-kedaluwarsa">
-                                Kedaluwarsa
-                            </span>
-
-                        {% else %}
-
-                            <span class="status">
-                                {{ p.status_pembayaran }}
-                            </span>
-
-                        {% endif %}
-
-                    </td>
-
-                    <td>
-                        {{ p.gateway_status or '-' }}
-                    </td>
-
-                    <td>
-                        {{ p.created_at }}
-                    </td>
-
-                    <td>
-
-                        {% if p.status_pembayaran == 'menunggu' %}
-
-                            <form
-                                action="{{ url_for('verifikasi_pembayaran', id_pembayaran=p.id_pembayaran) }}"
-                                method="POST"
-                                style="display:inline;"
-                            >
-
-                                <input
-                                    type="hidden"
-                                    name="aksi"
-                                    value="verifikasi"
-                                >
-
-                                <button
-                                    type="submit"
-                                    class="btn-verifikasi"
-                                    onclick="return confirm('Verifikasi pembayaran ini?')"
-                                >
-                                    Verifikasi
-                                </button>
-
-                            </form>
-
-                            <form
-                                action="{{ url_for('verifikasi_pembayaran', id_pembayaran=p.id_pembayaran) }}"
-                                method="POST"
-                                style="display:inline;"
-                            >
-
-                                <input
-                                    type="hidden"
-                                    name="aksi"
-                                    value="tolak"
-                                >
-
-                                <button
-                                    type="submit"
-                                    class="btn-tolak"
-                                    onclick="return confirm('Tolak pembayaran ini?')"
-                                >
-                                    Tolak
-                                </button>
-
-                            </form>
-
-                        {% else %}
-
-                            <span>-</span>
-
-                        {% endif %}
-
-                    </td>
-
-                </tr>
-
-                {% else %}
-
-                <tr>
-                    <td colspan="9" class="tidak-ada">
-                        Belum ada data pembayaran.
-                    </td>
-                </tr>
-
-                {% endfor %}
-
-            </tbody>
-
-        </table>
-
+                <div class="wa-info-group" style="margin-top: 20px;">
+                    <div class="wa-info-label">Phone</div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value">+62 856-9571-4264</span>
+                        <i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()" title="Salin nomor"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-</div>
+    <script>
+        let dendaAktif = 0;
 
+        function formatRupiah(angka) {
+            return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
+        }
+
+        function ubahJalur() {
+            const metode = document.getElementById('metodeSelect').value;
+            const boxQris = document.getElementById('boxQris');
+            const ketQris = document.getElementById('ketQris');
+            const boxTunai = document.getElementById('boxTunai');
+            const inputNominal = document.getElementById('nominalBayarInput');
+
+            if (metode === 'qris') {
+                boxQris.style.display = 'flex';
+                ketQris.style.display = 'block';
+                boxTunai.style.display = 'none';
+                inputNominal.required = false;
+                inputNominal.value = dendaAktif > 0 ? dendaAktif : '';
+            } else {
+                boxQris.style.display = 'none';
+                ketQris.style.display = 'none';
+                boxTunai.style.display = 'block';
+                inputNominal.required = true;
+                if (!inputNominal.value && dendaAktif > 0) {
+                    inputNominal.value = dendaAktif;
+                }
+            }
+            document.getElementById('nominalQrisText').textContent = formatRupiah(dendaAktif);
+        }
+
+        function pilihPengembalian(btn) {
+            const id = btn.dataset.id;
+            const anggota = btn.dataset.anggota;
+            const buku = btn.dataset.buku;
+            dendaAktif = Number(btn.dataset.denda || 0);
+            const metode = (btn.dataset.metode || 'qris').toLowerCase();
+
+            document.querySelectorAll('tbody tr').forEach(tr => { tr.style.backgroundColor = ''; });
+            const row = document.getElementById('row-' + id);
+            if (row) row.style.backgroundColor = '#fef9c3';
+
+            document.getElementById('formBayarSamping').action = `/admin/bayar_pengembalian/${id}`;
+
+            document.getElementById('infoDipilih').innerHTML =
+                `<strong>Pengembalian #${id}</strong> — ${anggota} | Buku: ${buku} | Total Denda: <strong>${formatRupiah(dendaAktif)}</strong>`;
+
+            document.getElementById('metodeSelect').value = (metode === 'tunai') ? 'tunai' : 'qris';
+            document.getElementById('nominalBayarInput').value = dendaAktif > 0 ? dendaAktif : '';
+            document.getElementById('btnKonfirmasiBayar').disabled = false;
+
+            ubahJalur();
+        }
+
+        ubahJalur();
+
+        // Profil WA
+        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
+        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+        function previewWaImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
+            };
+            if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+        function copyPhone() {
+            navigator.clipboard.writeText("+62 856-9571-4264");
+            alert("Nomor disalin!");
+        }
+    </script>
 </body>
 </html>

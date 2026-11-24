@@ -1,4 +1,3 @@
-
 -- ==========================================
 -- DATABASE PERPUSTAKAAN FREX
 -- Versi lengkap untuk sinkronisasi tim
@@ -146,37 +145,16 @@ INSERT INTO `kategori` (`id_kategori`, `nama_kategori`) VALUES
 -- Struktur dari tabel `peminjaman`
 --
 
-
---
--- Struktur tabel peminjaman FREX
---
-
 CREATE TABLE `peminjaman` (
   `id_peminjaman` int(11) NOT NULL,
   `id_anggota` int(11) NOT NULL,
   `id_buku` int(11) NOT NULL,
-
-  -- Diisi setelah admin menyetujui
-  `tgl_pinjam` date DEFAULT NULL,
-  `jatuh_tempo` date DEFAULT NULL,
-
-  -- Status lengkap peminjaman
-  `status` enum(
-    'menunggu',
-    'dipinjam',
-    'dikembalikan',
-    'ditolak',
-    'dibatalkan',
-    'kedaluwarsa'
-  ) DEFAULT 'menunggu',
-
+  `tgl_pinjam` date NOT NULL,
+  `jatuh_tempo` date NOT NULL,
+  `status` enum('menunggu','dipinjam','dikembalikan','ditolak') DEFAULT 'menunggu',
   `diproses_oleh` int(11) DEFAULT NULL,
-
-  -- Waktu pengajuan otomatis dicatat
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
 
 --
 -- Dumping data untuk tabel `peminjaman`
@@ -222,6 +200,27 @@ CREATE TABLE `pengembalian` (
   `denda_telat` decimal(10,2) DEFAULT 0.00,
   `denda_rusak` decimal(10,2) DEFAULT 0.00,
   `diproses_oleh` int(11) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `pembayaran_denda`
+--
+
+CREATE TABLE `pembayaran_denda` (
+  `id_pembayaran` int(11) NOT NULL,
+  `id_pengembalian` int(11) DEFAULT NULL,
+  `id_peminjaman` int(11) NOT NULL,
+  `id_anggota` int(11) NOT NULL,
+  `jumlah_denda` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `jumlah_bayar` decimal(10,2) NOT NULL DEFAULT 0.00,
+  `tanggal_bayar` datetime DEFAULT NULL,
+  `metode_pembayaran` enum('tunai','qris','transfer') DEFAULT 'tunai',
+  `status_pembayaran` enum('belum_lunas','lunas') NOT NULL DEFAULT 'belum_lunas',
+  `diproses_oleh` int(11) DEFAULT NULL,
+  `catatan` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
@@ -281,14 +280,11 @@ ALTER TABLE `kategori`
 --
 -- Indeks untuk tabel `peminjaman`
 --
-
 ALTER TABLE `peminjaman`
   ADD PRIMARY KEY (`id_peminjaman`),
   ADD KEY `fk_peminjaman_anggota` (`id_anggota`),
   ADD KEY `fk_peminjaman_buku` (`id_buku`),
-  ADD KEY `fk_peminjaman_admin` (`diproses_oleh`),
-  ADD KEY `idx_peminjaman_status_created` (`status`, `created_at`);
-
+  ADD KEY `fk_peminjaman_admin` (`diproses_oleh`);
 
 --
 -- Indeks untuk tabel `pengaturan`
@@ -305,42 +301,21 @@ ALTER TABLE `pengembalian`
   ADD KEY `fk_pengembalian_admin` (`diproses_oleh`);
 
 --
+-- Indeks untuk tabel `pembayaran_denda`
+--
+ALTER TABLE `pembayaran_denda`
+  ADD PRIMARY KEY (`id_pembayaran`),
+  ADD KEY `fk_bayar_pengembalian` (`id_pengembalian`),
+  ADD KEY `fk_bayar_peminjaman` (`id_peminjaman`),
+  ADD KEY `fk_bayar_anggota` (`id_anggota`),
+  ADD KEY `fk_bayar_admin` (`diproses_oleh`);
+
+--
 -- Indeks untuk tabel `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id_user`),
   ADD UNIQUE KEY `username` (`username`);
-
-
--- ==========================================
--- TABEL LAPORAN BUG DAN SARAN
--- ==========================================
-
-CREATE TABLE `laporan_masukan` (
-    `id_laporan` int(11) NOT NULL AUTO_INCREMENT,
-    `id_user` int(11) NOT NULL,
-    `jenis` enum('bug', 'saran') NOT NULL,
-    `judul` varchar(150) NOT NULL,
-    `isi_laporan` text NOT NULL,
-    `foto` varchar(255) DEFAULT NULL,
-    `status` enum('baru', 'diproses', 'selesai') NOT NULL DEFAULT 'baru',
-    `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-    `updated_at` timestamp NOT NULL DEFAULT current_timestamp()
-        ON UPDATE current_timestamp(),
-
-    PRIMARY KEY (`id_laporan`),
-    KEY `idx_laporan_user` (`id_user`),
-    KEY `idx_laporan_status_created` (`status`, `created_at`),
-
-    CONSTRAINT `fk_laporan_user`
-        FOREIGN KEY (`id_user`)
-        REFERENCES `users` (`id_user`)
-        ON UPDATE CASCADE
-        ON DELETE RESTRICT
-) ENGINE=InnoDB
-DEFAULT CHARSET=utf8mb4
-COLLATE=utf8mb4_general_ci;
-
 
 --
 -- AUTO_INCREMENT untuk tabel yang dibuang
@@ -369,6 +344,12 @@ ALTER TABLE `peminjaman`
 --
 ALTER TABLE `pengembalian`
   MODIFY `id_pengembalian` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT untuk tabel `pembayaran_denda`
+--
+ALTER TABLE `pembayaran_denda`
+  MODIFY `id_pembayaran` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT untuk tabel `users`
@@ -406,6 +387,15 @@ ALTER TABLE `peminjaman`
 ALTER TABLE `pengembalian`
   ADD CONSTRAINT `fk_pengembalian_admin` FOREIGN KEY (`diproses_oleh`) REFERENCES `users` (`id_user`) ON DELETE SET NULL ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_pengembalian_peminjaman` FOREIGN KEY (`id_peminjaman`) REFERENCES `peminjaman` (`id_peminjaman`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+--
+-- Ketidakleluasaan untuk tabel `pembayaran_denda`
+--
+ALTER TABLE `pembayaran_denda`
+  ADD CONSTRAINT `fk_bayar_admin` FOREIGN KEY (`diproses_oleh`) REFERENCES `users` (`id_user`) ON DELETE SET NULL ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_bayar_anggota` FOREIGN KEY (`id_anggota`) REFERENCES `anggota` (`id_anggota`) ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_bayar_peminjaman` FOREIGN KEY (`id_peminjaman`) REFERENCES `peminjaman` (`id_peminjaman`) ON DELETE CASCADE ON UPDATE CASCADE,
+  ADD CONSTRAINT `fk_bayar_pengembalian` FOREIGN KEY (`id_pengembalian`) REFERENCES `pengembalian` (`id_pengembalian`) ON DELETE SET NULL ON UPDATE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
