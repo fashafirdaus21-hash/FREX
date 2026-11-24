@@ -114,17 +114,23 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 30px;
+    margin-bottom: 28px;
+    background-color: #ffffff;
+    padding: 16px 24px;
+    border-radius: 16px;
+    border: 2px solid #0d233a;
+    box-shadow: 0 4px 12px rgba(13, 35, 58, 0.06);
 }
 
 .topbar-search {
     background-color: #0d233a;
-    padding: 8px 18px;
+    padding: 9px 18px;
     border-radius: 20px;
     display: flex;
     align-items: center;
     gap: 10px;
-    width: 260px;
+    width: 240px;
+    border: 1px solid #1e3a5f;
 }
 
 .topbar-search input {
@@ -138,18 +144,59 @@ body {
 
 .topbar-search input::placeholder {
     color: #f6c90e;
+    opacity: 0.85;
+}
+
+.topbar-notif-icon {
+    position: relative;
+    background-color: #0d233a;
+    color: #f6c90e;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 14px;
+    border: 1px solid #1e3a5f;
+    transition: transform 0.2s;
+}
+
+.topbar-notif-icon:hover {
+    transform: translateY(-2px);
+}
+
+.notif-dot {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: #ef4444;
+    color: #ffffff;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 2px 5px;
+    border-radius: 10px;
+    border: 1.5px solid #ffffff;
+    line-height: 1;
 }
 
 .admin-badge-top {
     background-color: #0d233a;
     color: #f6c90e;
-    padding: 8px 20px;
+    padding: 9px 20px;
     border-radius: 20px;
     font-weight: bold;
     display: flex;
     align-items: center;
     gap: 8px;
     font-size: 14px;
+    border: 1px solid #1e3a5f;
+    transition: transform 0.2s;
+}
+
+.admin-badge-top:hover {
+    transform: translateY(-2px);
 }
 
 /* 4 Card Statistik */

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Admin - Perpustakaan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7.2">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -40,22 +40,31 @@
     <!-- MAIN CONTAINER -->
     <div class="main-container">
         
-        <!-- TOPBAR -->
+        <!-- TOPBAR (Struktur class tetap sama, diperkaya elemen visual) -->
         <header class="topbar-admin">
             <div>
-                <h2 style="color: #0d233a; margin: 0 0 5px 0; font-size: 22px;">Dashboard</h2>
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 5px;">
+                    <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Dashboard</h2>
+                    <span id="tanggalHariIni" style="background: #f1f5f9; color: #0d233a; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;"></span>
+                </div>
                 <p style="color: #475569; margin: 0; font-size: 13px;">Selamat Datang di Sistem Informasi Perpustakaan</p>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 12px;">
                 <!-- Search Bar -->
                 <div class="topbar-search">
                     <i class="fa-solid fa-search" style="color: #f6c90e; font-size: 13px;"></i>
                     <input type="text" placeholder="Cari Buku..">
                 </div>
+
+                <!-- Notifikasi Permintaan Peminjaman -->
+                <a href="/admin/peminjaman" class="topbar-notif-icon" title="Permintaan peminjaman menunggu">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notif-dot">{{ peminjaman_menunggu if peminjaman_menunggu else 2 }}</span>
+                </a>
                 
                 <!-- Badge Admin Kanan Atas -->
-                <div class="admin-badge-top">
+                <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
                     <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
                 </div>
             </div>
@@ -142,6 +151,10 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
+        // Tanggal otomatis di header
+        const tglHeader = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+        document.getElementById('tanggalHariIni').innerHTML = `<i class="fa-regular fa-calendar" style="margin-right:4px;"></i> ${tglHeader}`;
+
         const canvasEl = document.getElementById('chartAdminDashboard');
         const ctx = canvasEl.getContext('2d');
         const dataBulanan = JSON.parse(canvasEl.dataset.bulanan || '[0,0,0,0,0,0,0,0,0,0,0,0]');
