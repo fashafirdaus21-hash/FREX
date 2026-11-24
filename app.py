@@ -992,7 +992,54 @@ def user_biodata():
     return redirect(url_for('login'))
 
 
+@app.route('/user/batal-peminjaman/<int:id_peminjaman>', methods=['POST'])
+def user_batal_peminjaman(id_peminjaman):
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
 
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        user_id = session.get('id_user')
+
+        cursor.execute("""
+            SELECT id_buku, status
+            FROM peminjaman
+            WHERE id_peminjaman = %s
+              AND id_anggota = %s
+            FOR UPDATE
+        """, (id_peminjaman, user_id))
+
+        peminjaman = cursor.fetchone()
+
+        if peminjaman and peminjaman['status'] == 'menunggu':
+            cursor.execute("""
+                UPDATE peminjaman
+                SET status = 'dibatalkan'
+                WHERE id_peminjaman = %s
+                  AND id_anggota = %s
+                  AND status = 'menunggu'
+            """, (id_peminjaman, user_id))
+
+            if cursor.rowcount == 1:
+                cursor.execute("""
+                    UPDATE buku
+                    SET jumlah_tersedia = jumlah_tersedia + 1
+                    WHERE id_buku = %s
+                """, (peminjaman['id_buku'],))
+
+        conn.commit()
+
+    except Exception as e:
+        conn.rollback()
+        print("Gagal membatalkan peminjaman:", e)
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('user_peminjaman'))
 
 
 @app.route('/user/update_biodata', methods=['POST'])
