@@ -2,267 +2,278 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pembayaran - Admin Perpustakaan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=9.0">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <title>Pembayaran Denda - Admin FREX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8.1">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body>
+<body class="admin-bayar-body">
 
-    <!-- SIDEBAR ADMIN -->
     <aside class="sidebar">
         <div>
-            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
-                <div class="profile-img" id="sidebarAvatarPreview">
-                    <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
+            <div class="sidebar-profile">
+                <div class="profile-img">
+                    <i class="fa-solid fa-user-shield"></i>
                 </div>
                 <h3>{{ session.get('nama', 'Admin') }}</h3>
+                <p class="admin-role-subtitle">Administrator</p>
             </div>
 
             <ul class="sidebar-menu">
                 <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
-                <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
+                <li><a href="/admin/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman</a></li>
                 <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
                 <li><a href="/admin/pembayaran" class="active"><i class="fa-solid fa-money-bill-wave"></i> Pembayaran</a></li>
-                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
+                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata Anggota</a></li>
             </ul>
         </div>
 
         <div class="sidebar-logout-box">
-            <a href="/logout" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+            <a href="/logout" class="btn-logout-sidebar">
+                <i class="fa-solid fa-right-from-bracket"></i> Log out
+            </a>
         </div>
     </aside>
 
-    <!-- MAIN CONTAINER -->
-    <div class="main-container">
-        <header class="topbar-admin">
-            <div>
-                <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Pembayaran</h2>
-            </div>
-            <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
-                <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
-            </div>
-        </header>
-
-        <div class="content-body">
-
-            <!-- Daftar Pengembalian & Denda -->
-            <div class="section-title">Daftar Pengembalian &amp; Denda</div>
-            <div class="table-box-container" style="border: 2px solid #0d233a; margin-bottom: 28px;">
-                <table class="custom-table-admin">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Anggota</th>
-                            <th>Buku</th>
-                            <th>Denda</th>
-                            <th>Jalur</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in pembayaran_list %}
-                        <tr id="row-{{ item.id_pengembalian }}">
-                            <td style="color: #0d233a;">#{{ item.id_pengembalian }}</td>
-                            <td style="color: #0d233a;">{{ item.nama_lengkap or '-' }}</td>
-                            <td style="color: #0d233a;">{{ item.judul_buku or '-' }}</td>
-                            <td style="color: #0d233a;">Rp {{ "{:,.0f}".format(item.total_denda or 0).replace(',', '.') }}</td>
-                            <td style="color: #0d233a;">{{ (item.metode_pembayaran or '-')|upper }}</td>
-                            <td>
-                                {% if item.status_pembayaran == 'lunas' %}
-                                    <span style="background-color: #dcfce7; color: #166534; padding: 6px 14px; border-radius: 12px; font-weight: bold; font-size: 13px; display: inline-block;">Sudah Dibayar</span>
-                                {% else %}
-                                    <span style="background-color: #fef3c7; color: #92400e; padding: 6px 14px; border-radius: 12px; font-weight: bold; font-size: 13px; display: inline-block;">Belum Dibayar</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <button
-                                    type="button"
-                                    class="btn-form-blue"
-                                    style="padding: 7px 14px; font-size: 12px; border-radius: 10px;"
-                                    data-id="{{ item.id_pengembalian }}"
-                                    data-anggota="{{ item.nama_lengkap or '-' }}"
-                                    data-buku="{{ item.judul_buku or '-' }}"
-                                    data-denda="{{ item.total_denda or 0 }}"
-                                    data-sisa="{{ (item.total_denda or 0) - (item.jumlah_bayar or 0) }}"
-                                    data-metode="{{ item.metode_pembayaran or '' }}"
-                                    onclick="pilihPengembalian(this)"
-                                    {% if item.status_pembayaran == 'lunas' %}disabled{% endif %}
-                                >
-                                    Pilih
-                                </button>
-                            </td>
-                        </tr>
-                        {% else %}
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 24px; color: #64748b;">
-                                Belum ada data pengembalian berdenda.
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Jalur Transaksi Pembayaran -->
-            <div class="section-title">Jalur Transaksi Pembayaran</div>
-            <div class="form-card-box">
-                <p id="infoDipilih" style="margin: 0 0 20px 0; color: #0d233a; font-size: 14px; line-height: 1.5;">
-                    Pilih baris pengembalian berdenda pada tabel di atas.
-                </p>
-
-                <form id="formBayarSamping" method="POST" action="">
-                    <div class="form-group-admin">
-                        <label for="metodeSelect">Jalur Transaksi</label>
-                        <div class="input-box-admin">
-                            <select name="metode_pembayaran" id="metodeSelect" class="custom-select-user" style="width: 100%; border: none; background: transparent; outline: none;" onchange="ubahJalur()">
-                                <option value="qris" selected>QRIS</option>
-                                <option value="tunai">Tunai</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="stat-card-item" id="boxQris" style="max-width: 380px; margin-bottom: 20px;">
-                        <div style="color: #f6c90e; font-size: 30px;"><i class="fa-solid fa-qrcode"></i></div>
-                        <div class="stat-card-info">
-                            <span class="stat-card-title">QRIS</span>
-                            <span class="stat-card-value" id="nominalQrisText">Rp 0</span>
-                        </div>
-                    </div>
-                    <p id="ketQris" style="font-size: 12.5px; color: #475569; margin: -8px 0 20px 0;">
-                        Tampilkan QRIS &amp; konfirmasi pembayaran sesuai nominal denda.
-                    </p>
-
-                    <div class="form-group-admin" id="boxTunai" style="display: none;">
-                        <label for="nominalBayarInput">Nominal Pembayaran Tunai (Rp)</label>
-                        <div class="input-box-admin">
-                            <input
-                                type="number"
-                                step="100"
-                                min="0"
-                                name="nominal_bayar"
-                                id="nominalBayarInput"
-                                placeholder="Masukkan nominal pembayaran"
-                            >
-                        </div>
-                    </div>
-
-                    <div class="form-actions-group">
-                        <button type="submit" class="btn-form-blue" id="btnKonfirmasiBayar" disabled>
-                            <i class="fa-solid fa-check"></i> Konfirmasi Sudah Dibayar
-                        </button>
-                    </div>
-                </form>
-            </div>
-
+    <div class="main-content">
+        <div class="page-title-box">
+            <h2><i class="fa-solid fa-money-bill-wave"></i> Pembayaran Denda</h2>
+            <span class="page-subtitle">Kelola pembayaran denda peminjaman (Tunai &amp; QRIS)</span>
         </div>
-    </div>
 
-    <!-- MODAL PROFIL WHATSAPP -->
-    <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
-        <div class="modal-card-wa">
-            <div class="wa-modal-header">
-                <h3>Profil Admin</h3>
-                <button type="button" class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+        {% if request.args.get('qris_terkirim') %}
+        <div class="alert-qris-terkirim">
+            <i class="fa-solid fa-circle-check"></i> QRIS berhasil dikirim ke halaman pembayaran user. Menunggu user men-scan &amp; mengirim bukti pembayaran.
+        </div>
+        {% endif %}
+
+        <div class="grid-pembayaran">
+            <div class="card-panel">
+                <h3><i class="fa-solid fa-list"></i> Daftar Pengembalian Berdenda</h3>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Anggota</th>
+                                <th>Buku</th>
+                                <th>Total Denda</th>
+                                <th>Metode</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% if pembayaran_list %}
+                                {% for item in pembayaran_list %}
+                                {% set total_denda = (item.total_denda or 0)|float %}
+                                {% set sudah_bayar = (item.jumlah_bayar or 0)|float %}
+                                {% set sisa_denda = total_denda - sudah_bayar %}
+                                {% if sisa_denda < 0 %}{% set sisa_denda = 0 %}{% endif %}
+                                <tr>
+                                    <td>#{{ item.id_pengembalian }}</td>
+                                    <td>
+                                        <strong>{{ item.nama_lengkap or '-' }}</strong><br>
+                                        <small class="sub-teks">{{ item.kelas or '' }}</small>
+                                    </td>
+                                    <td>{{ item.judul_buku or '-' }}</td>
+                                    <td>
+                                        <strong>Rp {{ "{:,.0f}".format(total_denda).replace(",", ".") }}</strong><br>
+                                        <small class="sub-teks">Sisa: Rp {{ "{:,.0f}".format(sisa_denda).replace(",", ".") }}</small>
+                                    </td>
+                                    <td>{{ (item.metode_pembayaran or '-')|upper }}</td>
+                                    <td>
+                                        {% if item.status_pembayaran == 'lunas' %}
+                                            <span class="badge-lunas">Sudah Dibayar</span>
+                                        {% elif item.status_pembayaran == 'menunggu' %}
+                                            <span class="badge-menunggu">Menunggu Scan / Verifikasi</span>
+                                        {% else %}
+                                            <span class="badge-belum">Belum Dibayar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button
+                                            type="button"
+                                            class="btn-pilih"
+                                            data-id="{{ item.id_pengembalian }}"
+                                            data-anggota="{{ item.nama_lengkap or '-' }}"
+                                            data-buku="{{ item.judul_buku or '-' }}"
+                                            data-total="{{ total_denda|int }}"
+                                            data-sisa="{{ sisa_denda|int }}"
+                                            data-metode="{{ item.metode_pembayaran or 'tunai' }}"
+                                            data-status="{{ item.status_pembayaran or 'belum_lunas' }}"
+                                            data-catatan="{{ item.catatan or '' }}"
+                                            onclick="pilihPengembalian(this)"
+                                        >
+                                            Pilih
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            {% else %}
+                                <tr>
+                                    <td colspan="7" class="baris-kosong">
+                                        Belum ada data pengembalian berdenda.
+                                    </td>
+                                </tr>
+                            {% endif %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="wa-body">
-                <div class="wa-avatar-container" id="modalAvatarDisplay">
-                    <i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i>
-                </div>
-                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
-                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
 
-                <div class="wa-info-group" style="margin-top: 20px;">
-                    <div class="wa-info-label">Phone</div>
-                    <div class="wa-info-row">
-                        <span class="wa-info-value">+62 856-9571-4264</span>
-                        <i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()" title="Salin nomor"></i>
-                    </div>
+            <div class="card-panel">
+                <h3><i class="fa-solid fa-qrcode"></i> Proses Pembayaran &amp; QRIS</h3>
+
+                <div class="info-tagihan-box" id="infoTagihan">
+                    Pilih baris pengembalian berdenda pada tabel di sebelah kiri.
                 </div>
+
+                <form id="formKirimQris" method="POST" action="">
+                    <button type="submit" id="btnKirimQris" class="btn-kirim-qris" disabled>
+                        <i class="fa-solid fa-paper-plane"></i> Kirim QRIS kepada User
+                    </button>
+                </form>
+
+                <form id="formBayar" method="POST" action="">
+                    <div class="form-group">
+                        <label for="metodePembayaran">Jalur Transaksi</label>
+                        <select id="metodePembayaran" name="metode_pembayaran" class="form-control" onchange="toggleMetode()">
+                            <option value="tunai">Tunai</option>
+                            <option value="qris">QRIS</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" id="grupNominalTunai">
+                        <label for="nominalBayar">Nominal Bayar Tunai (Rp)</label>
+                        <input
+                            type="number"
+                            id="nominalBayar"
+                            name="nominal_bayar"
+                            class="form-control"
+                            min="0"
+                            step="100"
+                            placeholder="Masukkan nominal uang diterima"
+                            oninput="hitungKembalian()"
+                        >
+                        <div class="kembalian-text" id="infoKembalian">Kembalian: Rp 0</div>
+                    </div>
+
+                    <div class="qris-box" id="boxQris">
+                        <div class="qris-box-judul">Pembayaran QRIS / Bukti User</div>
+                        <div class="qris-preview-img" id="boxQrPreview" data-qris-tersedia="{{ '1' if qris_tersedia else '0' }}">
+                            {% if qris_tersedia %}
+                                <img src="{{ url_for('static', filename='images/qris_perpustakaan.png') }}" alt="QRIS Perpustakaan">
+                            {% else %}
+                                <span class="qris-belum-ada">Simpan gambar QRIS di static/images/qris_perpustakaan.png</span>
+                            {% endif %}
+                        </div>
+                        <div id="statusQrKanan" class="status-qr-kanan">
+                            Klik "Kirim QRIS kepada User" agar QRIS muncul di halaman user.
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btnKonfirmasiBayar" class="btn-bayar" disabled>
+                        <i class="fa-solid fa-check-circle"></i> Konfirmasi Sudah Dibayar
+                    </button>
+                </form>
             </div>
         </div>
     </div>
 
     <script>
-        let dendaAktif = 0;
+        let sisaAktif = 0;
 
         function formatRupiah(angka) {
             return 'Rp ' + Number(angka || 0).toLocaleString('id-ID');
-        }
-
-        function ubahJalur() {
-            const metode = document.getElementById('metodeSelect').value;
-            const boxQris = document.getElementById('boxQris');
-            const ketQris = document.getElementById('ketQris');
-            const boxTunai = document.getElementById('boxTunai');
-            const inputNominal = document.getElementById('nominalBayarInput');
-
-            if (metode === 'qris') {
-                boxQris.style.display = 'flex';
-                ketQris.style.display = 'block';
-                boxTunai.style.display = 'none';
-                inputNominal.required = false;
-                inputNominal.value = dendaAktif > 0 ? dendaAktif : '';
-            } else {
-                boxQris.style.display = 'none';
-                ketQris.style.display = 'none';
-                boxTunai.style.display = 'block';
-                inputNominal.required = true;
-                if (!inputNominal.value && dendaAktif > 0) {
-                    inputNominal.value = dendaAktif;
-                }
-            }
-            document.getElementById('nominalQrisText').textContent = formatRupiah(dendaAktif);
         }
 
         function pilihPengembalian(btn) {
             const id = btn.dataset.id;
             const anggota = btn.dataset.anggota;
             const buku = btn.dataset.buku;
-            // yang ditagihkan = sisa denda (total - yang sudah dibayar)
-            dendaAktif = Math.max(Number(btn.dataset.sisa || btn.dataset.denda || 0), 0);
-            const metode = (btn.dataset.metode || '').toLowerCase();
+            const total = Number(btn.dataset.total || 0);
+            const sisa = Number(btn.dataset.sisa || 0);
+            const metode = (btn.dataset.metode || 'tunai').toLowerCase();
+            const status = (btn.dataset.status || 'belum_lunas').toLowerCase();
+            const catatan = btn.dataset.catatan || '';
 
-            document.querySelectorAll('tbody tr').forEach(tr => { tr.style.backgroundColor = ''; });
-            const row = document.getElementById('row-' + id);
-            if (row) row.style.backgroundColor = '#fef9c3';
+            sisaAktif = sisa;
 
-            document.getElementById('formBayarSamping').action = `/admin/bayar_pengembalian/${id}`;
+            document.getElementById('formKirimQris').action = `/admin/kirim_qris/${id}`;
+            document.getElementById('formBayar').action = `/admin/bayar_pengembalian/${id}`;
 
-            document.getElementById('infoDipilih').innerHTML =
-                `<strong>Pengembalian #${id}</strong> — ${anggota} | Buku: ${buku} | Sisa Denda: <strong>${formatRupiah(dendaAktif)}</strong>`;
+            document.getElementById('infoTagihan').innerHTML = `
+                <div><strong>Pengembalian #${id}</strong> — ${anggota} (${buku})</div>
+                <div class="info-tagihan-detail">Total Denda: <strong>${formatRupiah(total)}</strong> | Sisa Tagihan: <strong>${formatRupiah(sisa)}</strong></div>
+            `;
 
-            // Hanya ikuti jalur yang sudah tersimpan (mis. diajukan siswa).
-            // Kalau belum ada, pilihan admin di dropdown tidak ditimpa.
-            if (metode === 'tunai' || metode === 'qris') {
-                document.getElementById('metodeSelect').value = metode;
+            const selectMetode = document.getElementById('metodePembayaran');
+            selectMetode.value = (metode === 'qris') ? 'qris' : 'tunai';
+
+            const inputNominal = document.getElementById('nominalBayar');
+            inputNominal.value = sisa > 0 ? sisa : 0;
+
+            const btnKirimQris = document.getElementById('btnKirimQris');
+            const btnBayar = document.getElementById('btnKonfirmasiBayar');
+            const statusQrKanan = document.getElementById('statusQrKanan');
+            const boxQrPreview = document.getElementById('boxQrPreview');
+            const qrisTersedia = boxQrPreview ? boxQrPreview.dataset.qrisTersedia === '1' : false;
+            const urlQris = "{{ url_for('static', filename='images/qris_perpustakaan.png') }}";
+
+            const matchBukti = catatan.match(/BUKTI:([^\s|]+)/);
+            if (matchBukti && boxQrPreview) {
+                const namaBukti = matchBukti[1];
+                boxQrPreview.innerHTML = `<img src="/uploads/bukti_bayar/${encodeURIComponent(namaBukti)}" alt="Bukti Bayar User">`;
+                statusQrKanan.innerHTML = `Bukti transaksi diterima dari <strong>${anggota}</strong>. Silakan cek lalu klik <strong>Konfirmasi Sudah Dibayar</strong>.`;
+            } else if (boxQrPreview) {
+                if (qrisTersedia) {
+                    boxQrPreview.innerHTML = `<img src="${urlQris}" alt="QRIS Perpustakaan">`;
+                } else {
+                    boxQrPreview.innerHTML = `<span class="qris-belum-ada">Simpan gambar QRIS di static/images/qris_perpustakaan.png</span>`;
+                }
+                if (status === 'menunggu' && metode === 'qris') {
+                    statusQrKanan.innerHTML = `QRIS sudah dikirim ke <strong>${anggota}</strong> (${catatan || 'menunggu scan'}).`;
+                } else {
+                    statusQrKanan.innerHTML = `Klik "Kirim QRIS kepada User" agar QRIS muncul di halaman user.`;
+                }
             }
 
-            document.getElementById('nominalBayarInput').value = dendaAktif > 0 ? dendaAktif : '';
-            document.getElementById('btnKonfirmasiBayar').disabled = false;
+            if (status === 'lunas' || sisa <= 0) {
+                btnKirimQris.disabled = true;
+                btnBayar.disabled = true;
+                btnBayar.innerHTML = '<i class="fa-solid fa-check-circle"></i> Sudah Lunas';
+            } else {
+                btnKirimQris.disabled = false;
+                btnBayar.disabled = false;
+                btnBayar.innerHTML = '<i class="fa-solid fa-check-circle"></i> Konfirmasi Sudah Dibayar';
+            }
 
-            ubahJalur();
+            toggleMetode();
+            hitungKembalian();
         }
 
-        ubahJalur();
+        function toggleMetode() {
+            const metode = document.getElementById('metodePembayaran').value;
+            const grupTunai = document.getElementById('grupNominalTunai');
+            const boxQris = document.getElementById('boxQris');
 
-        // Profil WA
-        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
-        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
-        function previewWaImage(e) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
-            };
-            if (e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+            if (metode === 'qris') {
+                grupTunai.style.display = 'none';
+                boxQris.style.display = 'block';
+            } else {
+                grupTunai.style.display = 'block';
+                boxQris.style.display = 'none';
+            }
         }
-        function copyPhone() {
-            navigator.clipboard.writeText("+62 856-9571-4264");
-            alert("Nomor disalin!");
+
+        function hitungKembalian() {
+            const bayar = Number(document.getElementById('nominalBayar').value || 0);
+            const kembali = Math.max(bayar - sisaAktif, 0);
+            document.getElementById('infoKembalian').textContent = 'Kembalian: ' + formatRupiah(kembali);
         }
+
+        toggleMetode();
     </script>
 </body>
 </html>

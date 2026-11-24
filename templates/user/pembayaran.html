@@ -1,145 +1,11 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembayaran Denda - FREX</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8.1">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-    <style>
-
-.custom-sidebar-menu {
-    list-style: none;
-    padding: 0 15px;
-    margin: 0;
-}
-
-.custom-sidebar-menu li {
-    margin-bottom: 12px;
-}
-
-.custom-sidebar-menu a {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    color: #ffffff;
-    text-decoration: none;
-    padding: 12px 18px;
-    border-radius: 16px;
-    font-size: 13px;
-    font-weight: bold;
-    border: 2px solid transparent;
-    background-color: #0d233a;
-    box-sizing: border-box;
-    transition: all 0.2s;
-}
-
-.custom-sidebar-menu a:hover,
-.custom-sidebar-menu a.active {
-    border-color: #f6c90e;
-    color: #f6c90e;
-    background: linear-gradient(
-        90deg,
-        rgba(255,204,0,0.15),
-        transparent
-    );
-}
-
-
-        .payment-content {
-            padding: 30px;
-        }
-
-        .payment-summary {
-            background: #0d233a;
-            color: white;
-            padding: 28px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-        }
-
-        .payment-summary h3 {
-            margin: 0 0 12px;
-            color: #f6c90e;
-        }
-
-        .payment-total {
-            font-size: 32px;
-            font-weight: bold;
-        }
-
-        .payment-card {
-            background: white;
-            padding: 24px;
-            border-radius: 14px;
-            margin-bottom: 25px;
-            box-shadow: 0 3px 12px rgba(0,0,0,.06);
-        }
-
-        .payment-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 15px;
-        }
-
-        .payment-table th,
-        .payment-table td {
-            padding: 13px;
-            border-bottom: 1px solid #e2e8f0;
-            text-align: left;
-        }
-
-        .payment-table th {
-            background: #f1f5f9;
-            color: #0d233a;
-        }
-
-        .status-belum {
-            color: #dc2626;
-            font-weight: bold;
-        }
-
-        .status-berhasil {
-            color: #16a34a;
-            font-weight: bold;
-        }
-
-        .status-lain {
-            color: #64748b;
-            font-weight: bold;
-        }
-
-        .payment-note {
-            background: #eff6ff;
-            border-left: 4px solid #2563eb;
-            padding: 15px;
-            border-radius: 8px;
-            color: #1e40af;
-            margin-top: 15px;
-        }
-
-        .empty-data {
-            text-align: center;
-            padding: 30px;
-            color: #64748b;
-        }
-
-        @media(max-width: 768px) {
-            .payment-content {
-                padding: 15px;
-            }
-
-            .payment-table {
-                min-width: 650px;
-            }
-
-            .table-wrapper {
-                overflow-x: auto;
-            }
-        }
-    </style>
 </head>
 
 <body>
@@ -159,9 +25,8 @@
             <li><a href="/user/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman Saya</a></li>
             <li><a href="/user/pembayaran" class="active"><i class="fa-solid fa-wallet"></i> Pembayaran Denda</a></li>
             <li><a href="/user/riwayat"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a></li>
-            
             <li><a href="/user/biodata"><i class="fa-solid fa-user"></i> Biodata</a></li>
-            <li><a href="/user/laporan"><i class="fa-solid fa-comment-dots"></i> Laporan Bug & Saran</a></li>
+            <li><a href="/user/laporan"><i class="fa-solid fa-comment-dots"></i> Laporan Bug &amp; Saran</a></li>
         </ul>
     </div>
 
@@ -175,7 +40,7 @@
 <div class="main-container">
 
     <header class="topbar-admin">
-        <h2 style="color:#0d233a; margin:0;">Pembayaran Denda</h2>
+        <h2 class="topbar-heading">Pembayaran Denda</h2>
         <div class="admin-badge-top">
             <i class="fa-solid fa-user"></i>
             {{ session.get('nama', 'Pengguna') }}
@@ -184,7 +49,72 @@
 
     <main class="payment-content">
 
-        <!-- TOTAL DENDA -->
+        {% if request.args.get('scan_qris') %}
+        <div class="alert-sukses">
+            <i class="fa-solid fa-circle-check"></i> Foto bukti pembayaran QRIS sudah dikirim ke admin. Menunggu konfirmasi admin.
+        </div>
+        {% endif %}
+
+        {% if request.args.get('error') == 'bukti_wajib' %}
+        <div class="alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i> Silakan upload foto bukti transaksi terlebih dahulu sebelum mengirim.
+        </div>
+        {% endif %}
+
+        {% if qris_aktif_list %}
+        <section id="panelQrisUser" class="payment-card qris-panel-box" data-rendered="1">
+            <h3 class="payment-card-title">
+                <i class="fa-solid fa-qrcode"></i> Pembayaran QRIS — Scan Barcode &amp; Kirim Bukti Foto
+            </h3>
+            <p class="qris-instruksi">
+                1. Scan barcode QRIS sesuai nominal denda.<br>
+                2. Setelah transaksi selesai, upload foto bukti pembayaran lalu klik <strong>Kirim Bukti Pembayaran</strong>.
+            </p>
+
+            <div class="qris-grid-user">
+                {% for q in qris_aktif_list %}
+                <div class="qris-item-card">
+                    <div class="qris-item-judul">
+                        #{{ q.id_pengembalian }} - {{ q.judul }}
+                    </div>
+                    <div class="qris-item-nominal">
+                        Rp {{ "{:,}".format(q.total_denda or 0).replace(",", ".") }}
+                    </div>
+                    <div class="qris-img-box">
+                        {% if qris_tersedia %}
+                            <img src="{{ url_for('static', filename='images/qris_perpustakaan.png') }}" alt="Barcode QRIS Perpustakaan">
+                        {% else %}
+                            <span class="qris-kosong-text">Simpan gambar QRIS di static/images/qris_perpustakaan.png</span>
+                        {% endif %}
+                    </div>
+                    <div class="qris-item-catatan">
+                        {{ q.catatan or 'Silakan scan QRIS lalu kirim foto bukti pembayaran' }}
+                    </div>
+
+                    <form action="{{ url_for('user_konfirmasi_scan_qris') }}" method="POST" enctype="multipart/form-data" class="qris-form">
+                        <input type="hidden" name="id_pengembalian" value="{{ q.id_pengembalian }}">
+                        <label class="qris-label">
+                            Upload Foto Bukti Transaksi
+                        </label>
+                        <input
+                            type="file"
+                            name="bukti_transaksi"
+                            accept=".png,.jpg,.jpeg,.webp,image/*"
+                            required
+                            class="qris-file-input"
+                        >
+                        <button type="submit" class="btn-kirim-bukti">
+                            <i class="fa-solid fa-paper-plane"></i> Kirim Bukti Pembayaran
+                        </button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% else %}
+        <section id="panelQrisUser" class="payment-card qris-panel-box" hidden data-rendered=""></section>
+        {% endif %}
+
         <section class="payment-summary">
             <h3><i class="fa-solid fa-wallet"></i> Total Denda Belum Lunas</h3>
 
@@ -192,14 +122,13 @@
                 Rp {{ "{:,}".format(total_denda or 0).replace(",", ".") }}
             </div>
 
-            <p style="margin-bottom:0; color:#cbd5e1;">
+            <p class="payment-summary-desc">
                 Total seluruh denda yang masih harus diselesaikan.
             </p>
         </section>
 
-        <!-- RINCIAN DENDA -->
         <section class="payment-card">
-            <h3 style="color:#0d233a;">
+            <h3 class="payment-card-title">
                 <i class="fa-solid fa-receipt"></i> Rincian Denda
             </h3>
 
@@ -236,34 +165,16 @@
                                 </strong>
                             </td>
                             <td>
-
-    {% if d.status_denda == 'belum_lunas' %}
-
-        <span class="status-belum">
-            Belum Lunas
-        </span>
-
-    {% elif d.status_denda == 'menunggu' %}
-
-        <span class="status-lain">
-            Menunggu Verifikasi
-        </span>
-
-    {% elif d.status_denda == 'lunas' %}
-
-        <span class="status-berhasil">
-            Lunas
-        </span>
-
-    {% else %}
-
-        <span class="status-belum">
-            Ditolak
-        </span>
-
-    {% endif %}
-
-</td>
+                                {% if d.status_denda == 'belum_lunas' %}
+                                    <span class="status-belum">Belum Lunas</span>
+                                {% elif d.status_denda == 'menunggu' %}
+                                    <span class="status-lain">Menunggu Verifikasi</span>
+                                {% elif d.status_denda == 'lunas' %}
+                                    <span class="status-berhasil">Lunas</span>
+                                {% else %}
+                                    <span class="status-belum">Ditolak</span>
+                                {% endif %}
+                            </td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -271,132 +182,58 @@
             </div>
             {% else %}
             <div class="empty-data">
-                <i class="fa-solid fa-circle-check" style="font-size:40px; color:#16a34a;"></i>
+                <i class="fa-solid fa-circle-check empty-icon-check"></i>
                 <h3>Tidak Ada Denda</h3>
                 <p>Kamu tidak memiliki denda yang belum dilunasi.</p>
             </div>
             {% endif %}
         </section>
 
-        <!-- METODE PEMBAYARAN -->
         <section class="payment-card">
-            <h3 style="color:#0d233a;">
-                <i class="fa-solid fa-credit-card"></i> Metode Pembayaran
+            <h3 class="payment-card-title">
+                <i class="fa-solid fa-credit-card"></i> Ajukan Pembayaran
             </h3>
 
             {% if daftar_denda %}
+            <form action="{{ url_for('ajukan_pembayaran') }}" method="POST" enctype="multipart/form-data">
+                <div class="form-field-group">
+                    <label>
+                        Pilih Denda
+                    </label>
+                    <select name="id_pengembalian" required class="form-select-input">
+                        <option value="">-- Pilih denda yang ingin dibayar --</option>
+                        {% for d in daftar_denda %}
+                        <option value="{{ d.id_pengembalian }}">
+                            #{{ d.id_pengembalian }} - {{ d.judul }} - Rp {{ "{:,}".format(d.total_denda or 0).replace(",", ".") }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-<form action="{{ url_for('ajukan_pembayaran') }}" method="POST">
+                <div class="form-field-group">
+                    <label>
+                        Metode Pembayaran
+                    </label>
+                    <select name="metode_pembayaran" required class="form-select-input">
+                        <option value="">-- Pilih metode pembayaran --</option>
+                        <option value="tunai">Tunai melalui Admin</option>
+                        <option value="qris">QRIS</option>
+                    </select>
+                </div>
 
-    <div style="margin-bottom:20px;">
-
-        <label style="display:block; font-weight:bold; margin-bottom:8px;">
-            Pilih Denda
-        </label>
-
-        <select
-            name="id_pengembalian"
-            required
-            style="
-                width:100%;
-                padding:12px;
-                border:1px solid #cbd5e1;
-                border-radius:8px;
-            "
-        >
-
-            <option value="">
-                -- Pilih denda yang ingin dibayar --
-            </option>
-
-            {% for d in daftar_denda %}
-
-            <option value="{{ d.id_pengembalian }}">
-
-                #{{ d.id_pengembalian }}
-                -
-                {{ d.judul }}
-                -
-                Rp {{ "{:,}".format(d.total_denda or 0).replace(",", ".") }}
-
-            </option>
-
-            {% endfor %}
-
-        </select>
-
-    </div>
-
-
-    <div style="margin-bottom:20px;">
-
-        <label style="display:block; font-weight:bold; margin-bottom:8px;">
-            Metode Pembayaran
-        </label>
-
-        <select
-            name="metode_pembayaran"
-            required
-            style="
-                width:100%;
-                padding:12px;
-                border:1px solid #cbd5e1;
-                border-radius:8px;
-            "
-        >
-
-            <option value="">
-                -- Pilih metode pembayaran --
-            </option>
-
-            <option value="tunai">
-                Tunai melalui Admin
-            </option>
-
-            <option value="qris">
-                QRIS
-            </option>
-
-        </select>
-
-    </div>
-
-
-    <button
-        type="submit"
-        style="
-            background:#0d233a;
-            color:white;
-            border:none;
-            padding:13px 22px;
-            border-radius:8px;
-            cursor:pointer;
-            font-weight:bold;
-        "
-    >
-
-        <i class="fa-solid fa-paper-plane"></i>
-
-        Ajukan Pembayaran
-
-    </button>
-
-</form>
-
-{% else %}
-
-<div class="payment-note">
-
-    Tidak ada denda yang dapat dibayar saat ini.
-
-</div>
-
-{% endif %}
+                <button type="submit" class="btn-ajukan-bayar">
+                    <i class="fa-solid fa-paper-plane"></i> Ajukan Pembayaran
+                </button>
+            </form>
+            {% else %}
+            <div class="payment-note">
+                Tidak ada denda yang dapat dibayar saat ini.
+            </div>
+            {% endif %}
         </section>
 
-        <!-- RIWAYAT PEMBAYARAN -->
         <section class="payment-card">
-            <h3 style="color:#0d233a;">
+            <h3 class="payment-card-title">
                 <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pembayaran
             </h3>
 
@@ -423,8 +260,8 @@
                                 Rp {{ "{:,}".format(r.jumlah_bayar or 0).replace(",", ".") }}
                             </td>
                             <td>
-                                {% if r.status_pembayaran == 'berhasil' %}
-                                    <span class="status-berhasil">Berhasil</span>
+                                {% if r.status_pembayaran == 'berhasil' or r.status_pembayaran == 'lunas' %}
+                                    <span class="status-berhasil">Lunas</span>
                                 {% elif r.status_pembayaran == 'menunggu' %}
                                     <span class="status-lain">Menunggu</span>
                                 {% else %}
@@ -445,6 +282,28 @@
 
     </main>
 </div>
+
+<script>
+    (function () {
+        const panel = document.getElementById('panelQrisUser');
+        if (!panel) return;
+
+        function cekUpdateQrisUser() {
+            fetch("{{ url_for('user_status_pembayaran_json') }}")
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                    if (!data || !data.authenticated) return;
+                    const adaQris = Array.isArray(data.qris_aktif) && data.qris_aktif.length > 0;
+                    if (adaQris && !panel.dataset.rendered) {
+                        location.reload();
+                    }
+                })
+                .catch(() => {});
+        }
+
+        setInterval(cekUpdateQrisUser, 4000);
+    })();
+</script>
 
 </body>
 </html>

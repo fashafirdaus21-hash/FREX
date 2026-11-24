@@ -398,6 +398,18 @@ ALTER TABLE `pembayaran_denda`
   ADD CONSTRAINT `fk_bayar_pengembalian` FOREIGN KEY (`id_pengembalian`) REFERENCES `pengembalian` (`id_pengembalian`) ON DELETE SET NULL ON UPDATE CASCADE;
 COMMIT;
 
+--
+--
+--
+ALTER TABLE pengembalian
+  ADD COLUMN IF NOT EXISTS foto_bukti VARCHAR(255) DEFAULT NULL AFTER diproses_oleh;
+
+--
+--
+--
+ALTER TABLE `pembayaran_denda`
+  MODIFY COLUMN `status_pembayaran` ENUM('belum_lunas','menunggu','lunas') NOT NULL DEFAULT 'belum_lunas';
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

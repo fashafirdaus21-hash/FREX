@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify, send_from_directory
 from koneksi import buat_koneksi
 import os
 import time
@@ -8,17 +8,26 @@ app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_perpustakaan'
 
 # ==========================================
-# KONFIGURASI FOLDER UPLOAD COVER BUKU
+# KONFIGURASI FOLDER UPLOAD COVER BUKU & BUKTI BAYAR
 # ==========================================
 UPLOAD_FOLDER = 'static/uploads/covers'
+BUKTI_BAYAR_FOLDER = 'static/uploads/bukti_bayar'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['BUKTI_BAYAR_FOLDER'] = BUKTI_BAYAR_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(BUKTI_BAYAR_FOLDER, exist_ok=True)
+os.makedirs('static/images', exist_ok=True)
 
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def has_pengembalian_status_denda(cursor):
+    cursor.execute("SHOW COLUMNS FROM pengembalian LIKE 'status_denda'")
+    return cursor.fetchone() is not None
 
 
 @app.context_processor
@@ -153,6 +162,13 @@ def login():
             return "Login Gagal! Username atau Password salah. <a href='/login'>Coba lagi</a>"
 
     return render_template('index.html')
+
+
+@app.route('/uploads/bukti_bayar/<path:filename>')
+def lihat_bukti_bayar(filename):
+    if session.get('role') not in ['admin', 'siswa', 'user']:
+        return redirect(url_for('login'))
+    return send_from_directory(app.config['BUKTI_BAYAR_FOLDER'], filename)
 
 
 # ==========================================================
@@ -682,10 +698,13 @@ def admin_pembayaran():
                 COALESCE(pd.jumlah_bayar, 0) AS jumlah_bayar,
                 pd.metode_pembayaran AS metode_pembayaran,
                 pd.tanggal_bayar,
+                pd.catatan,
                 CASE
                     WHEN pd.status_pembayaran = 'lunas'
                          OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
                     THEN 'lunas'
+                    WHEN pd.status_pembayaran = 'menunggu'
+                    THEN 'menunggu'
                     ELSE 'belum_lunas'
                 END AS status_pembayaran
             FROM pengembalian pg
@@ -703,21 +722,112 @@ def admin_pembayaran():
                 CASE
                     WHEN pd.status_pembayaran = 'lunas'
                          OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
-                    THEN 1
-                    ELSE 0
+                    THEN 2
+                    WHEN pd.status_pembayaran = 'menunggu'
+                    THEN 0
+                    ELSE 1
                 END,
                 pg.id_pengembalian DESC
         """)
         pembayaran_list = cursor.fetchall()
 
+        qris_tersedia = os.path.exists('static/images/qris_perpustakaan.png')
+
         return render_template(
             'admin/pembayaran.html',
-            pembayaran_list=pembayaran_list
+            pembayaran_list=pembayaran_list,
+            qris_tersedia=qris_tersedia
         )
 
     except Exception as e:
         print("Gagal memuat pembayaran admin:", e)
         return f"Gagal memuat halaman pembayaran admin: {e}", 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+
+@app.route('/admin/kirim_qris/<int:id_pengembalian>', methods=['POST'])
+def admin_kirim_qris(id_pengembalian):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        cursor.execute("""
+            SELECT
+                pg.id_pengembalian,
+                pg.id_peminjaman,
+                pm.id_anggota,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda
+            FROM pengembalian pg
+            JOIN peminjaman pm
+                ON pg.id_peminjaman = pm.id_peminjaman
+            WHERE pg.id_pengembalian = %s
+            FOR UPDATE
+        """, (id_pengembalian,))
+        pg = cursor.fetchone()
+
+        if not pg:
+            return redirect(url_for('admin_pembayaran'))
+
+        tagihan = float(pg['total_denda'] or 0)
+
+        cursor.execute("""
+            SELECT id_pembayaran, status_pembayaran, catatan
+            FROM pembayaran_denda
+            WHERE id_pengembalian = %s
+            FOR UPDATE
+        """, (id_pengembalian,))
+        existing = cursor.fetchone()
+
+        if existing and existing['status_pembayaran'] == 'lunas':
+            conn.rollback()
+            return redirect(url_for('admin_pembayaran'))
+
+        catatan_qris = existing['catatan'] if (existing and existing.get('catatan')) else 'QRIS dikirim ke pembayaran user (menunggu scan)'
+
+        if existing:
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET
+                    jumlah_denda = %s,
+                    metode_pembayaran = 'qris',
+                    status_pembayaran = 'menunggu',
+                    diproses_oleh = %s,
+                    catatan = %s
+                WHERE id_pembayaran = %s
+            """, (tagihan, session.get('id_user'), catatan_qris, existing['id_pembayaran']))
+        else:
+            cursor.execute("""
+                INSERT INTO pembayaran_denda (
+                    id_pengembalian, id_peminjaman, id_anggota,
+                    jumlah_denda, jumlah_bayar, tanggal_bayar,
+                    metode_pembayaran, status_pembayaran, diproses_oleh, catatan
+                )
+                VALUES (%s, %s, %s, %s, 0.00, NULL, 'qris', 'menunggu', %s, %s)
+            """, (
+                pg['id_pengembalian'], pg['id_peminjaman'], pg['id_anggota'],
+                tagihan, session.get('id_user'), catatan_qris
+            ))
+
+        if has_pengembalian_status_denda(cursor):
+            cursor.execute("""
+                UPDATE pengembalian
+                SET status_denda = 'menunggu'
+                WHERE id_pengembalian = %s
+            """, (id_pengembalian,))
+
+        conn.commit()
+        return redirect(url_for('admin_pembayaran', qris_terkirim=1, id=id_pengembalian))
+
+    except Exception as e:
+        conn.rollback()
+        print("Gagal mengirim QRIS ke user:", e)
+        return f"Gagal mengirim QRIS ke user: {e}", 500
 
     finally:
         cursor.close()
@@ -821,6 +931,13 @@ def admin_bayar_pengembalian(id_pengembalian):
                 tagihan, total_bayar, metode, status_baru,
                 session.get('id_user')
             ))
+
+        if status_baru == 'lunas' and has_pengembalian_status_denda(cursor):
+            cursor.execute("""
+                UPDATE pengembalian
+                SET status_denda = 'lunas'
+                WHERE id_pengembalian = %s
+            """, (id_pengembalian,))
 
         conn.commit()
         return redirect(url_for('admin_pembayaran'))
@@ -1064,6 +1181,124 @@ def user_riwayat():
     return redirect(url_for('login'))
 
 
+def _ambil_data_pembayaran_user(cursor, user_id):
+    has_status_denda = has_pengembalian_status_denda(cursor)
+
+    if has_status_denda:
+        cursor.execute("""
+            SELECT
+                pg.id_pengembalian,
+                p.id_peminjaman,
+                b.judul,
+                pg.tgl_kembali,
+                COALESCE(pg.denda_telat, 0) AS denda_telat,
+                COALESCE(pg.denda_rusak, 0) AS denda_rusak,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                pd.id_pembayaran,
+                pd.metode_pembayaran,
+                pd.catatan,
+                CASE
+                    WHEN pd.status_pembayaran = 'lunas'
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                    THEN 'lunas'
+                    WHEN pd.status_pembayaran = 'menunggu' OR pg.status_denda = 'menunggu'
+                    THEN 'menunggu'
+                    ELSE 'belum_lunas'
+                END AS status_denda
+            FROM pengembalian pg
+            JOIN peminjaman p
+                ON pg.id_peminjaman = p.id_peminjaman
+            JOIN buku b
+                ON p.id_buku = b.id_buku
+            LEFT JOIN pembayaran_denda pd
+                ON pd.id_pengembalian = pg.id_pengembalian
+            WHERE p.id_anggota = %s
+              AND (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+              AND NOT (
+                    pd.status_pembayaran = 'lunas'
+                    OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                  )
+            ORDER BY pg.tgl_kembali DESC, pg.id_pengembalian DESC
+        """, (user_id,))
+    else:
+        cursor.execute("""
+            SELECT
+                pg.id_pengembalian,
+                p.id_peminjaman,
+                b.judul,
+                pg.tgl_kembali,
+                COALESCE(pg.denda_telat, 0) AS denda_telat,
+                COALESCE(pg.denda_rusak, 0) AS denda_rusak,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                pd.id_pembayaran,
+                pd.metode_pembayaran,
+                pd.catatan,
+                CASE
+                    WHEN pd.status_pembayaran = 'menunggu' THEN 'menunggu'
+                    ELSE 'belum_lunas'
+                END AS status_denda
+            FROM pengembalian pg
+            JOIN peminjaman p
+                ON pg.id_peminjaman = p.id_peminjaman
+            JOIN buku b
+                ON p.id_buku = b.id_buku
+            LEFT JOIN pembayaran_denda pd
+                ON pd.id_pengembalian = pg.id_pengembalian
+            WHERE p.id_anggota = %s
+              AND (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+              AND NOT (
+                    pd.status_pembayaran = 'lunas'
+                    OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                  )
+            ORDER BY pg.tgl_kembali DESC, pg.id_pengembalian DESC
+        """, (user_id,))
+
+    daftar_denda = cursor.fetchall()
+    total_denda = sum(int(float(d['total_denda'] or 0)) for d in daftar_denda)
+
+    qris_aktif_list = [
+        {
+            'id_pengembalian': d['id_pengembalian'],
+            'judul': d['judul'],
+            'total_denda': int(float(d['total_denda'] or 0)),
+            'status_denda': d['status_denda'],
+            'catatan': d.get('catatan') or ''
+        }
+        for d in daftar_denda
+        if (d.get('metode_pembayaran') == 'qris' and d.get('status_denda') == 'menunggu')
+    ]
+
+    cursor.execute("""
+        SELECT *
+        FROM pembayaran_denda
+        WHERE id_anggota = %s
+        ORDER BY created_at DESC
+    """, (user_id,))
+    riwayat_pembayaran = cursor.fetchall()
+
+    return daftar_denda, total_denda, qris_aktif_list, riwayat_pembayaran
+
+
+@app.route('/user/status_pembayaran_json')
+def user_status_pembayaran_json():
+    if session.get('role') not in ['siswa', 'user']:
+        return jsonify({'authenticated': False}), 401
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    try:
+        daftar_denda, total_denda, qris_aktif_list, _ = _ambil_data_pembayaran_user(cursor, session.get('id_user'))
+        return jsonify({
+            'authenticated': True,
+            'jumlah_tagihan': len(daftar_denda),
+            'total_denda': total_denda,
+            'qris_aktif': qris_aktif_list
+        })
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @app.route('/user/pembayaran')
 def user_pembayaran():
     if session.get('role') in ['siswa', 'user']:
@@ -1073,50 +1308,15 @@ def user_pembayaran():
 
         try:
             user_id = session.get('id_user')
-
-            cursor.execute("""
-                SELECT
-                    pg.id_pengembalian,
-                    p.id_peminjaman,
-                    b.judul,
-                    pg.tgl_kembali,
-                    pg.denda_telat,
-                    pg.denda_rusak,
-                    pg.status_denda,
-                    (
-                        COALESCE(pg.denda_telat, 0) +
-                        COALESCE(pg.denda_rusak, 0)
-                    ) AS total_denda
-                FROM pengembalian pg
-                JOIN peminjaman p
-                    ON pg.id_peminjaman = p.id_peminjaman
-                JOIN buku b
-                    ON p.id_buku = b.id_buku
-                WHERE p.id_anggota = %s
-                AND pg.status_denda IN ('belum_lunas', 'menunggu')
-                ORDER BY pg.tgl_kembali DESC
-            """, (user_id,))
-
-            daftar_denda = cursor.fetchall()
-
-            total_denda = sum(
-                int(d['total_denda'] or 0)
-                for d in daftar_denda
-            )
-
-            cursor.execute("""
-                SELECT *
-                FROM pembayaran_denda
-                WHERE id_anggota = %s
-                ORDER BY created_at DESC
-            """, (user_id,))
-
-            riwayat_pembayaran = cursor.fetchall()
+            daftar_denda, total_denda, qris_aktif_list, riwayat_pembayaran = _ambil_data_pembayaran_user(cursor, user_id)
+            qris_tersedia = os.path.exists('static/images/qris_perpustakaan.png')
 
             return render_template(
                 'user/pembayaran.html',
                 daftar_denda=daftar_denda,
                 total_denda=total_denda,
+                qris_aktif_list=qris_aktif_list,
+                qris_tersedia=qris_tersedia,
                 riwayat_pembayaran=riwayat_pembayaran
             )
 
@@ -1132,6 +1332,63 @@ def user_pembayaran():
     return redirect(url_for('login'))
 
 
+@app.route('/user/konfirmasi_scan_qris', methods=['POST'])
+def user_konfirmasi_scan_qris():
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
+
+    id_pengembalian = request.form.get('id_pengembalian')
+    if not id_pengembalian:
+        return redirect(url_for('user_pembayaran'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+    try:
+        user_id = session.get('id_user')
+        cursor.execute("""
+            SELECT pd.id_pembayaran, pd.status_pembayaran
+            FROM pembayaran_denda pd
+            JOIN pengembalian pg ON pd.id_pengembalian = pg.id_pengembalian
+            JOIN peminjaman p ON pg.id_peminjaman = p.id_peminjaman
+            WHERE pd.id_pengembalian = %s
+              AND p.id_anggota = %s
+            FOR UPDATE
+        """, (id_pengembalian, user_id))
+        pd_row = cursor.fetchone()
+
+        if pd_row and pd_row['status_pembayaran'] != 'lunas':
+            nama_file_bukti = None
+            if 'bukti_transaksi' in request.files:
+                file = request.files['bukti_transaksi']
+                if file and file.filename != '' and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    nama_file_bukti = f"bukti_{user_id}_{id_pengembalian}_{int(time.time())}_{filename}"
+                    file.save(os.path.join(app.config['BUKTI_BAYAR_FOLDER'], nama_file_bukti))
+
+            if not nama_file_bukti:
+                conn.rollback()
+                return redirect(url_for('user_pembayaran', error='bukti_wajib'))
+
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET
+                    metode_pembayaran = 'qris',
+                    status_pembayaran = 'menunggu',
+                    catatan = %s
+                WHERE id_pembayaran = %s
+            """, (f"BUKTI:{nama_file_bukti} | Bukti QRIS dikirim user (menunggu verifikasi admin)", pd_row['id_pembayaran']))
+            conn.commit()
+
+        return redirect(url_for('user_pembayaran', scan_qris=1))
+    except Exception as e:
+        conn.rollback()
+        print("Gagal konfirmasi scan QRIS:", e)
+        return redirect(url_for('user_pembayaran'))
+    finally:
+        cursor.close()
+        conn.close()
+
+
 @app.route('/user/ajukan_pembayaran', methods=['POST'])
 def ajukan_pembayaran():
 
@@ -1145,7 +1402,7 @@ def ajukan_pembayaran():
         user_id = session.get('id_user')
 
         id_pengembalian = request.form.get('id_pengembalian')
-        metode_pembayaran = request.form.get('metode_pembayaran')
+        metode_pembayaran = (request.form.get('metode_pembayaran') or '').strip().lower()
 
         if not id_pengembalian or not metode_pembayaran:
             return redirect(url_for('user_pembayaran'))
@@ -1153,9 +1410,8 @@ def ajukan_pembayaran():
         cursor.execute("""
             SELECT
                 pg.id_pengembalian,
-                pg.denda_telat,
-                pg.denda_rusak,
-                pg.status_denda
+                pg.id_peminjaman,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda
             FROM pengembalian pg
             JOIN peminjaman p
                 ON pg.id_peminjaman = p.id_peminjaman
@@ -1168,36 +1424,73 @@ def ajukan_pembayaran():
         if not denda:
             return redirect(url_for('user_pembayaran'))
 
-        if denda['status_denda'] in ['lunas', 'menunggu']:
-            return redirect(url_for('user_pembayaran'))
+        jumlah_denda = float(denda['total_denda'] or 0)
 
-        jumlah_bayar = (
-            float(denda['denda_telat'] or 0) +
-            float(denda['denda_rusak'] or 0)
+        nama_file_bukti = None
+        if 'bukti_transaksi' in request.files:
+            file = request.files['bukti_transaksi']
+            if file and file.filename != '' and allowed_file(file.filename):
+                filename = secure_filename(file.filename)
+                nama_file_bukti = f"bukti_{user_id}_{id_pengembalian}_{int(time.time())}_{filename}"
+                file.save(os.path.join(app.config['BUKTI_BAYAR_FOLDER'], nama_file_bukti))
+
+        catatan_bayar = (
+            f"BUKTI:{nama_file_bukti} | Diajukan oleh user ({metode_pembayaran.upper()})"
+            if nama_file_bukti
+            else "Diajukan oleh user"
         )
 
         cursor.execute("""
-            INSERT INTO pembayaran_denda
-            (
-                id_anggota,
-                id_pengembalian,
-                jumlah_bayar,
-                metode_pembayaran,
-                status_pembayaran
-            )
-            VALUES (%s, %s, %s, %s, 'menunggu')
-        """, (
-            user_id,
-            id_pengembalian,
-            jumlah_bayar,
-            metode_pembayaran
-        ))
-
-        cursor.execute("""
-            UPDATE pengembalian
-            SET status_denda = 'menunggu'
+            SELECT id_pembayaran, status_pembayaran
+            FROM pembayaran_denda
             WHERE id_pengembalian = %s
+            FOR UPDATE
         """, (id_pengembalian,))
+        existing = cursor.fetchone()
+
+        if existing and existing['status_pembayaran'] == 'lunas':
+            conn.rollback()
+            return redirect(url_for('user_pembayaran'))
+
+        if existing:
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET
+                    jumlah_denda = %s,
+                    metode_pembayaran = %s,
+                    status_pembayaran = 'menunggu',
+                    catatan = %s
+                WHERE id_pembayaran = %s
+            """, (jumlah_denda, metode_pembayaran, catatan_bayar, existing['id_pembayaran']))
+        else:
+            cursor.execute("""
+                INSERT INTO pembayaran_denda
+                (
+                    id_anggota,
+                    id_peminjaman,
+                    id_pengembalian,
+                    jumlah_denda,
+                    jumlah_bayar,
+                    metode_pembayaran,
+                    status_pembayaran,
+                    catatan
+                )
+                VALUES (%s, %s, %s, %s, 0.00, %s, 'menunggu', %s)
+            """, (
+                user_id,
+                denda['id_peminjaman'],
+                id_pengembalian,
+                jumlah_denda,
+                metode_pembayaran,
+                catatan_bayar
+            ))
+
+        if has_pengembalian_status_denda(cursor):
+            cursor.execute("""
+                UPDATE pengembalian
+                SET status_denda = 'menunggu'
+                WHERE id_pengembalian = %s
+            """, (id_pengembalian,))
 
         conn.commit()
 

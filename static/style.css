@@ -1540,3 +1540,602 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: #64748b;
     cursor: not-allowed;
 }
+/* ========================================== */
+/* STYLING PEMBAYARAN DENDA (USER & ADMIN)   */
+/* ========================================== */
+
+.custom-sidebar-menu {
+    list-style: none;
+    padding: 0 15px;
+    margin: 0;
+}
+
+.custom-sidebar-menu li {
+    margin-bottom: 12px;
+}
+
+.custom-sidebar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: bold;
+    border: 2px solid transparent;
+    background-color: #0d233a;
+    box-sizing: border-box;
+    transition: all 0.2s;
+}
+
+.custom-sidebar-menu a:hover,
+.custom-sidebar-menu a.active {
+    border-color: #f6c90e;
+    color: #f6c90e;
+    background: linear-gradient(
+        90deg,
+        rgba(255, 204, 0, 0.15),
+        transparent
+    );
+}
+
+.topbar-heading {
+    color: #0d233a;
+    margin: 0;
+}
+
+.payment-content {
+    padding: 30px;
+}
+
+.alert-sukses {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #fca5a5;
+    padding: 14px 18px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}
+
+.payment-summary {
+    background: #0d233a;
+    color: #ffffff;
+    padding: 28px;
+    border-radius: 16px;
+    margin-bottom: 25px;
+}
+
+.payment-summary h3 {
+    margin: 0 0 12px;
+    color: #f6c90e;
+}
+
+.payment-summary-desc {
+    margin-bottom: 0;
+    color: #cbd5e1;
+}
+
+.payment-total {
+    font-size: 32px;
+    font-weight: bold;
+}
+
+.payment-card {
+    background: #ffffff;
+    padding: 24px;
+    border-radius: 14px;
+    margin-bottom: 25px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+}
+
+.payment-card-title {
+    color: #0d233a;
+    margin-top: 0;
+}
+
+.qris-panel-box {
+    border: 2px solid #0d233a;
+}
+
+.qris-instruksi {
+    color: #475569;
+    margin-top: 4px;
+}
+
+.qris-grid-user {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+    margin-top: 14px;
+}
+
+.qris-item-card {
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 16px;
+    background: #f8fafc;
+    text-align: center;
+}
+
+.qris-item-judul {
+    font-weight: bold;
+    color: #0d233a;
+    margin-bottom: 4px;
+}
+
+.qris-item-nominal {
+    font-size: 20px;
+    font-weight: bold;
+    color: #0d233a;
+    margin-bottom: 10px;
+}
+
+.qris-img-box {
+    width: 190px;
+    height: 190px;
+    margin: 0 auto 12px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.qris-img-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.qris-kosong-text {
+    font-size: 12px;
+    color: #64748b;
+    padding: 8px;
+}
+
+.qris-item-catatan {
+    font-size: 12px;
+    color: #475569;
+    margin-bottom: 12px;
+}
+
+.qris-form {
+    text-align: left;
+}
+
+.qris-label {
+    display: block;
+    font-size: 12px;
+    font-weight: bold;
+    color: #0d233a;
+    margin-bottom: 6px;
+}
+
+.qris-file-input {
+    width: 100%;
+    font-size: 12px;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+.btn-kirim-bukti {
+    width: 100%;
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    padding: 10px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.btn-kirim-bukti:hover {
+    background: #15803d;
+}
+
+.payment-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.payment-table th,
+.payment-table td {
+    padding: 13px;
+    border-bottom: 1px solid #e2e8f0;
+    text-align: left;
+}
+
+.payment-table th {
+    background: #f1f5f9;
+    color: #0d233a;
+}
+
+.status-belum {
+    color: #dc2626;
+    font-weight: bold;
+}
+
+.status-berhasil {
+    color: #16a34a;
+    font-weight: bold;
+}
+
+.status-lain {
+    color: #64748b;
+    font-weight: bold;
+}
+
+.payment-note {
+    background: #eff6ff;
+    border-left: 4px solid #2563eb;
+    padding: 15px;
+    border-radius: 8px;
+    color: #1e40af;
+    margin-top: 15px;
+}
+
+.empty-data {
+    text-align: center;
+    padding: 30px;
+    color: #64748b;
+}
+
+.empty-icon-check {
+    font-size: 40px;
+    color: #16a34a;
+}
+
+.form-select-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    background: #ffffff;
+}
+
+.btn-ajukan-bayar {
+    background: #0d233a;
+    color: #ffffff;
+    border: none;
+    padding: 13px 22px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-ajukan-bayar:hover {
+    background: #163759;
+}
+
+/* Admin Pembayaran */
+.admin-bayar-body {
+    background-color: #f4f6f9;
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.admin-role-subtitle {
+    color: #cbd5e1;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.main-content {
+    margin-left: 260px;
+    padding: 30px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+.page-title-box {
+    background: #ffffff;
+    padding: 20px 25px;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.page-title-box h2 {
+    margin: 0;
+    color: #0d233a;
+    font-size: 22px;
+}
+
+.page-subtitle {
+    color: #64748b;
+    font-size: 13.5px;
+}
+
+.alert-qris-terkirim {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 18px;
+    font-weight: 600;
+    font-size: 13.5px;
+}
+
+.grid-pembayaran {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+.card-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+    border: 1px solid #eef2f6;
+}
+
+.card-panel h3 {
+    margin: 0 0 16px 0;
+    font-size: 17px;
+    color: #0d233a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.card-panel table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.card-panel th,
+.card-panel td {
+    padding: 11px 10px;
+    border-bottom: 1px solid #edf2f7;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.card-panel th {
+    background: #f8fafc;
+    color: #334155;
+    font-weight: 700;
+}
+
+.sub-teks {
+    color: #64748b;
+}
+
+.baris-kosong {
+    text-align: center;
+    color: #64748b;
+    padding: 24px;
+}
+
+.badge-lunas {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #dcfce7;
+    color: #166534;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.badge-menunggu {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #fef9c3;
+    color: #854d0e;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.badge-belum {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: #fee2e2;
+    color: #991b1b;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.btn-pilih {
+    background: #0d233a;
+    color: #ffffff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+}
+
+.btn-pilih:hover {
+    background: #163759;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 13.5px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background: #ffffff;
+}
+
+.info-tagihan-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 16px;
+    font-size: 13.5px;
+}
+
+.info-tagihan-detail {
+    margin-top: 4px;
+}
+
+.qris-box {
+    border: 1px dashed #94a3b8;
+    border-radius: 10px;
+    padding: 14px;
+    text-align: center;
+    background: #f8fafc;
+    margin-bottom: 16px;
+}
+
+.qris-box-judul {
+    font-weight: 700;
+    color: #0d233a;
+    margin-bottom: 4px;
+}
+
+.qris-preview-img {
+    width: 180px;
+    height: 180px;
+    margin: 8px auto;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.qris-preview-img img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.qris-belum-ada {
+    font-size: 12px;
+    color: #64748b;
+    padding: 8px;
+}
+
+.status-qr-kanan {
+    font-size: 12.5px;
+    color: #475569;
+}
+
+.btn-bayar {
+    width: 100%;
+    background: #16a34a;
+    color: #ffffff;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 14.5px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.btn-bayar:hover:not(:disabled) {
+    background: #15803d;
+}
+
+.btn-bayar:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.btn-kirim-qris {
+    width: 100%;
+    background: #0d233a;
+    color: #ffffff;
+    border: none;
+    padding: 11px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-bottom: 10px;
+}
+
+.btn-kirim-qris:hover:not(:disabled) {
+    background: #163759;
+}
+
+.btn-kirim-qris:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+}
+
+.kembalian-text {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #0f766e;
+}
+
+@media (max-width: 992px) {
+    .main-content {
+        margin-left: 0;
+        padding: 16px;
+    }
+
+    .grid-pembayaran {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .payment-content {
+        padding: 15px;
+    }
+
+    .payment-table {
+        min-width: 650px;
+    }
+
+    .table-wrapper {
+        overflow-x: auto;
+    }
+}
