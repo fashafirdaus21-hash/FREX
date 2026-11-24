@@ -157,6 +157,14 @@
             </li>
 
             <li>
+    <a href="/user/pembayaran"
+       class="{% if request.path == '/user/pembayaran' %}active{% endif %}">
+        <i class="fa-solid fa-wallet"></i>
+        Pembayaran Denda
+    </a>
+</li>
+
+            <li>
                 <a href="/user/riwayat"
                    class="{% if request.path == '/user/riwayat' %}active{% endif %}">
                     <i class="fa-solid fa-rotate-left"></i>

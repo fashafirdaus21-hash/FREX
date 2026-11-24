@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pembayaran Denda - FREX</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        .payment-content {
+            padding: 30px;
+        }
+
+        .payment-summary {
+            background: #0d233a;
+            color: white;
+            padding: 28px;
+            border-radius: 16px;
+            margin-bottom: 25px;
+        }
+
+        .payment-summary h3 {
+            margin: 0 0 12px;
+            color: #f6c90e;
+        }
+
+        .payment-total {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .payment-card {
+            background: white;
+            padding: 24px;
+            border-radius: 14px;
+            margin-bottom: 25px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.06);
+        }
+
+        .payment-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .payment-table th,
+        .payment-table td {
+            padding: 13px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+        }
+
+        .payment-table th {
+            background: #f1f5f9;
+            color: #0d233a;
+        }
+
+        .status-belum {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .status-berhasil {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .status-lain {
+            color: #64748b;
+            font-weight: bold;
+        }
+
+        .payment-note {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 15px;
+            border-radius: 8px;
+            color: #1e40af;
+            margin-top: 15px;
+        }
+
+        .empty-data {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        @media(max-width: 768px) {
+            .payment-content {
+                padding: 15px;
+            }
+
+            .payment-table {
+                min-width: 650px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<aside class="sidebar">
+    <div>
+        <div class="sidebar-profile">
+            <div class="profile-img">
+                <i class="fa-solid fa-user"></i>
+            </div>
+            <h3>{{ session.get('nama', 'Pengguna') }}</h3>
+        </div>
+
+        <ul class="sidebar-menu">
+            <li><a href="/user/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+            <li><a href="/user/databuku"><i class="fa-solid fa-book"></i> Data Buku</a></li>
+            <li><a href="/user/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman Saya</a></li>
+            <li><a href="/user/riwayat"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a></li>
+            <li><a href="/user/pembayaran" class="active"><i class="fa-solid fa-wallet"></i> Pembayaran</a></li>
+            <li><a href="/user/biodata"><i class="fa-solid fa-user"></i> Biodata</a></li>
+            <li><a href="/user/laporan"><i class="fa-solid fa-comment-dots"></i> Laporan Bug & Saran</a></li>
+        </ul>
+    </div>
+
+    <div class="sidebar-logout-box">
+        <a href="/logout" class="btn-logout-sidebar">
+            <i class="fa-solid fa-right-from-bracket"></i> Log out
+        </a>
+    </div>
+</aside>
+
+<div class="main-container">
+
+    <header class="topbar-admin">
+        <h2 style="color:#0d233a; margin:0;">Pembayaran Denda</h2>
+        <div class="admin-badge-top">
+            <i class="fa-solid fa-user"></i>
+            {{ session.get('nama', 'Pengguna') }}
+        </div>
+    </header>
+
+    <main class="payment-content">
+
+        <!-- TOTAL DENDA -->
+        <section class="payment-summary">
+            <h3><i class="fa-solid fa-wallet"></i> Total Denda Belum Lunas</h3>
+
+            <div class="payment-total">
+                Rp {{ "{:,.0f}".format(total_denda or 0).replace(",", ".") }}
+            </div>
+
+            <p style="margin-bottom:0; color:#cbd5e1;">
+                Total seluruh denda yang masih harus diselesaikan.
+            </p>
+        </section>
+
+        <!-- RINCIAN DENDA -->
+        <section class="payment-card">
+            <h3 style="color:#0d233a;">
+                <i class="fa-solid fa-receipt"></i> Rincian Denda
+            </h3>
+
+            {% if daftar_denda %}
+            <div class="table-wrapper">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>ID Pengembalian</th>
+                            <th>Judul Buku</th>
+                            <th>Tanggal Kembali</th>
+                            <th>Denda Terlambat</th>
+                            <th>Denda Kondisi</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for d in daftar_denda %}
+                        <tr>
+                            <td>#{{ d.id_pengembalian }}</td>
+                            <td>{{ d.judul }}</td>
+                            <td>{{ d.tgl_kembali.strftime('%d-%m-%Y') if d.tgl_kembali else '-' }}</td>
+                            <td>
+                                Rp {{ "{:,.0f}".format(d.denda_telat or 0).replace(",", ".") }}
+                            </td>
+                            <td>
+                                Rp {{ "{:,.0f}".format(d.denda_rusak or 0).replace(",", ".") }}
+                            </td>
+                            <td>
+                                <strong>
+                                    Rp {{ "{:,.0f}".format(d.total_denda or 0).replace(",", ".") }}
+                                </strong>
+                            </td>
+                            <td class="status-belum">Belum Lunas</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-data">
+                <i class="fa-solid fa-circle-check" style="font-size:40px; color:#16a34a;"></i>
+                <h3>Tidak Ada Denda</h3>
+                <p>Kamu tidak memiliki denda yang belum dilunasi.</p>
+            </div>
+            {% endif %}
+        </section>
+
+        <!-- METODE PEMBAYARAN -->
+        <section class="payment-card">
+            <h3 style="color:#0d233a;">
+                <i class="fa-solid fa-credit-card"></i> Metode Pembayaran
+            </h3>
+
+            <div class="payment-note">
+                <strong>Informasi:</strong>
+                Pembayaran tunai melalui admin dan pembayaran QRIS
+                akan tersedia setelah proses verifikasi transaksi diaktifkan.
+                Jangan melakukan transfer ke rekening atau QR yang belum
+                disediakan oleh sistem resmi FREX.
+            </div>
+        </section>
+
+        <!-- RIWAYAT PEMBAYARAN -->
+        <section class="payment-card">
+            <h3 style="color:#0d233a;">
+                <i class="fa-solid fa-clock-rotate-left"></i> Riwayat Pembayaran
+            </h3>
+
+            {% if riwayat_pembayaran %}
+            <div class="table-wrapper">
+                <table class="payment-table">
+                    <thead>
+                        <tr>
+                            <th>ID Transaksi</th>
+                            <th>Tanggal</th>
+                            <th>Metode</th>
+                            <th>Jumlah</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for r in riwayat_pembayaran %}
+                        <tr>
+                            <td>#{{ r.id_pembayaran }}</td>
+                            <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M') if r.created_at else '-' }}</td>
+                            <td>{{ r.metode_pembayaran|upper }}</td>
+                            <td>
+                                Rp {{ "{:,.0f}".format(r.jumlah_bayar or 0).replace(",", ".") }}
+                            </td>
+                            <td>
+                                {% if r.status_pembayaran == 'berhasil' %}
+                                    <span class="status-berhasil">Berhasil</span>
+                                {% elif r.status_pembayaran == 'menunggu' %}
+                                    <span class="status-lain">Menunggu</span>
+                                {% else %}
+                                    <span class="status-lain">{{ r.status_pembayaran|capitalize }}</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-data">
+                Belum ada riwayat transaksi pembayaran.
+            </div>
+            {% endif %}
+        </section>
+
+    </main>
+</div>
+
+</body>
+</html>

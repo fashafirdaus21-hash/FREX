@@ -180,6 +180,15 @@
                 <li><a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}"><i class="fa-solid fa-book"></i> Data Buku</a></li>
                 <li><a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya</a></li>
+
+<li>
+    <a href="/user/pembayaran"
+       class="{% if request.path == '/user/pembayaran' %}active{% endif %}">
+        <i class="fa-solid fa-wallet"></i>
+        Pembayaran Denda
+    </a>
+</li>
+
                 <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
                 <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
                 <li><a href="/user/laporan" class="{% if request.path == '/user/laporan' %}active{% endif %}"><i class="fa-solid fa-comment-dots"></i> Laporan Bug & Saran</a></li>
