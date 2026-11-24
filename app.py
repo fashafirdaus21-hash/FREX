@@ -181,41 +181,88 @@ def admin_dashboard():
         res_denda = cursor.fetchone()
         total_denda = res_denda['total'] if res_denda and res_denda['total'] else 0
 
-        # Hitung jumlah anggota/member unik yang meminjam buku per bulan (1 - 12)
+        # ==================================================
+        # JUMLAH PEMBAYARAN YANG MENUNGGU VERIFIKASI
+        # ==================================================
+
         cursor.execute("""
-            SELECT MONTH(tgl_pinjam) AS bulan, COUNT(DISTINCT id_anggota) AS jumlah_peminjam
+            SELECT COUNT(*) AS total
+            FROM pembayaran_denda
+            WHERE status_pembayaran = 'menunggu'
+        """)
+
+        res_pembayaran = cursor.fetchone()
+
+        jumlah_pembayaran_menunggu = (
+            res_pembayaran['total']
+            if res_pembayaran and res_pembayaran['total']
+            else 0
+        )
+
+        # ==================================================
+        # DATA PEMINJAM PER BULAN
+        # ==================================================
+
+        cursor.execute("""
+            SELECT MONTH(tgl_pinjam) AS bulan,
+                   COUNT(DISTINCT id_anggota) AS jumlah_peminjam
             FROM peminjaman
             WHERE tgl_pinjam IS NOT NULL
             GROUP BY MONTH(tgl_pinjam)
         """)
+
         rows_bulanan = cursor.fetchall()
 
-        # Siapkan list 12 bulan (default 0 untuk bulan yang belum ada peminjaman)
         data_peminjam_bulanan = [0] * 12
+
         for r in rows_bulanan:
             idx_bulan = int(r['bulan']) - 1
+
             if 0 <= idx_bulan < 12:
-                data_peminjam_bulanan[idx_bulan] = int(r['jumlah_peminjam'])
+                data_peminjam_bulanan[idx_bulan] = int(
+                    r['jumlah_peminjam']
+                )
+
+        # ==================================================
+        # TRANSAKSI TERBARU
+        # ==================================================
 
         cursor.execute("""
-            SELECT peminjaman.*, anggota.nama_lengkap as nama_peminjam, buku.judul
+            SELECT peminjaman.*,
+                   anggota.nama_lengkap as nama_peminjam,
+                   buku.judul
             FROM peminjaman
-            JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
-            JOIN buku ON peminjaman.id_buku = buku.id_buku
-            ORDER BY peminjaman.id_peminjaman DESC LIMIT 5
+            JOIN anggota
+                ON peminjaman.id_anggota = anggota.id_anggota
+            JOIN buku
+                ON peminjaman.id_buku = buku.id_buku
+            ORDER BY peminjaman.id_peminjaman DESC
+            LIMIT 5
         """)
+
         transaksi_terbaru = cursor.fetchall()
 
         cursor.close()
         conn.close()
 
-        return render_template('admin/dashboard.html',
-                               total_buku=total_buku,
-                               sedang_dipinjam=sedang_dipinjam,
-                               total_pengguna=total_pengguna,
-                               total_denda=total_denda,
-                               transaksi_terbaru=transaksi_terbaru,
-                               data_peminjam_bulanan=data_peminjam_bulanan)
+        return render_template(
+            'admin/dashboard.html',
+
+            total_buku=total_buku,
+
+            sedang_dipinjam=sedang_dipinjam,
+
+            total_pengguna=total_pengguna,
+
+            total_denda=total_denda,
+
+            jumlah_pembayaran_menunggu=jumlah_pembayaran_menunggu,
+
+            transaksi_terbaru=transaksi_terbaru,
+
+            data_peminjam_bulanan=data_peminjam_bulanan
+        )
+
     return redirect(url_for('login'))
 
 
