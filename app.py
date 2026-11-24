@@ -872,9 +872,9 @@ def user_pembayaran():
             daftar_denda = cursor.fetchall()
 
             total_denda = sum(
-                float(d['total_denda'] or 0)
-                for d in daftar_denda
-            )
+    int(d['total_denda'] or 0)
+    for d in daftar_denda
+)
 
             cursor.execute("""
                 SELECT *
