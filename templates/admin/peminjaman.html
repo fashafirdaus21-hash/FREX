@@ -42,40 +42,6 @@
         </header>
 
         <div class="content-body">
-
-
-{% if request.args.get('status') == 'kuota_penuh' %}
-<div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
-    Anggota tersebut sudah mencapai batas maksimal 3 buku.
-</div>
-
-{% elif request.args.get('status') == 'stok_habis' %}
-<div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
-    Stok buku sudah habis.
-</div>
-
-{% elif request.args.get('status') == 'berhasil' %}
-<div style="background:#dcfce7;color:#166534;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
-    Data peminjaman berhasil disimpan.
-</div>
-
-{% elif request.args.get('status') == 'pengajuan_diterima' %}
-<div style="background:#dcfce7;color:#166534;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
-    Pengajuan peminjaman berhasil diterima.
-</div>
-
-{% elif request.args.get('status') == 'pengajuan_tidak_valid' %}
-<div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
-    Pengajuan tidak ditemukan atau sudah diproses sebelumnya.
-</div>
-
-{% elif request.args.get('status') == 'gagal' %}
-<div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
-    Terjadi kesalahan saat menyimpan peminjaman.
-</div>
-{% endif %}
-
-
             <!-- Form Input Peminjaman -->
             <div class="form-card-box" style="margin-bottom: 30px;">
                 <h3 style="color: #0d233a; font-size: 20px; margin-top: 0; margin-bottom: 25px;">Form Transaksi Peminjaman Buku</h3>
@@ -136,9 +102,9 @@
             </div>
 
             <!-- Tabel Daftar Orang yang Meminjam -->
-            <div class="table-box-container" style="border: 2px solid #0d233a; overflow-x: auto;">
+            <div class="table-box-container" style="border: 2px solid #0d233a; border-radius: 12px; overflow: hidden;">
 
-               <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
+                <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">
                     <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Pengajuan dan Peminjaman</h3>
                     
@@ -149,63 +115,100 @@
                     </div>
                 </div>
 
-                <table class="custom-table-admin" id="tabelPeminjamAktif">
-                    <thead>
-                        <tr>
-                            <th style="width: 60px;">No</th>
-                            <th>ID Anggota</th>
-                            <th>ID Buku</th>
-                            <th>Tgl Pinjam</th>
-                            <th>Jatuh Tempo</th>
-                            <th>Status</th>
-                            <th>Diproses Oleh</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for p in peminjaman_list %}
-                        <tr class="baris-data-peminjam">
-                            <td style="text-align: center;">
-    {% if p.status == 'menunggu' %}
-    <form action="{{ url_for('admin_terima_peminjaman', id_peminjaman=p.id_peminjaman) }}"
-          method="POST"
-          onsubmit="return confirm('Terima pengajuan peminjaman ini?');">
-        <button type="submit" class="btn-form-blue">
-            <i class="fa-solid fa-check"></i> Terima
-        </button>
-    </form>
-    {% else %}
-        <span style="color: #64748b;">-</span>
-    {% endif %}
-</td>
-                            <td style="text-align: center;">{{ loop.index }}</td>
-                            <td class="nowrap-cell" style="font-weight: bold;">{{ p.id_anggota }}</td>
-                            <td class="judul-buku-cell">{{ p.judul_buku or p.id_buku }}</td>
-                            <td class="nowrap-cell">{{ p.tgl_pinjam }}</td>
-                            <td class="nowrap-cell">{{ p.jatuh_tempo }}</td>
-                            <td class="nowrap-cell" style="text-align: center;">
-                                <span style="background-color: #eab308; color: #0d233a; padding: 6px 12px; border-radius: 10px; font-weight: bold; font-size: 13px; display: inline-block;">
-                                    {{ p.status }}
-                                </span>
-                            </td>
-                            <td style="font-size: 16px; color: #0d233a;">{{ p.diproses_oleh }}</td>
-                        </tr>
+                <div style="overflow-x: auto;">
+                    <table class="custom-table-admin" id="tabelPeminjamAktif" style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th style="width: 55px; text-align: center;">No</th>
+                                <th style="text-align: center;">ID Anggota</th>
+                                <th>Judul Buku</th>
+                                <th style="text-align: center;">Tgl Pinjam</th>
+                                <th style="text-align: center;">Jatuh Tempo</th>
+                                <th style="text-align: center;">Status</th>
+                                <th style="text-align: center;">Aksi</th>
+                                <th style="text-align: center;">Diproses Oleh</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for p in peminjaman_list %}
+                            <tr class="baris-data-peminjam">
+                                <!-- 1. No -->
+                                <td style="text-align: center; font-weight: 600;">{{ loop.index }}</td>
 
-                    
+                                <!-- 2. ID Anggota -->
+                                <td class="nowrap-cell" style="text-align: center; font-weight: bold;">{{ p.id_anggota }}</td>
 
-                        {% else %}
-                        <tr>
-                            <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
-                        </tr>
-                        {% endfor %}
-                        
-                        <!-- Baris pesan jika hasil pencarian tidak ditemukan -->
-                        <tr id="pesanTidakDitemukan" style="display: none;">
-                            <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
-                        </tr>
-                    </tbody>
-                </table>
+                                <!-- 3. Judul Buku -->
+                                <td class="judul-buku-cell" style="font-weight: 500;">{{ p.judul_buku or p.id_buku }}</td>
+
+                                <!-- 4. Tgl Pinjam -->
+                                <td class="nowrap-cell" style="text-align: center;">{{ p.tgl_pinjam }}</td>
+
+                                <!-- 5. Jatuh Tempo -->
+                                <td class="nowrap-cell" style="text-align: center;">{{ p.jatuh_tempo }}</td>
+
+                                <!-- 6. Status -->
+                                <td class="nowrap-cell" style="text-align: center;">
+                                    {% if p.status == 'dipinjam' %}
+                                        <span style="background-color: #22c55e; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                            {{ p.status }}
+                                        </span>
+                                    {% elif p.status == 'ditolak' %}
+                                        <span style="background-color: #ef4444; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                            {{ p.status }}
+                                        </span>
+                                    {% elif p.status == 'dikembalikan' %}
+                                        <span style="background-color: #3b82f6; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                            {{ p.status }}
+                                        </span>
+                                    {% else %}
+                                        <span style="background-color: #eab308; color: #0d233a; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                            {{ p.status }}
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- 7. Aksi -->
+                                <td class="nowrap-cell" style="text-align: center;">
+                                    {% if p.status == 'menunggu' %}
+                                        <form action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}" method="POST" style="display: inline;">
+                                            <input type="hidden" name="aksi" value="setujui">
+                                            <button type="submit" style="background-color: #0d233a; color: #f6c90e; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer;">
+                                                <i class="fa-solid fa-check"></i> Terima
+                                            </button>
+                                        </form>
+                                    {% else %}
+                                        <span style="color: #94a3b8; font-weight: bold;">-</span>
+                                    {% endif %}
+                                </td>
+
+                                <!-- 8. Diproses Oleh (Pojok Kanan) -->
+                                <td class="nowrap-cell" style="text-align: center; font-size: 14px; color: #0d233a; font-weight: 600;">
+                                    {% if p.nama_admin and p.nama_admin != '-' %}
+                                        {{ p.nama_admin }}
+                                    {% elif p.diproses_oleh %}
+                                        Admin #{{ p.diproses_oleh }}
+                                    {% else %}
+                                        <span style="color: #94a3b8; font-weight: normal; font-style: italic;">-</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
+                            </tr>
+                            {% endfor %}
+                            
+                            <!-- Baris pesan jika hasil pencarian tidak ditemukan -->
+                            <tr id="pesanTidakDitemukan" style="display: none;">
+                                <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Data peminjam tidak ditemukan.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
+        </div>
+    </div>
 
     <!-- MODAL PROFIL WHATSAPP (TUNGGAL) -->
     <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
