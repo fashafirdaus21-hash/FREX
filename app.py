@@ -680,7 +680,7 @@ def admin_pembayaran():
                 b.judul AS judul_buku,
                 pd.id_pembayaran,
                 COALESCE(pd.jumlah_bayar, 0) AS jumlah_bayar,
-                COALESCE(pd.metode_pembayaran, 'qris') AS metode_pembayaran,
+                pd.metode_pembayaran AS metode_pembayaran,
                 pd.tanggal_bayar,
                 CASE
                     WHEN pd.status_pembayaran = 'lunas'
@@ -729,9 +729,9 @@ def admin_bayar_pengembalian(id_pengembalian):
     if session.get('role') != 'admin':
         return redirect(url_for('login'))
 
-    metode = request.form.get('metode_pembayaran', 'qris').strip().lower()
+    metode = request.form.get('metode_pembayaran', '').strip().lower()
     if metode not in ['qris', 'tunai']:
-        metode = 'qris'
+        return redirect(url_for('admin_pembayaran'))
 
     nominal_raw = request.form.get('nominal_bayar', '').strip()
 
@@ -758,28 +758,40 @@ def admin_bayar_pengembalian(id_pengembalian):
 
         tagihan = float(pg['total_denda'] or 0)
 
-        if metode == 'tunai':
-            try:
-                nominal_bayar = float(nominal_raw) if nominal_raw != '' else tagihan
-            except ValueError:
-                conn.rollback()
-                return redirect(url_for('admin_pembayaran'))
-
-            if nominal_bayar <= 0:
-                conn.rollback()
-                return redirect(url_for('admin_pembayaran'))
-        else:
-            nominal_bayar = tagihan
-
-        status_baru = 'lunas' if nominal_bayar >= tagihan else 'belum_lunas'
-
         cursor.execute("""
-            SELECT id_pembayaran
+            SELECT id_pembayaran, jumlah_bayar, status_pembayaran
             FROM pembayaran_denda
             WHERE id_pengembalian = %s
             FOR UPDATE
         """, (id_pengembalian,))
         existing = cursor.fetchone()
+
+        sudah_bayar = float(existing['jumlah_bayar'] or 0) if existing else 0
+        sisa = max(tagihan - sudah_bayar, 0)
+
+        # Sudah lunas -> jangan diproses ulang
+        if existing and existing['status_pembayaran'] == 'lunas':
+            conn.rollback()
+            return redirect(url_for('admin_pembayaran'))
+
+        if metode == 'tunai':
+            try:
+                nominal_input = float(nominal_raw) if nominal_raw != '' else sisa
+            except ValueError:
+                conn.rollback()
+                return redirect(url_for('admin_pembayaran'))
+
+            if nominal_input <= 0:
+                conn.rollback()
+                return redirect(url_for('admin_pembayaran'))
+
+            # Lebih dari sisa = kembalian, yang dicatat hanya sebesar sisa
+            tambahan = min(nominal_input, sisa)
+        else:  # qris -> langsung sebesar sisa tagihan
+            tambahan = sisa
+
+        total_bayar = sudah_bayar + tambahan
+        status_baru = 'lunas' if total_bayar >= tagihan else 'belum_lunas'
 
         if existing:
             cursor.execute("""
@@ -793,35 +805,20 @@ def admin_bayar_pengembalian(id_pengembalian):
                     diproses_oleh = %s
                 WHERE id_pembayaran = %s
             """, (
-                tagihan,
-                nominal_bayar,
-                metode,
-                status_baru,
-                session.get('id_user'),
-                existing['id_pembayaran']
+                tagihan, total_bayar, metode, status_baru,
+                session.get('id_user'), existing['id_pembayaran']
             ))
         else:
             cursor.execute("""
                 INSERT INTO pembayaran_denda (
-                    id_pengembalian,
-                    id_peminjaman,
-                    id_anggota,
-                    jumlah_denda,
-                    jumlah_bayar,
-                    tanggal_bayar,
-                    metode_pembayaran,
-                    status_pembayaran,
-                    diproses_oleh
+                    id_pengembalian, id_peminjaman, id_anggota,
+                    jumlah_denda, jumlah_bayar, tanggal_bayar,
+                    metode_pembayaran, status_pembayaran, diproses_oleh
                 )
                 VALUES (%s, %s, %s, %s, %s, NOW(), %s, %s, %s)
             """, (
-                pg['id_pengembalian'],
-                pg['id_peminjaman'],
-                pg['id_anggota'],
-                tagihan,
-                nominal_bayar,
-                metode,
-                status_baru,
+                pg['id_pengembalian'], pg['id_peminjaman'], pg['id_anggota'],
+                tagihan, total_bayar, metode, status_baru,
                 session.get('id_user')
             ))
 

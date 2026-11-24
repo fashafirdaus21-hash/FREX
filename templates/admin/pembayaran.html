@@ -86,8 +86,10 @@
                                     data-anggota="{{ item.nama_lengkap or '-' }}"
                                     data-buku="{{ item.judul_buku or '-' }}"
                                     data-denda="{{ item.total_denda or 0 }}"
-                                    data-metode="{{ item.metode_pembayaran or 'qris' }}"
+                                    data-sisa="{{ (item.total_denda or 0) - (item.jumlah_bayar or 0) }}"
+                                    data-metode="{{ item.metode_pembayaran or '' }}"
                                     onclick="pilihPengembalian(this)"
+                                    {% if item.status_pembayaran == 'lunas' %}disabled{% endif %}
                                 >
                                     Pilih
                                 </button>
@@ -219,8 +221,9 @@
             const id = btn.dataset.id;
             const anggota = btn.dataset.anggota;
             const buku = btn.dataset.buku;
-            dendaAktif = Number(btn.dataset.denda || 0);
-            const metode = (btn.dataset.metode || 'qris').toLowerCase();
+            // yang ditagihkan = sisa denda (total - yang sudah dibayar)
+            dendaAktif = Math.max(Number(btn.dataset.sisa || btn.dataset.denda || 0), 0);
+            const metode = (btn.dataset.metode || '').toLowerCase();
 
             document.querySelectorAll('tbody tr').forEach(tr => { tr.style.backgroundColor = ''; });
             const row = document.getElementById('row-' + id);
@@ -229,9 +232,14 @@
             document.getElementById('formBayarSamping').action = `/admin/bayar_pengembalian/${id}`;
 
             document.getElementById('infoDipilih').innerHTML =
-                `<strong>Pengembalian #${id}</strong> — ${anggota} | Buku: ${buku} | Total Denda: <strong>${formatRupiah(dendaAktif)}</strong>`;
+                `<strong>Pengembalian #${id}</strong> — ${anggota} | Buku: ${buku} | Sisa Denda: <strong>${formatRupiah(dendaAktif)}</strong>`;
 
-            document.getElementById('metodeSelect').value = (metode === 'tunai') ? 'tunai' : 'qris';
+            // Hanya ikuti jalur yang sudah tersimpan (mis. diajukan siswa).
+            // Kalau belum ada, pilihan admin di dropdown tidak ditimpa.
+            if (metode === 'tunai' || metode === 'qris') {
+                document.getElementById('metodeSelect').value = metode;
+            }
+
             document.getElementById('nominalBayarInput').value = dendaAktif > 0 ? dendaAktif : '';
             document.getElementById('btnKonfirmasiBayar').disabled = false;
 
