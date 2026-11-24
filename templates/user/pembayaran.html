@@ -9,6 +9,45 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
+
+.custom-sidebar-menu {
+    list-style: none;
+    padding: 0 15px;
+    margin: 0;
+}
+
+.custom-sidebar-menu li {
+    margin-bottom: 12px;
+}
+
+.custom-sidebar-menu a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+    text-decoration: none;
+    padding: 12px 18px;
+    border-radius: 16px;
+    font-size: 13px;
+    font-weight: bold;
+    border: 2px solid transparent;
+    background-color: #0d233a;
+    box-sizing: border-box;
+    transition: all 0.2s;
+}
+
+.custom-sidebar-menu a:hover,
+.custom-sidebar-menu a.active {
+    border-color: #f6c90e;
+    color: #f6c90e;
+    background: linear-gradient(
+        90deg,
+        rgba(255,204,0,0.15),
+        transparent
+    );
+}
+
+
         .payment-content {
             padding: 30px;
         }
@@ -114,7 +153,7 @@
             <h3>{{ session.get('nama', 'Pengguna') }}</h3>
         </div>
 
-        <ul class="sidebar-menu">
+        <ul class="custom-sidebar-menu">
             <li><a href="/user/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
             <li><a href="/user/databuku"><i class="fa-solid fa-book"></i> Data Buku</a></li>
             <li><a href="/user/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman Saya</a></li>
@@ -149,7 +188,7 @@
             <h3><i class="fa-solid fa-wallet"></i> Total Denda Belum Lunas</h3>
 
             <div class="payment-total">
-                Rp {{ "{:,.0f}".format(total_denda or 0).replace(",", ".") }}
+                Rp {{ "{:,}".format(total_denda or 0).replace(",", ".") }}
             </div>
 
             <p style="margin-bottom:0; color:#cbd5e1;">
@@ -185,14 +224,14 @@
                             <td>{{ d.judul }}</td>
                             <td>{{ d.tgl_kembali.strftime('%d-%m-%Y') if d.tgl_kembali else '-' }}</td>
                             <td>
-                                Rp {{ "{:,.0f}".format(d.denda_telat or 0).replace(",", ".") }}
+                                Rp {{ "{:,}".format(d.denda_telat or 0).replace(",", ".") }}
                             </td>
                             <td>
-                                Rp {{ "{:,.0f}".format(d.denda_rusak or 0).replace(",", ".") }}
+                                Rp {{ "{:,}".format(d.denda_rusak or 0).replace(",", ".") }}
                             </td>
                             <td>
                                 <strong>
-                                    Rp {{ "{:,.0f}".format(d.total_denda or 0).replace(",", ".") }}
+                                    Rp {{ "{:,}".format(d.total_denda or 0).replace(",", ".") }}
                                 </strong>
                             </td>
                             <td class="status-belum">Belum Lunas</td>
@@ -251,7 +290,7 @@
                             <td>{{ r.created_at.strftime('%d-%m-%Y %H:%M') if r.created_at else '-' }}</td>
                             <td>{{ r.metode_pembayaran|upper }}</td>
                             <td>
-                                Rp {{ "{:,.0f}".format(r.jumlah_bayar or 0).replace(",", ".") }}
+                                Rp {{ "{:,}".format(r.jumlah_bayar or 0).replace(",", ".") }}
                             </td>
                             <td>
                                 {% if r.status_pembayaran == 'berhasil' %}
