@@ -904,86 +904,93 @@ def user_pembayaran():
     return redirect(url_for('login'))
 
 
+
 @app.route('/user/biodata')
 def user_biodata():
     if session.get('role') in ['siswa', 'user']:
+
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
+
         user_id = session.get('id_user')
 
-        cursor.execute("SELECT * FROM anggota WHERE id_anggota = %s", (user_id,))
-        biodata = cursor.fetchone()
+        try:
+            # ======================================
+            # 1. AMBIL DATA BIODATA
+            # ======================================
 
-        if not biodata:
-            biodata = {
-                'nama_lengkap': session.get('nama', '-'),
-                'email': '-',
-                'no_hp': '-',
-                'status_keanggotaan': 'Aktif',
-                'tanggal_bergabung': '-',
-                'masa_berlaku': '-',
-                'kelas': '-'
-            }
+            cursor.execute("""
+                SELECT *
+                FROM anggota
+                WHERE id_anggota = %s
+            """, (user_id,))
 
-        cursor.close()
-        conn.close()
-        return render_template('user/biodata.html', biodata=biodata)
+            biodata = cursor.fetchone()
+
+            if not biodata:
+                biodata = {
+                    'nama_lengkap': session.get('nama', '-'),
+                    'email': '-',
+                    'no_hp': '-',
+                    'status_keanggotaan': 'Aktif',
+                    'tanggal_bergabung': '-',
+                    'masa_berlaku': '-',
+                    'kelas': '-'
+                }
+
+            # ======================================
+            # 2. AMBIL STATISTIK PEMINJAMAN
+            # ======================================
+
+            cursor.execute("""
+                SELECT
+                    COUNT(*) AS total_peminjaman,
+
+                    SUM(
+                        CASE
+                            WHEN status = 'dipinjam' THEN 1
+                            ELSE 0
+                        END
+                    ) AS sedang_dipinjam,
+
+                    SUM(
+                        CASE
+                            WHEN status = 'dikembalikan' THEN 1
+                            ELSE 0
+                        END
+                    ) AS total_dikembalikan,
+
+                    SUM(
+                        CASE
+                            WHEN status = 'dipinjam'
+                            AND jatuh_tempo < CURDATE()
+                            THEN 1
+                            ELSE 0
+                        END
+                    ) AS peminjaman_terlambat
+
+                FROM peminjaman
+                WHERE id_anggota = %s
+            """, (user_id,))
+
+            statistik = cursor.fetchone()
+
+            return render_template(
+                'user/biodata.html',
+                biodata=biodata,
+                statistik=statistik
+            )
+
+        except Exception as e:
+            print("Gagal memuat biodata:", e)
+            return "Gagal memuat data biodata.", 500
+
+        finally:
+            cursor.close()
+            conn.close()
+
     return redirect(url_for('login'))
 
-
-
-@app.route('/user/batal-peminjaman/<int:id_peminjaman>', methods=['POST'])
-def user_batal_peminjaman(id_peminjaman):
-    if session.get('role') not in ['siswa', 'user']:
-        return redirect(url_for('login'))
-
-    conn = buat_koneksi()
-    cursor = conn.cursor(dictionary=True, buffered=True)
-
-    try:
-        user_id = session.get('id_user')
-
-        # Ambil transaksi dan kunci baris agar tidak diproses bersamaan
-        cursor.execute("""
-            SELECT id_buku, status
-            FROM peminjaman
-            WHERE id_peminjaman = %s
-              AND id_anggota = %s
-            FOR UPDATE
-        """, (id_peminjaman, user_id))
-
-        peminjaman = cursor.fetchone()
-
-        if peminjaman and peminjaman['status'] == 'menunggu':
-
-            # Ubah status menjadi dibatalkan
-            cursor.execute("""
-                UPDATE peminjaman
-                SET status = 'dibatalkan'
-                WHERE id_peminjaman = %s
-                  AND id_anggota = %s
-                  AND status = 'menunggu'
-            """, (id_peminjaman, user_id))
-
-            if cursor.rowcount == 1:
-                # Kembalikan stok buku
-                cursor.execute("""
-                    UPDATE buku
-                    SET jumlah_tersedia = jumlah_tersedia + 1
-                    WHERE id_buku = %s
-                """, (peminjaman['id_buku'],))
-
-        conn.commit()
-
-    except Exception as e:
-        conn.rollback()
-        print("Gagal membatalkan peminjaman:", e)
-
-    finally:
-        cursor.close()
-        conn.close()
-
-    return redirect(url_for('user_peminjaman'))
 
 
 
