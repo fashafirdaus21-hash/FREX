@@ -157,7 +157,7 @@
             <li><a href="/user/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
             <li><a href="/user/databuku"><i class="fa-solid fa-book"></i> Data Buku</a></li>
             <li><a href="/user/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman Saya</a></li>
-            <li><a href="/user/pembayaran" class="active"><i class="fa-solid fa-wallet"></i> Pembayaran</a></li>
+            <li><a href="/user/pembayaran" class="active"><i class="fa-solid fa-wallet"></i> Pembayaran Denda</a></li>
             <li><a href="/user/riwayat"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a></li>
             
             <li><a href="/user/biodata"><i class="fa-solid fa-user"></i> Biodata</a></li>
@@ -235,7 +235,35 @@
                                     Rp {{ "{:,}".format(d.total_denda or 0).replace(",", ".") }}
                                 </strong>
                             </td>
-                            <td class="status-belum">Belum Lunas</td>
+                            <td>
+
+    {% if d.status_denda == 'belum_lunas' %}
+
+        <span class="status-belum">
+            Belum Lunas
+        </span>
+
+    {% elif d.status_denda == 'menunggu' %}
+
+        <span class="status-lain">
+            Menunggu Verifikasi
+        </span>
+
+    {% elif d.status_denda == 'lunas' %}
+
+        <span class="status-berhasil">
+            Lunas
+        </span>
+
+    {% else %}
+
+        <span class="status-belum">
+            Ditolak
+        </span>
+
+    {% endif %}
+
+</td>
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -256,13 +284,114 @@
                 <i class="fa-solid fa-credit-card"></i> Metode Pembayaran
             </h3>
 
-            <div class="payment-note">
-                <strong>Informasi:</strong>
-                Pembayaran tunai melalui admin dan pembayaran QRIS
-                akan tersedia setelah proses verifikasi transaksi diaktifkan.
-                Jangan melakukan transfer ke rekening atau QR yang belum
-                disediakan oleh sistem resmi FREX.
-            </div>
+            {% if daftar_denda %}
+
+<form action="{{ url_for('ajukan_pembayaran') }}" method="POST">
+
+    <div style="margin-bottom:20px;">
+
+        <label style="display:block; font-weight:bold; margin-bottom:8px;">
+            Pilih Denda
+        </label>
+
+        <select
+            name="id_pengembalian"
+            required
+            style="
+                width:100%;
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:8px;
+            "
+        >
+
+            <option value="">
+                -- Pilih denda yang ingin dibayar --
+            </option>
+
+            {% for d in daftar_denda %}
+
+            <option value="{{ d.id_pengembalian }}">
+
+                #{{ d.id_pengembalian }}
+                -
+                {{ d.judul }}
+                -
+                Rp {{ "{:,}".format(d.total_denda or 0).replace(",", ".") }}
+
+            </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+
+    <div style="margin-bottom:20px;">
+
+        <label style="display:block; font-weight:bold; margin-bottom:8px;">
+            Metode Pembayaran
+        </label>
+
+        <select
+            name="metode_pembayaran"
+            required
+            style="
+                width:100%;
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:8px;
+            "
+        >
+
+            <option value="">
+                -- Pilih metode pembayaran --
+            </option>
+
+            <option value="tunai">
+                Tunai melalui Admin
+            </option>
+
+            <option value="qris">
+                QRIS
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <button
+        type="submit"
+        style="
+            background:#0d233a;
+            color:white;
+            border:none;
+            padding:13px 22px;
+            border-radius:8px;
+            cursor:pointer;
+            font-weight:bold;
+        "
+    >
+
+        <i class="fa-solid fa-paper-plane"></i>
+
+        Ajukan Pembayaran
+
+    </button>
+
+</form>
+
+{% else %}
+
+<div class="payment-note">
+
+    Tidak ada denda yang dapat dibayar saat ini.
+
+</div>
+
+{% endif %}
         </section>
 
         <!-- RIWAYAT PEMBAYARAN -->

@@ -902,6 +902,94 @@ def user_pembayaran():
             conn.close()
 
     return redirect(url_for('login'))
+@app.route('/user/ajukan_pembayaran', methods=['POST'])
+def ajukan_pembayaran():
+
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        user_id = session.get('id_user')
+
+        id_pengembalian = request.form.get('id_pengembalian')
+        metode_pembayaran = request.form.get('metode_pembayaran')
+
+        if not id_pengembalian or not metode_pembayaran:
+            return redirect(url_for('user_pembayaran'))
+
+        # Pastikan denda memang milik user yang sedang login
+        cursor.execute("""
+            SELECT
+                pg.id_pengembalian,
+                pg.denda_telat,
+                pg.denda_rusak,
+                pg.status_denda
+            FROM pengembalian pg
+            JOIN peminjaman p
+                ON pg.id_peminjaman = p.id_peminjaman
+            WHERE pg.id_pengembalian = %s
+            AND p.id_anggota = %s
+        """, (id_pengembalian, user_id))
+
+        denda = cursor.fetchone()
+
+        if not denda:
+            return redirect(url_for('user_pembayaran'))
+
+        # Jangan membuat pembayaran baru jika sudah lunas
+        if denda['status_denda'] == 'lunas':
+            return redirect(url_for('user_pembayaran'))
+
+        # Jangan membuat pembayaran baru jika masih menunggu
+        if denda['status_denda'] == 'menunggu':
+            return redirect(url_for('user_pembayaran'))
+
+        jumlah_bayar = (
+            float(denda['denda_telat'] or 0) +
+            float(denda['denda_rusak'] or 0)
+        )
+
+        # Simpan transaksi pembayaran
+        cursor.execute("""
+            INSERT INTO pembayaran_denda
+            (
+                id_anggota,
+                id_pengembalian,
+                jumlah_bayar,
+                metode_pembayaran,
+                status_pembayaran
+            )
+            VALUES (%s, %s, %s, %s, 'menunggu')
+        """, (
+            user_id,
+            id_pengembalian,
+            jumlah_bayar,
+            metode_pembayaran
+        ))
+
+        # Ubah status denda menjadi menunggu verifikasi
+        cursor.execute("""
+            UPDATE pengembalian
+            SET status_denda = 'menunggu'
+            WHERE id_pengembalian = %s
+        """, (id_pengembalian,))
+
+        conn.commit()
+
+        return redirect(url_for('user_pembayaran'))
+
+    except Exception as e:
+        conn.rollback()
+        print("Gagal mengajukan pembayaran:", e)
+        return "Terjadi kesalahan saat mengajukan pembayaran.", 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 
 
