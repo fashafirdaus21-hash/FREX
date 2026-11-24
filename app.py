@@ -992,6 +992,17 @@ def user_biodata():
     return redirect(url_for('login'))
 
 
+
+@app.route('/user/laporan')
+def user_laporan():
+    if session.get('role') not in ['siswa', 'user']:
+        return redirect(url_for('login'))
+
+    return render_template('user/laporan.html')
+
+
+
+
 @app.route('/user/batal-peminjaman/<int:id_peminjaman>', methods=['POST'])
 def user_batal_peminjaman(id_peminjaman):
     if session.get('role') not in ['siswa', 'user']:

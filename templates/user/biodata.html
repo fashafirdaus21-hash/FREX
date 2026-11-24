@@ -173,7 +173,7 @@
             </li>
 
             <li>
-                <a href="/user/biodata"
+                <a href="{{ url_for('user_biodata') }}"
                    class="{% if request.path == '/user/biodata' %}active{% endif %}">
                     <i class="fa-solid fa-users"></i>
                     Biodata
