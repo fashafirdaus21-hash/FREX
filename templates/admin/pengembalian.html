@@ -92,10 +92,28 @@
                                 </div>
                                 
                                 <div class="kondisi-btn-group">
-                                    <button type="button" class="kondisi-btn-option active" onclick="selectKondisi(this, 'Baik')">Baik</button>
-                                    <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Rusak Ringan')">Rusak Ringan</button>
-                                    <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Rusak Berat')">Rusak Berat</button>
-                                </div>
+    <button type="button" class="kondisi-btn-option active" onclick="selectKondisi(this, 'Baik')">Baik</button>
+    <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Rusak Ringan')">Rusak Ringan</button>
+    <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Rusak Berat')">Rusak Berat</button>
+    <button type="button" class="kondisi-btn-option" onclick="selectKondisi(this, 'Hilang')">Hilang</button>
+</div>
+<div id="biayaHilangBox" style="display: none; margin-top: 12px;">
+    <label>Biaya Penggantian Buku (Rp)</label>
+    <div class="input-box-admin">
+        <input
+            type="number"
+            id="biayaHilang"
+            name="biaya_hilang" 
+            min="0"
+            value="0"
+            oninput="hitungDendaOtomatis()"
+            style="width: 100%;"
+        >
+    </div>
+    <small style="color: #64748b;">
+        Masukkan biaya penggantian sesuai keputusan admin.
+    </small>
+</div>
                             </div>
                         </div>
 
@@ -162,9 +180,9 @@
         });
 
         // Mengambil data pengaturan dari database phpMyAdmin
-        const dendaTelatPerHari = parseInt("{{ settings.get('denda_telat_per_hari', 10000) }}");
-        const dendaRusakRingan = parseInt("{{ settings.get('denda_rusak_ringan', 20000) }}");
-        const dendaRusakBerat = parseInt("{{ settings.get('denda_rusak_berat', 50000) }}");
+        const dendaTelatPerHari = parseInt("{{ settings.get('denda_telat_per_hari', 2000) }}");
+const dendaRusakRingan = parseInt("{{ settings.get('denda_rusak_ringan', 10000) }}");
+const dendaRusakBerat = parseInt("{{ settings.get('denda_rusak_berat', 25000) }}");
 
         function hitungDendaOtomatis() {
             const select = document.getElementById('selectPeminjaman');
@@ -189,22 +207,40 @@
             // Hitung denda kondisi buku
             const kondisi = document.getElementById('selectedKondisi').value;
             let dendaKondisi = 0;
-            if (kondisi === 'Rusak Ringan') {
-                dendaKondisi = dendaRusakRingan;
-            } else if (kondisi === 'Rusak Berat') {
-                dendaKondisi = dendaRusakBerat;
-            }
+
+if (kondisi === 'Rusak Ringan') {
+    dendaKondisi = dendaRusakRingan;
+} else if (kondisi === 'Rusak Berat') {
+    dendaKondisi = dendaRusakBerat;
+} else if (kondisi === 'Hilang') {
+    dendaKondisi = Number(
+        document.getElementById('biayaHilang').value
+    ) || 0;
+}
             
             // Total gabungan denda telat + kondisi
             document.getElementById('inputDenda').value = dendaKeterlambatan + dendaKondisi;
         }
 
         function selectKondisi(btn, text) {
-            document.querySelectorAll('.kondisi-btn-option').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('selectedKondisi').value = text;
-            hitungDendaOtomatis();
-        }
+    document.querySelectorAll('.kondisi-btn-option')
+        .forEach(b => b.classList.remove('active'));
+
+    btn.classList.add('active');
+
+    document.getElementById('selectedKondisi').value = text;
+
+    const biayaHilangBox = document.getElementById('biayaHilangBox');
+
+    if (text === 'Hilang') {
+        biayaHilangBox.style.display = 'block';
+    } else {
+        biayaHilangBox.style.display = 'none';
+        document.getElementById('biayaHilang').value = 0;
+    }
+
+    hitungDendaOtomatis();
+}
 
         // Fungsi pratinjau foto bukti buku yang diunggah
         function previewBuktiFoto(event) {

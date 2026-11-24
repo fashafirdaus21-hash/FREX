@@ -4,6 +4,7 @@ import os
 import time
 from werkzeug.utils import secure_filename
 import uuid
+import datetime as dt
 
 app = Flask(__name__)
 
@@ -472,6 +473,84 @@ def admin_peminjaman():
 
 
 
+@app.route('/admin/peminjaman/terima/<int:id_peminjaman>', methods=['POST'])
+def admin_terima_peminjaman(id_peminjaman):
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        # Kunci pengajuan agar tidak diproses dua kali.
+        cursor.execute("""
+            SELECT id_peminjaman, status
+            FROM peminjaman
+            WHERE id_peminjaman = %s
+            FOR UPDATE
+        """, (id_peminjaman,))
+
+        pengajuan = cursor.fetchone()
+
+        if not pengajuan or pengajuan['status'] != 'menunggu':
+            conn.rollback()
+            return redirect(url_for(
+                'admin_peminjaman',
+                status='pengajuan_tidak_valid'
+            ))
+
+        # Ambil lama peminjaman dari pengaturan.
+        cursor.execute("""
+            SELECT nilai
+            FROM pengaturan
+            WHERE kunci = 'lama_pinjam_hari'
+        """)
+        pengaturan_pinjam = cursor.fetchone()
+
+        lama_pinjam = int(
+            pengaturan_pinjam['nilai']
+        ) if pengaturan_pinjam else 7
+
+        admin_id = session.get('id_user')
+
+        # Stok TIDAK dikurangi lagi karena sudah dikurangi
+        # saat siswa mengajukan peminjaman.
+        cursor.execute("""
+            UPDATE peminjaman
+            SET tgl_pinjam = CURDATE(),
+                jatuh_tempo = DATE_ADD(CURDATE(), INTERVAL %s DAY),
+                status = 'dipinjam',
+                diproses_oleh = %s
+            WHERE id_peminjaman = %s
+              AND status = 'menunggu'
+        """, (lama_pinjam, admin_id, id_peminjaman))
+
+        if cursor.rowcount != 1:
+            conn.rollback()
+            return redirect(url_for(
+                'admin_peminjaman',
+                status='pengajuan_tidak_valid'
+            ))
+
+        conn.commit()
+
+        return redirect(url_for(
+            'admin_peminjaman',
+            status='pengajuan_diterima'
+        ))
+
+    except Exception as e:
+        conn.rollback()
+        print("Gagal menerima pengajuan:", e)
+        return redirect(url_for(
+            'admin_peminjaman',
+            status='gagal'
+        ))
+
+    finally:
+        cursor.close()
+        conn.close()
+
 
 @app.route('/admin/proses_pengajuan/<int:id_peminjaman>', methods=['POST'])
 def admin_proses_pengajuan(id_peminjaman):
@@ -561,6 +640,7 @@ def admin_proses_pengajuan(id_peminjaman):
 
 
 
+
 @app.route('/admin/pengembalian', methods=['GET', 'POST'])
 def admin_pengembalian():
     if session.get('role') == 'admin':
@@ -569,68 +649,228 @@ def admin_pengembalian():
 
         try:
             if request.method == 'POST':
+
                 id_peminjaman = request.form['id_peminjaman']
-                tgl_kembali = request.form['tgl_kembali']
+                tgl_kembali = dt.datetime.strptime(
+                    request.form['tgl_kembali'], '%Y-%m-%d'
+                ).date()
+
                 kondisi_buku = request.form['kondisi_buku']
-                total_denda = float(request.form.get('denda', 0))
                 admin_id = session.get('id_user')
 
-                cursor.execute("SELECT * FROM peminjaman WHERE id_peminjaman = %s", (id_peminjaman,))
+                # ======================================
+                # 1. AMBIL DATA PEMINJAMAN
+                # ======================================
+
+                cursor.execute("""
+                    SELECT *
+                    FROM peminjaman
+                    WHERE id_peminjaman = %s
+                    AND status = 'dipinjam'
+                    FOR UPDATE
+                """, (id_peminjaman,))
+
                 peminjaman = cursor.fetchone()
 
-                if peminjaman:
-                    id_buku = peminjaman['id_buku']
+                if not peminjaman:
+                    conn.rollback()
+                    return "Transaksi tidak ditemukan atau sudah diproses.", 400
 
-                    denda_telat = total_denda if kondisi_buku == 'Baik' else 0
-                    denda_rusak = total_denda if kondisi_buku != 'Baik' else 0
+                id_buku = peminjaman['id_buku']
+                jatuh_tempo = peminjaman['jatuh_tempo']
 
-                    kondisi_enum = (
-                        'baik' if kondisi_buku == 'Baik'
-                        else ('rusak ringan' if kondisi_buku == 'Rusak Ringan' else 'rusak berat')
+                if isinstance(jatuh_tempo, dt.datetime):
+                    jatuh_tempo = jatuh_tempo.date()
+                elif isinstance(jatuh_tempo, str):
+                    jatuh_tempo = dt.datetime.strptime(
+                        jatuh_tempo, '%Y-%m-%d'
+                    ).date()
+
+                if tgl_kembali < jatuh_tempo:
+                    hari_terlambat = 0
+                else:
+                    hari_terlambat = max(
+                        0, (tgl_kembali - jatuh_tempo).days
                     )
 
+                # ======================================
+                # 2. AMBIL PENGATURAN DENDA
+                # ======================================
+
+                cursor.execute("""
+                    SELECT kunci, nilai
+                    FROM pengaturan
+                """)
+
+                pengaturan_rows = cursor.fetchall()
+
+                settings = {
+                    row['kunci']: row['nilai']
+                    for row in pengaturan_rows
+                }
+
+                denda_per_hari = int(
+                    settings.get('denda_telat_per_hari', 2000)
+                )
+
+                denda_ringan = int(
+                    settings.get('denda_rusak_ringan', 10000)
+                )
+
+                denda_berat = int(
+                    settings.get('denda_rusak_berat', 25000)
+                )
+
+                # ======================================
+                # 3. HITUNG DENDA KETERLAMBATAN
+                # ======================================
+
+                denda_telat = hari_terlambat * denda_per_hari
+
+                # ======================================
+                # 4. HITUNG DENDA KONDISI BUKU
+                # ======================================
+
+                if kondisi_buku == 'Baik':
+                    kondisi_enum = 'baik'
+                    denda_rusak = 0
+
+                elif kondisi_buku == 'Rusak Ringan':
+                    kondisi_enum = 'rusak ringan'
+                    denda_rusak = denda_ringan
+
+                elif kondisi_buku == 'Rusak Berat':
+                    kondisi_enum = 'rusak berat'
+                    denda_rusak = denda_berat
+
+                elif kondisi_buku == 'Hilang':
+                    kondisi_enum = 'hilang'
+
+                    denda_rusak = float(
+                        request.form.get('biaya_hilang', 0) or 0
+                    )
+
+                    if denda_rusak < 0:
+                        conn.rollback()
+                        return "Biaya penggantian tidak boleh negatif.", 400
+
+                else:
+                    conn.rollback()
+                    return "Kondisi buku tidak valid.", 400
+
+                # ======================================
+                # 5. TENTUKAN STATUS DENDA
+                # ======================================
+
+                total_denda_final = denda_telat + denda_rusak
+
+                status_denda = (
+                    'belum_lunas'
+                    if total_denda_final > 0
+                    else 'tidak_ada'
+                )
+
+                # ======================================
+                # 6. SIMPAN DATA PENGEMBALIAN
+                # ======================================
+
+                cursor.execute("""
+                    INSERT INTO pengembalian
+                    (
+                        id_peminjaman,
+                        tgl_kembali,
+                        kondisi_buku,
+                        denda_telat,
+                        denda_rusak,
+                        status_denda,
+                        diproses_oleh
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                """, (
+                    id_peminjaman,
+                    tgl_kembali,
+                    kondisi_enum,
+                    denda_telat,
+                    denda_rusak,
+                    status_denda,
+                    admin_id
+                ))
+
+                # ======================================
+                # 7. UBAH STATUS PEMINJAMAN
+                # ======================================
+
+                cursor.execute("""
+                    UPDATE peminjaman
+                    SET status = 'dikembalikan'
+                    WHERE id_peminjaman = %s
+                """, (id_peminjaman,))
+
+                # ======================================
+                # 8. TAMBAH STOK JIKA BUKU TIDAK HILANG
+                # ======================================
+
+                if kondisi_buku != 'Hilang':
                     cursor.execute("""
-                        INSERT INTO pengembalian (id_peminjaman, tgl_kembali, kondisi_buku, denda_telat, denda_rusak, diproses_oleh)
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (id_peminjaman, tgl_kembali, kondisi_enum, denda_telat, denda_rusak, admin_id))
+                        UPDATE buku
+                        SET jumlah_tersedia = jumlah_tersedia + 1
+                        WHERE id_buku = %s
+                    """, (id_buku,))
 
-                    cursor.execute("UPDATE peminjaman SET status = 'dikembalikan' WHERE id_peminjaman = %s", (id_peminjaman,))
-                    cursor.execute("UPDATE buku SET jumlah_tersedia = jumlah_tersedia + 1 WHERE id_buku = %s", (id_buku,))
-
-                    conn.commit()
+                # Simpan seluruh proses pengembalian
+                conn.commit()
 
                 return redirect(url_for('admin_pengembalian'))
 
+            # ======================================
+            # TAMPILKAN HALAMAN PENGEMBALIAN
+            # ======================================
+
             cursor.execute("SELECT * FROM pengaturan")
             pengaturan_rows = cursor.fetchall()
-            settings = {row['kunci']: row['nilai'] for row in pengaturan_rows}
+
+            settings = {
+                row['kunci']: row['nilai']
+                for row in pengaturan_rows
+            }
 
             cursor.execute("""
-                SELECT peminjaman.*,
-                       anggota.nama_lengkap AS nama_anggota,
-                       buku.judul
+                SELECT
+                    peminjaman.*,
+                    anggota.nama_lengkap AS nama_anggota,
+                    buku.judul
                 FROM peminjaman
-                JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
-                JOIN buku ON peminjaman.id_buku = buku.id_buku
+                JOIN anggota
+                    ON peminjaman.id_anggota = anggota.id_anggota
+                JOIN buku
+                    ON peminjaman.id_buku = buku.id_buku
                 WHERE peminjaman.status = 'dipinjam'
                 ORDER BY peminjaman.id_peminjaman DESC
             """)
+
             peminjaman_aktif = cursor.fetchall()
 
-            return render_template('admin/pengembalian.html',
-                                   settings=settings,
-                                   peminjaman_aktif=peminjaman_aktif)
+            return render_template(
+                'admin/pengembalian.html',
+                settings=settings,
+                peminjaman_aktif=peminjaman_aktif
+            )
 
         except Exception as e:
             conn.rollback()
             print("Gagal proses pengembalian:", e)
-            return f"Terjadi kesalahan pada proses pengembalian: {e}", 500
+
+            return (
+                f"Terjadi kesalahan pada proses pengembalian: {e}",
+                500
+            )
 
         finally:
             cursor.close()
             conn.close()
 
     return redirect(url_for('login'))
+
 
 
 @app.route('/admin/biodataagt')
@@ -747,6 +987,26 @@ def user_dashboard():
             jml_menunggu = res2['total'] if res2 else 0
 
 
+# ==========================================
+# TOTAL DENDA YANG BELUM LUNAS
+# ==========================================
+
+            cursor.execute("""
+        SELECT
+        COALESCE(SUM(
+            COALESCE(pg.denda_telat, 0) +
+            COALESCE(pg.denda_rusak, 0)
+        ), 0) AS total_denda
+    FROM pengembalian pg
+    INNER JOIN peminjaman p
+        ON pg.id_peminjaman = p.id_peminjaman
+    WHERE p.id_anggota = %s
+    AND pg.status_denda = 'belum_lunas'
+""", (user_id,))
+
+            hasil_denda = cursor.fetchone()
+            total_denda = hasil_denda['total_denda'] if hasil_denda else 0
+
             # ==========================================
             # 2. BUKU TERBANYAK DIPINJAM
             # ==========================================
@@ -859,30 +1119,31 @@ def user_dashboard():
             # RENDER DASHBOARD
             # ==========================================
             return render_template(
-                'user/dashboard.html',
+    'user/dashboard.html',
 
-                jml_dipinjam=jml_dipinjam,
-                jml_menunggu=jml_menunggu,
+    jml_dipinjam=jml_dipinjam,
+    jml_menunggu=jml_menunggu,
+    total_denda=total_denda,
 
-                buku_terbanyak=buku_terbanyak,
-                buku_tren=buku_tren,
-                buku_favorit=buku_favorit,
-                buku_terbaru=buku_terbaru
-            )
-
+    buku_terbanyak=buku_terbanyak,
+    buku_tren=buku_tren,
+    buku_favorit=buku_favorit,
+    buku_terbaru=buku_terbaru
+)
         except Exception as e:
 
             print("Gagal mengambil data dashboard:", e)
 
             return render_template(
-                'user/dashboard.html',
-                jml_dipinjam=jml_dipinjam,
-                jml_menunggu=jml_menunggu,
-                buku_terbanyak=[],
-                buku_tren=[],
-                buku_favorit=[],
-                buku_terbaru=[]
-            )
+    'user/dashboard.html',
+    jml_dipinjam=jml_dipinjam,
+    jml_menunggu=jml_menunggu,
+    total_denda=0,
+    buku_terbanyak=[],
+    buku_tren=[],
+    buku_favorit=[],
+    buku_terbaru=[]
+)
 
         finally:
 
@@ -1621,6 +1882,82 @@ def user_update_biodata():
 
     return redirect(next_url)
 
+
+
+@app.route('/user/pembayaran')
+def user_pembayaran():
+    if session.get('role') in ['siswa', 'user']:
+
+        conn = buat_koneksi()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        user_id = session.get('id_user')
+
+        try:
+            # ======================================
+            # 1. AMBIL DAFTAR DENDA BELUM LUNAS
+            # ======================================
+
+            cursor.execute("""
+                SELECT
+                    pg.id_pengembalian,
+                    p.id_peminjaman,
+                    b.judul,
+                    pg.tgl_kembali,
+                    pg.kondisi_buku,
+                    pg.denda_telat,
+                    pg.denda_rusak,
+                    (
+                        COALESCE(pg.denda_telat, 0) +
+                        COALESCE(pg.denda_rusak, 0)
+                    ) AS total_denda
+                FROM pengembalian pg
+                JOIN peminjaman p
+                    ON pg.id_peminjaman = p.id_peminjaman
+                JOIN buku b
+                    ON p.id_buku = b.id_buku
+                WHERE p.id_anggota = %s
+                AND pg.status_denda = 'belum_lunas'
+                ORDER BY pg.tgl_kembali DESC
+            """, (user_id,))
+
+            daftar_denda = cursor.fetchall()
+
+            total_denda = sum(
+                float(item['total_denda'] or 0)
+                for item in daftar_denda
+            )
+
+            # ======================================
+            # 2. AMBIL RIWAYAT TRANSAKSI
+            # ======================================
+
+            cursor.execute("""
+                SELECT *
+                FROM pembayaran_denda
+                WHERE id_anggota = %s
+                ORDER BY created_at DESC
+            """, (user_id,))
+
+            riwayat_pembayaran = cursor.fetchall()
+
+            return render_template(
+                'user/pembayaran.html',
+                daftar_denda=daftar_denda,
+                total_denda=total_denda,
+                riwayat_pembayaran=riwayat_pembayaran
+            )
+
+        except Exception as e:
+            conn.rollback()
+            print("Gagal memuat pembayaran:", e)
+            return "Gagal memuat halaman pembayaran.", 500
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    return redirect(url_for('login'))
 
 
 

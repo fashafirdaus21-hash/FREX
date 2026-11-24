@@ -43,10 +43,10 @@
 
         <div class="content-body">
 
+
 {% if request.args.get('status') == 'kuota_penuh' %}
 <div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
     Anggota tersebut sudah mencapai batas maksimal 3 buku.
-    Anggota harus mengembalikan buku terlebih dahulu.
 </div>
 
 {% elif request.args.get('status') == 'stok_habis' %}
@@ -59,11 +59,22 @@
     Data peminjaman berhasil disimpan.
 </div>
 
+{% elif request.args.get('status') == 'pengajuan_diterima' %}
+<div style="background:#dcfce7;color:#166534;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
+    Pengajuan peminjaman berhasil diterima.
+</div>
+
+{% elif request.args.get('status') == 'pengajuan_tidak_valid' %}
+<div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
+    Pengajuan tidak ditemukan atau sudah diproses sebelumnya.
+</div>
+
 {% elif request.args.get('status') == 'gagal' %}
 <div style="background:#fee2e2;color:#991b1b;padding:12px 18px;border-radius:10px;margin-bottom:20px;">
     Terjadi kesalahan saat menyimpan peminjaman.
 </div>
 {% endif %}
+
 
             <!-- Form Input Peminjaman -->
             <div class="form-card-box" style="margin-bottom: 30px;">
@@ -148,11 +159,25 @@
                             <th>Jatuh Tempo</th>
                             <th>Status</th>
                             <th>Diproses Oleh</th>
+                            <th>Aksi</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for p in peminjaman_list %}
                         <tr class="baris-data-peminjam">
+                            <td style="text-align: center;">
+    {% if p.status == 'menunggu' %}
+    <form action="{{ url_for('admin_terima_peminjaman', id_peminjaman=p.id_peminjaman) }}"
+          method="POST"
+          onsubmit="return confirm('Terima pengajuan peminjaman ini?');">
+        <button type="submit" class="btn-form-blue">
+            <i class="fa-solid fa-check"></i> Terima
+        </button>
+    </form>
+    {% else %}
+        <span style="color: #64748b;">-</span>
+    {% endif %}
+</td>
                             <td style="text-align: center;">{{ loop.index }}</td>
                             <td class="nowrap-cell" style="font-weight: bold;">{{ p.id_anggota }}</td>
                             <td class="judul-buku-cell">{{ p.judul_buku or p.id_buku }}</td>
@@ -165,6 +190,9 @@
                             </td>
                             <td style="font-size: 16px; color: #0d233a;">{{ p.diproses_oleh }}</td>
                         </tr>
+
+                    
+
                         {% else %}
                         <tr>
                             <td colspan="8" style="text-align: center; padding: 20px; color: #64748b;">Belum ada data peminjaman buku.</td>
