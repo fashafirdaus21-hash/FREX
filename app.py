@@ -266,6 +266,68 @@ def admin_dashboard():
     return redirect(url_for('login'))
 
 
+@app.route('/admin/verifikasi_pembayaran/<int:id_pembayaran>', methods=['POST'])
+def verifikasi_pembayaran(id_pembayaran):
+
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    aksi = request.form.get('aksi')
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+
+        if aksi == 'verifikasi':
+
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET
+                    status_pembayaran = 'berhasil',
+                    paid_at = NOW(),
+                    dikonfirmasi_oleh = %s
+                WHERE id_pembayaran = %s
+            """, (
+                session.get('id_user'),
+                id_pembayaran
+            ))
+
+            conn.commit()
+
+        elif aksi == 'tolak':
+
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET
+                    status_pembayaran = 'gagal',
+                    dikonfirmasi_oleh = %s
+                WHERE id_pembayaran = %s
+            """, (
+                session.get('id_user'),
+                id_pembayaran
+            ))
+
+            conn.commit()
+
+        return redirect(url_for('admin_pembayaran'))
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print("Gagal memproses pembayaran:", e)
+
+        return (
+            "Gagal memproses pembayaran.",
+            500
+        )
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
 @app.route('/admin/kelolabuku', methods=['GET', 'POST'])
 def admin_kelolabuku():
     if session.get('role') == 'admin':
@@ -675,32 +737,24 @@ def admin_pembayaran():
             SELECT
                 pd.id_pembayaran,
                 pd.id_anggota,
-                pd.id_pengembalian,
-                pd.jumlah_bayar,
+                pd.order_id,
+                pd.transaction_id,
                 pd.metode_pembayaran,
+                pd.jumlah_bayar,
                 pd.status_pembayaran,
+                pd.gateway_status,
+                pd.qr_url,
+                pd.expired_at,
+                pd.paid_at,
+                pd.dikonfirmasi_oleh,
                 pd.created_at,
 
-                u.username,
-                u.nama AS nama_pengguna,
-
-                b.judul,
-
-                pg.tgl_kembali
+                a.nama_lengkap
 
             FROM pembayaran_denda pd
 
-            JOIN users u
-                ON pd.id_anggota = u.id_user
-
-            JOIN pengembalian pg
-                ON pd.id_pengembalian = pg.id_pengembalian
-
-            JOIN peminjaman pm
-                ON pg.id_peminjaman = pm.id_peminjaman
-
-            JOIN buku b
-                ON pm.id_buku = b.id_buku
+            LEFT JOIN anggota a
+                ON pd.id_anggota = a.id_anggota
 
             ORDER BY
                 CASE
