@@ -855,6 +855,7 @@ def user_pembayaran():
                     pg.tgl_kembali,
                     pg.denda_telat,
                     pg.denda_rusak,
+                    pg.status_denda,
                     (
                         COALESCE(pg.denda_telat, 0) +
                         COALESCE(pg.denda_rusak, 0)
@@ -865,7 +866,7 @@ def user_pembayaran():
                 JOIN buku b
                     ON p.id_buku = b.id_buku
                 WHERE p.id_anggota = %s
-                AND pg.status_denda = 'belum_lunas'
+AND pg.status_denda IN ('belum_lunas', 'menunggu')
                 ORDER BY pg.tgl_kembali DESC
             """, (user_id,))
 
