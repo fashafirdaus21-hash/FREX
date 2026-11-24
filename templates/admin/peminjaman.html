@@ -104,10 +104,30 @@
             <!-- Tabel Daftar Orang yang Meminjam -->
             <div class="table-box-container" style="border: 2px solid #0d233a; border-radius: 12px; overflow: hidden;">
 
-                <!-- HEADER TABEL DENGAN BILAH PENCARIAN DI POJOK KANAN -->
+                <!-- HEADER TABEL DENGAN LEGENDA WARNA DAN BILAH PENCARIAN -->
                 <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; padding: 15px 20px; background-color: #f8fafc; border-bottom: 2px solid #0d233a;">
                     <h3 style="color: #0d233a; margin: 0; font-size: 18px;">Daftar Pengajuan dan Peminjaman</h3>
-                    
+
+                    <!-- Pemberitahuan / Legenda Warna Status -->
+                    <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 14px; font-size: 12px; color: #0d233a; font-weight: 600;">
+                        <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 11px; height: 11px; border-radius: 50%; background-color: #22c55e; display: inline-block;"></span>
+                            Disetujui
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 11px; height: 11px; border-radius: 50%; background-color: #f97316; display: inline-block;"></span>
+                            Menunggu
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 11px; height: 11px; border-radius: 50%; background-color: #ef4444; display: inline-block;"></span>
+                            Ditolak
+                        </span>
+                        <span style="display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="width: 11px; height: 11px; border-radius: 50%; background-color: #64748b; display: inline-block;"></span>
+                            Kadaluarsa
+                        </span>
+                    </div>
+
                     <!-- Bilah Pencarian -->
                     <div style="display: flex; align-items: center; background-color: #0d233a; padding: 8px 15px; border-radius: 20px; border: 1.5px solid #0d233a; width: 260px;">
                         <i class="fa-solid fa-magnifying-glass" style="color: #f6c90e; margin-right: 10px; font-size: 14px;"></i>
@@ -149,20 +169,25 @@
 
                                 <!-- 6. Status -->
                                 <td class="nowrap-cell" style="text-align: center;">
-                                    {% if p.status == 'dipinjam' %}
+                                    {% set st = (p.status or '') | lower %}
+                                    {% if st in ['dipinjam', 'disetujui', 'dikembalikan'] %}
                                         <span style="background-color: #22c55e; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                            {{ 'disetujui' if st == 'dipinjam' else p.status }}
+                                        </span>
+                                    {% elif st == 'menunggu' %}
+                                        <span style="background-color: #f97316; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
                                             {{ p.status }}
                                         </span>
-                                    {% elif p.status == 'ditolak' %}
+                                    {% elif st == 'ditolak' %}
                                         <span style="background-color: #ef4444; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
                                             {{ p.status }}
                                         </span>
-                                    {% elif p.status == 'dikembalikan' %}
-                                        <span style="background-color: #3b82f6; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                    {% elif st in ['kadaluarsa', 'expired'] %}
+                                        <span style="background-color: #64748b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
                                             {{ p.status }}
                                         </span>
                                     {% else %}
-                                        <span style="background-color: #eab308; color: #0d233a; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
+                                        <span style="background-color: #64748b; color: #ffffff; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; display: inline-block;">
                                             {{ p.status }}
                                         </span>
                                     {% endif %}
@@ -170,13 +195,21 @@
 
                                 <!-- 7. Aksi -->
                                 <td class="nowrap-cell" style="text-align: center;">
-                                    {% if p.status == 'menunggu' %}
-                                        <form action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}" method="POST" style="display: inline;">
-                                            <input type="hidden" name="aksi" value="setujui">
-                                            <button type="submit" style="background-color: #0d233a; color: #f6c90e; border: none; padding: 6px 14px; border-radius: 20px; font-weight: bold; font-size: 13px; cursor: pointer;">
-                                                <i class="fa-solid fa-check"></i> Terima
-                                            </button>
-                                        </form>
+                                    {% if (p.status or '') | lower == 'menunggu' %}
+                                        <div style="display: inline-flex; gap: 6px; align-items: center; justify-content: center;">
+                                            <form action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}" method="POST" style="display: inline;">
+                                                <input type="hidden" name="aksi" value="setujui">
+                                                <button type="submit" style="background-color: #22c55e; color: #ffffff; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer;">
+                                                    <i class="fa-solid fa-check"></i> ACC
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('admin_proses_pengajuan', id_peminjaman=p.id_peminjaman) }}" method="POST" style="display: inline;">
+                                                <input type="hidden" name="aksi" value="tolak">
+                                                <button type="submit" style="background-color: #ef4444; color: #ffffff; border: none; padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 12px; cursor: pointer;">
+                                                    <i class="fa-solid fa-xmark"></i> Tolak
+                                                </button>
+                                            </form>
+                                        </div>
                                     {% else %}
                                         <span style="color: #94a3b8; font-weight: bold;">-</span>
                                     {% endif %}
@@ -270,7 +303,6 @@
                 }
             });
 
-            // Tampilkan pesan jika tidak ada baris yang cocok (dan tabel memang memiliki data)
             if (barisData.length > 0) {
                 pesanKosong.style.display = adaHasil ? "none" : "";
             }
