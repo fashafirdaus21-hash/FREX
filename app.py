@@ -837,6 +837,72 @@ def user_riwayat():
         return render_template('user/riwayat.html', riwayat_list=riwayat_list)
     return redirect(url_for('login'))
 
+@app.route('/user/pembayaran')
+def user_pembayaran():
+    if session.get('role') in ['siswa', 'user']:
+
+        conn = buat_koneksi()
+        cursor = conn.cursor(dictionary=True, buffered=True)
+
+        try:
+            user_id = session.get('id_user')
+
+            cursor.execute("""
+                SELECT
+                    pg.id_pengembalian,
+                    p.id_peminjaman,
+                    b.judul,
+                    pg.tgl_kembali,
+                    pg.denda_telat,
+                    pg.denda_rusak,
+                    (
+                        COALESCE(pg.denda_telat, 0) +
+                        COALESCE(pg.denda_rusak, 0)
+                    ) AS total_denda
+                FROM pengembalian pg
+                JOIN peminjaman p
+                    ON pg.id_peminjaman = p.id_peminjaman
+                JOIN buku b
+                    ON p.id_buku = b.id_buku
+                WHERE p.id_anggota = %s
+                AND pg.status_denda = 'belum_lunas'
+                ORDER BY pg.tgl_kembali DESC
+            """, (user_id,))
+
+            daftar_denda = cursor.fetchall()
+
+            total_denda = sum(
+                float(d['total_denda'] or 0)
+                for d in daftar_denda
+            )
+
+            cursor.execute("""
+                SELECT *
+                FROM pembayaran_denda
+                WHERE id_anggota = %s
+                ORDER BY created_at DESC
+            """, (user_id,))
+
+            riwayat_pembayaran = cursor.fetchall()
+
+            return render_template(
+                'user/pembayaran.html',
+                daftar_denda=daftar_denda,
+                total_denda=total_denda,
+                riwayat_pembayaran=riwayat_pembayaran
+            )
+
+        except Exception as e:
+            conn.rollback()
+            print("Gagal memuat pembayaran:", e)
+            return "Gagal memuat halaman pembayaran.", 500
+
+        finally:
+            cursor.close()
+            conn.close()
+
+    return redirect(url_for('login'))
+
 
 @app.route('/user/biodata')
 def user_biodata():
