@@ -610,6 +610,182 @@ def hapus_anggota(id_anggota):
 
 
 # ==========================================================
+# ================== PEMBAYARAN ADMIN ======================
+# ==========================================================
+
+@app.route('/admin/pembayaran')
+def admin_pembayaran():
+
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+
+        cursor.execute("""
+            SELECT
+                pd.id_pembayaran,
+                pd.id_anggota,
+                pd.id_pengembalian,
+                pd.jumlah_bayar,
+                pd.metode_pembayaran,
+                pd.status_pembayaran,
+                pd.created_at,
+
+                u.username,
+                u.nama AS nama_pengguna,
+
+                b.judul,
+
+                pg.tgl_kembali
+
+            FROM pembayaran_denda pd
+
+            JOIN users u
+                ON pd.id_anggota = u.id_user
+
+            JOIN pengembalian pg
+                ON pd.id_pengembalian = pg.id_pengembalian
+
+            JOIN peminjaman pm
+                ON pg.id_peminjaman = pm.id_peminjaman
+
+            JOIN buku b
+                ON pm.id_buku = b.id_buku
+
+            ORDER BY
+                CASE
+                    WHEN pd.status_pembayaran = 'menunggu'
+                    THEN 0
+                    ELSE 1
+                END,
+
+                pd.created_at DESC
+
+        """)
+
+        pembayaran_list = cursor.fetchall()
+
+        return render_template(
+            'admin/pembayaran.html',
+            pembayaran_list=pembayaran_list
+        )
+
+    except Exception as e:
+
+        print("Gagal memuat pembayaran admin:", e)
+
+        return (
+            "Gagal memuat halaman pembayaran admin.",
+            500
+        )
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+@app.route(
+    '/admin/verifikasi_pembayaran/<int:id_pembayaran>',
+    methods=['POST']
+)
+def admin_verifikasi_pembayaran(id_pembayaran):
+
+    if session.get('role') != 'admin':
+        return redirect(url_for('login'))
+
+    aksi = request.form.get('aksi')
+
+    if aksi not in ['verifikasi', 'tolak']:
+        return redirect(url_for('admin_pembayaran'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+
+        # Ambil data pembayaran
+        cursor.execute("""
+            SELECT
+                id_pembayaran,
+                id_pengembalian,
+                status_pembayaran
+            FROM pembayaran_denda
+            WHERE id_pembayaran = %s
+            FOR UPDATE
+        """, (id_pembayaran,))
+
+        pembayaran = cursor.fetchone()
+
+        if not pembayaran:
+            return redirect(url_for('admin_pembayaran'))
+
+        # Jangan proses transaksi yang sudah selesai
+        if pembayaran['status_pembayaran'] != 'menunggu':
+            return redirect(url_for('admin_pembayaran'))
+
+        # ==========================
+        # VERIFIKASI
+        # ==========================
+
+        if aksi == 'verifikasi':
+
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET status_pembayaran = 'berhasil'
+                WHERE id_pembayaran = %s
+            """, (id_pembayaran,))
+
+            cursor.execute("""
+                UPDATE pengembalian
+                SET status_denda = 'lunas'
+                WHERE id_pengembalian = %s
+            """, (pembayaran['id_pengembalian'],))
+
+        # ==========================
+        # TOLAK
+        # ==========================
+
+        elif aksi == 'tolak':
+
+            cursor.execute("""
+                UPDATE pembayaran_denda
+                SET status_pembayaran = 'ditolak'
+                WHERE id_pembayaran = %s
+            """, (id_pembayaran,))
+
+            cursor.execute("""
+                UPDATE pengembalian
+                SET status_denda = 'belum_lunas'
+                WHERE id_pengembalian = %s
+            """, (pembayaran['id_pengembalian'],))
+
+        conn.commit()
+
+        return redirect(url_for('admin_pembayaran'))
+
+    except Exception as e:
+
+        conn.rollback()
+
+        print(
+            "Gagal memproses pembayaran:",
+            e
+        )
+
+        return (
+            "Gagal memproses pembayaran.",
+            500
+        )
+
+    finally:
+
+        cursor.close()
+        conn.close()
+
+# ==========================================================
 # ===================== DASHBOARD USER ======================
 # ==========================================================
 

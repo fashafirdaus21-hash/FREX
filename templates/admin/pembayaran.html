@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Verifikasi Pembayaran - FREX</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}?v=8.0">
+
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+
+        .payment-admin-content {
+            padding: 30px;
+        }
+
+        .payment-admin-card {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            box-shadow: 0 3px 12px rgba(0,0,0,.06);
+            margin-bottom: 25px;
+        }
+
+        .payment-admin-card h3 {
+            color: #0d233a;
+            margin-top: 0;
+        }
+
+        .payment-admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .payment-admin-table th,
+        .payment-admin-table td {
+            padding: 14px;
+            border-bottom: 1px solid #e2e8f0;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .payment-admin-table th {
+            background: #f1f5f9;
+            color: #0d233a;
+        }
+
+        .status-menunggu {
+            color: #d97706;
+            font-weight: bold;
+        }
+
+        .status-berhasil {
+            color: #16a34a;
+            font-weight: bold;
+        }
+
+        .status-ditolak {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .btn-verifikasi {
+            background: #16a34a;
+            color: white;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-verifikasi:hover {
+            background: #15803d;
+        }
+
+        .btn-tolak {
+            background: #dc2626;
+            color: white;
+            border: none;
+            padding: 9px 14px;
+            border-radius: 7px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-tolak:hover {
+            background: #b91c1c;
+        }
+
+        .aksi-pembayaran {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .empty-payment {
+            text-align: center;
+            padding: 45px 20px;
+            color: #64748b;
+        }
+
+        .empty-payment i {
+            font-size: 45px;
+            margin-bottom: 15px;
+        }
+
+        .info-box {
+            background: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 14px;
+            border-radius: 8px;
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+
+        @media(max-width: 900px) {
+            .payment-admin-content {
+                padding: 15px;
+            }
+
+            .table-wrapper {
+                overflow-x: auto;
+            }
+
+            .payment-admin-table {
+                min-width: 1000px;
+            }
+        }
+
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+
+    <div>
+
+        <div class="sidebar-profile">
+
+            <div class="profile-img">
+                <i class="fa-solid fa-user"></i>
+            </div>
+
+            <h3>
+                {{ session.get('nama', 'Admin') }}
+            </h3>
+
+        </div>
+
+        <ul class="sidebar-menu">
+
+            <li>
+                <a href="/admin/dashboard">
+                    <i class="fa-solid fa-house"></i>
+                    Dashboard
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/kelolabuku">
+                    <i class="fa-solid fa-book"></i>
+                    Kelola Buku
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/peminjaman">
+                    <i class="fa-solid fa-hand-holding-hand"></i>
+                    Peminjaman
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/pengembalian">
+                    <i class="fa-solid fa-rotate-left"></i>
+                    Pengembalian
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/pembayaran" class="active">
+                    <i class="fa-solid fa-money-bill-wave"></i>
+                    Pembayaran
+                </a>
+            </li>
+
+            <li>
+                <a href="/admin/biodataagt">
+                    <i class="fa-solid fa-users"></i>
+                    Biodata
+                </a>
+            </li>
+
+        </ul>
+
+    </div>
+
+    <div class="sidebar-logout-box">
+
+        <a href="/logout" class="btn-logout-sidebar">
+
+            <i class="fa-solid fa-right-from-bracket"></i>
+
+            Log out
+
+        </a>
+
+    </div>
+
+</aside>
+
+
+<!-- MAIN -->
+<div class="main-container">
+
+    <!-- TOPBAR -->
+    <header class="topbar-admin">
+
+        <div>
+
+            <h2 style="color:#0d233a; margin:0;">
+                Verifikasi Pembayaran
+            </h2>
+
+            <p style="color:#475569; margin:5px 0 0;">
+                Kelola pembayaran denda yang diajukan pengguna.
+            </p>
+
+        </div>
+
+        <div class="admin-badge-top">
+
+            <i class="fa-solid fa-user"></i>
+
+            {{ session.get('nama', 'Admin') }}
+
+        </div>
+
+    </header>
+
+
+    <!-- CONTENT -->
+    <main class="payment-admin-content">
+
+        <div class="payment-admin-card">
+
+            <h3>
+                <i class="fa-solid fa-receipt"></i>
+                Pengajuan Pembayaran
+            </h3>
+
+            <div class="info-box">
+
+                <strong>Informasi:</strong>
+
+                Pembayaran dengan status
+                <strong>Menunggu</strong>
+                harus diverifikasi oleh admin.
+
+            </div>
+
+
+            {% if pembayaran_list %}
+
+            <div class="table-wrapper">
+
+                <table class="payment-admin-table">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>ID</th>
+
+                            <th>Pengguna</th>
+
+                            <th>Buku</th>
+
+                            <th>Tanggal</th>
+
+                            <th>Jumlah</th>
+
+                            <th>Metode</th>
+
+                            <th>Status</th>
+
+                            <th>Aksi</th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody>
+
+                        {% for p in pembayaran_list %}
+
+                        <tr>
+
+                            <td>
+                                #{{ p.id_pembayaran }}
+                            </td>
+
+                            <td>
+
+                                <strong>
+                                    {{ p.nama_pengguna }}
+                                </strong>
+
+                                <br>
+
+                                <small style="color:#64748b;">
+                                    {{ p.username }}
+                                </small>
+
+                            </td>
+
+                            <td>
+                                {{ p.judul }}
+                            </td>
+
+                            <td>
+
+                                {{ p.created_at.strftime('%d-%m-%Y %H:%M')
+                                   if p.created_at else '-' }}
+
+                            </td>
+
+                            <td>
+
+                                <strong>
+                                    Rp {{ "{:,}".format(
+                                        p.jumlah_bayar or 0
+                                    ).replace(",", ".") }}
+                                </strong>
+
+                            </td>
+
+                            <td>
+
+                                {% if p.metode_pembayaran == 'qris' %}
+
+                                    <i class="fa-solid fa-qrcode"></i>
+                                    QRIS
+
+                                {% else %}
+
+                                    <i class="fa-solid fa-money-bill"></i>
+                                    Tunai
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if p.status_pembayaran == 'menunggu' %}
+
+                                    <span class="status-menunggu">
+                                        Menunggu
+                                    </span>
+
+                                {% elif p.status_pembayaran == 'berhasil' %}
+
+                                    <span class="status-berhasil">
+                                        Berhasil
+                                    </span>
+
+                                {% else %}
+
+                                    <span class="status-ditolak">
+                                        Ditolak
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {% if p.status_pembayaran == 'menunggu' %}
+
+                                <div class="aksi-pembayaran">
+
+                                    <form
+                                        action="{{ url_for(
+                                            'admin_verifikasi_pembayaran',
+                                            id_pembayaran=p.id_pembayaran
+                                        ) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Verifikasi pembayaran ini sebagai berhasil?');"
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="aksi"
+                                            value="verifikasi"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="btn-verifikasi"
+                                        >
+
+                                            <i class="fa-solid fa-check"></i>
+                                            Verifikasi
+
+                                        </button>
+
+                                    </form>
+
+
+                                    <form
+                                        action="{{ url_for(
+                                            'admin_verifikasi_pembayaran',
+                                            id_pembayaran=p.id_pembayaran
+                                        ) }}"
+                                        method="POST"
+                                        onsubmit="return confirm('Tolak pembayaran ini?');"
+                                    >
+
+                                        <input
+                                            type="hidden"
+                                            name="aksi"
+                                            value="tolak"
+                                        >
+
+                                        <button
+                                            type="submit"
+                                            class="btn-tolak"
+                                        >
+
+                                            <i class="fa-solid fa-xmark"></i>
+                                            Tolak
+
+                                        </button>
+
+                                    </form>
+
+                                </div>
+
+                                {% else %}
+
+                                    <span style="color:#64748b;">
+                                        Selesai
+                                    </span>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+            {% else %}
+
+            <div class="empty-payment">
+
+                <i class="fa-solid fa-circle-check"></i>
+
+                <h3>
+                    Tidak Ada Pengajuan
+                </h3>
+
+                <p>
+                    Belum ada pembayaran yang diajukan pengguna.
+                </p>
+
+            </div>
+
+            {% endif %}
+
+        </div>
+
+    </main>
+
+</div>
+
+</body>
+
+</html>
