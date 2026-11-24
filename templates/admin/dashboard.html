@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Admin - Perpustakaan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7.2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7.3">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -40,14 +40,14 @@
     <!-- MAIN CONTAINER -->
     <div class="main-container">
         
-        <!-- TOPBAR (Struktur class tetap sama, diperkaya elemen visual) -->
+        <!-- TOPBAR (Tanpa kotak/bingkai luar, dipercantik dengan emoticon & sapaan) -->
         <header class="topbar-admin">
             <div>
-                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 5px;">
-                    <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Dashboard</h2>
-                    <span id="tanggalHariIni" style="background: #f1f5f9; color: #0d233a; border: 1px solid #cbd5e1; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: bold;"></span>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
+                    <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Dashboard 👋</h2>
+                    <span id="tanggalHariIni" style="background: #ffffff; color: #0d233a; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.03);"></span>
                 </div>
-                <p style="color: #475569; margin: 0; font-size: 13px;">Selamat Datang di Sistem Informasi Perpustakaan</p>
+                <p style="color: #475569; margin: 0; font-size: 13.5px;">📚 Selamat Datang, <strong style="color: #0d233a;">{{ session.get('nama', 'Admin') }}</strong>! Pantau aktivitas perpustakaan hari ini ✨</p>
             </div>
             
             <div style="display: flex; align-items: center; gap: 12px;">
@@ -59,13 +59,13 @@
 
                 <!-- Notifikasi Permintaan Peminjaman -->
                 <a href="/admin/peminjaman" class="topbar-notif-icon" title="Permintaan peminjaman menunggu">
-                    <i class="fa-solid fa-bell"></i>
+                    <span>🔔</span>
                     <span class="notif-dot">{{ peminjaman_menunggu if peminjaman_menunggu else 2 }}</span>
                 </a>
                 
                 <!-- Badge Admin Kanan Atas -->
                 <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
-                    <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
+                    <span>👑</span> {{ session.get('nama', 'Admin') }}
                 </div>
             </div>
         </header>
@@ -111,7 +111,7 @@
             <!-- Bagian Ringkasan -->
             <div class="section-title">Ringkasan</div>
 
-            <!-- Grafik Peminjam per Bulan -->
+            <!-- Grafik Peminjam per Bulan (Gridlines dihapus) -->
             <div class="chart-box-container">
                 <h3 style="color: #0d233a; font-size: 16px; font-weight: bold; margin-bottom: 15px;">Peminjam per bulan</h3>
                 <div style="height: 200px; width: 100%;">
@@ -151,9 +151,9 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
-        // Tanggal otomatis di header
+        // Tanggal otomatis di header dengan emoticon kalender
         const tglHeader = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
-        document.getElementById('tanggalHariIni').innerHTML = `<i class="fa-regular fa-calendar" style="margin-right:4px;"></i> ${tglHeader}`;
+        document.getElementById('tanggalHariIni').innerHTML = `📅 ${tglHeader}`;
 
         const canvasEl = document.getElementById('chartAdminDashboard');
         const ctx = canvasEl.getContext('2d');
@@ -177,12 +177,15 @@
                 scales: { 
                     y: { 
                         beginAtZero: true,
+                        grid: { display: false },
                         ticks: {
                             stepSize: 1,
                             precision: 0
                         }
                     },
-                    x: { grid: { display: false } }
+                    x: { 
+                        grid: { display: false } 
+                    }
                 }
             }
         });

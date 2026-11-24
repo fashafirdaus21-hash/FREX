@@ -115,11 +115,8 @@ body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 28px;
-    background-color: #ffffff;
-    padding: 16px 24px;
-    border-radius: 16px;
-    border: 2px solid #0d233a;
-    box-shadow: 0 4px 12px rgba(13, 35, 58, 0.06);
+    padding-bottom: 18px;
+    border-bottom: 1px solid #e2e8f0;
 }
 
 .topbar-search {
@@ -131,6 +128,7 @@ body {
     gap: 10px;
     width: 240px;
     border: 1px solid #1e3a5f;
+    box-shadow: 0 3px 8px rgba(13, 35, 58, 0.08);
 }
 
 .topbar-search input {
@@ -151,15 +149,16 @@ body {
     position: relative;
     background-color: #0d233a;
     color: #f6c90e;
-    width: 36px;
-    height: 36px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     text-decoration: none;
-    font-size: 14px;
+    font-size: 15px;
     border: 1px solid #1e3a5f;
+    box-shadow: 0 3px 8px rgba(13, 35, 58, 0.08);
     transition: transform 0.2s;
 }
 
@@ -192,6 +191,7 @@ body {
     gap: 8px;
     font-size: 14px;
     border: 1px solid #1e3a5f;
+    box-shadow: 0 3px 8px rgba(13, 35, 58, 0.08);
     transition: transform 0.2s;
 }
 
