@@ -44,7 +44,7 @@
             <div>
                 <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Pengembalian</h2>
             </div>
-            <div class="admin-badge-top"><i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}</div>
+            <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil"><i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}</div>
         </header>
 
         <div class="content-body">
@@ -179,16 +179,37 @@
     </div>
 
     <script>
-        // Set otomatis tanggal pengembalian hari ini
+        const KEY_FOTO_PROFIL_ADMIN = 'admin_foto_profil_permanen';
+
+        function terapkanFotoProfilAdmin(dataUrl) {
+            if (!dataUrl) return;
+
+            const sidebarBox = document.getElementById('sidebarAvatarPreview');
+            if (sidebarBox) {
+                sidebarBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+
+            const modalBox = document.getElementById('modalAvatarDisplay');
+            if (modalBox) {
+                modalBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+        }
+
+        // Set otomatis tanggal pengembalian hari ini & muat foto profil tersimpan
         document.addEventListener("DOMContentLoaded", function() {
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('tglKembali').value = today;
+
+            const fotoTersimpan = localStorage.getItem(KEY_FOTO_PROFIL_ADMIN);
+            if (fotoTersimpan) {
+                terapkanFotoProfilAdmin(fotoTersimpan);
+            }
         });
 
         // Mengambil data pengaturan dari database phpMyAdmin
         const dendaTelatPerHari = parseInt("{{ settings.get('denda_telat_per_hari', 2000) }}");
-const dendaRusakRingan = parseInt("{{ settings.get('denda_rusak_ringan', 10000) }}");
-const dendaRusakBerat = parseInt("{{ settings.get('denda_rusak_berat', 25000) }}");
+        const dendaRusakRingan = parseInt("{{ settings.get('denda_rusak_ringan', 10000) }}");
+        const dendaRusakBerat = parseInt("{{ settings.get('denda_rusak_berat', 25000) }}");
 
         function hitungDendaOtomatis() {
             const select = document.getElementById('selectPeminjaman');
@@ -214,39 +235,39 @@ const dendaRusakBerat = parseInt("{{ settings.get('denda_rusak_berat', 25000) }}
             const kondisi = document.getElementById('selectedKondisi').value;
             let dendaKondisi = 0;
 
-if (kondisi === 'Rusak Ringan') {
-    dendaKondisi = dendaRusakRingan;
-} else if (kondisi === 'Rusak Berat') {
-    dendaKondisi = dendaRusakBerat;
-} else if (kondisi === 'Hilang') {
-    dendaKondisi = Number(
-        document.getElementById('biayaHilang').value
-    ) || 0;
-}
+            if (kondisi === 'Rusak Ringan') {
+                dendaKondisi = dendaRusakRingan;
+            } else if (kondisi === 'Rusak Berat') {
+                dendaKondisi = dendaRusakBerat;
+            } else if (kondisi === 'Hilang') {
+                dendaKondisi = Number(
+                    document.getElementById('biayaHilang').value
+                ) || 0;
+            }
             
             // Total gabungan denda telat + kondisi
             document.getElementById('inputDenda').value = dendaKeterlambatan + dendaKondisi;
         }
 
         function selectKondisi(btn, text) {
-    document.querySelectorAll('.kondisi-btn-option')
-        .forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.kondisi-btn-option')
+                .forEach(b => b.classList.remove('active'));
 
-    btn.classList.add('active');
+            btn.classList.add('active');
 
-    document.getElementById('selectedKondisi').value = text;
+            document.getElementById('selectedKondisi').value = text;
 
-    const biayaHilangBox = document.getElementById('biayaHilangBox');
+            const biayaHilangBox = document.getElementById('biayaHilangBox');
 
-    if (text === 'Hilang') {
-        biayaHilangBox.style.display = 'block';
-    } else {
-        biayaHilangBox.style.display = 'none';
-        document.getElementById('biayaHilang').value = 0;
-    }
+            if (text === 'Hilang') {
+                biayaHilangBox.style.display = 'block';
+            } else {
+                biayaHilangBox.style.display = 'none';
+                document.getElementById('biayaHilang').value = 0;
+            }
 
-    hitungDendaOtomatis();
-}
+            hitungDendaOtomatis();
+        }
 
         // Fungsi pratinjau foto bukti buku yang diunggah
         function previewBuktiFoto(event) {
@@ -259,20 +280,42 @@ if (kondisi === 'Rusak Ringan') {
             }
         }
 
-        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
-        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+        function openWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         function previewWaImage(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function() {
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                const hasil = reader.result;
+                try {
+                    localStorage.setItem(KEY_FOTO_PROFIL_ADMIN, hasil);
+                } catch (err) {
+                    alert('Foto terlalu besar untuk disimpan permanen. Coba pilih foto dengan ukuran lebih kecil.');
+                    console.warn(err);
+                }
+                terapkanFotoProfilAdmin(hasil);
             };
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         }
+
         function copyPhone() { 
             navigator.clipboard.writeText("+62 856-9571-4264"); 
             alert("Nomor disalin!"); 
         }
     </script>
+    
 </body>
 </html>
+```[cite: 22]
+
+Semua halaman admin utama sudah selesai dirapikan. Silakan dites di browser saat pindah-pindah menu sidebar—kalau ada kendala atau halaman lain yang ingin dicek, beri tahu saja!

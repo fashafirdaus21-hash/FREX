@@ -21,14 +21,25 @@
             <ul class="sidebar-menu">
                 <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
-                <li><a href="/admin/peminjaman" class="active"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
+                <li>
+                    <a href="/admin/peminjaman" class="active">
+                        <i class="fa-solid fa-hand-holding-hand"></i>
+                        <span>Peminjaman</span>
+                        {% if (peminjaman_menunggu or 0) > 0 %}
+                        <span class="sidebar-notif-badge">{{ '99+' if (peminjaman_menunggu or 0) > 99 else peminjaman_menunggu }}</span>
+                        {% endif %}
+                    </a>
+                </li>
                 <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
                 <li>
-    <a href="/admin/pembayaran">
-        <i class="fa-solid fa-money-bill-wave"></i>
-        Pembayaran
-    </a>
-</li>
+                    <a href="/admin/pembayaran">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                        <span>Pembayaran</span>
+                        {% if (pembayaran_menunggu or 0) > 0 %}
+                        <span class="sidebar-notif-badge">{{ '99+' if (pembayaran_menunggu or 0) > 99 else pembayaran_menunggu }}</span>
+                        {% endif %}
+                    </a>
+                </li>
                 <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
             </ul>
         </div>
@@ -44,7 +55,7 @@
             <div>
                 <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Peminjaman</h2>
             </div>
-            <div class="admin-badge-top"><i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}</div>
+            <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil"><i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}</div>
         </header>
 
         <div class="content-body">
@@ -146,7 +157,7 @@
                         <thead>
                             <tr>
                                 <th style="width: 55px; text-align: center;">No</th>
-                                <th style="text-align: center;">ID Anggota</th>
+                                <th>Nama Anggota</th>
                                 <th>Judul Buku</th>
                                 <th style="text-align: center;">Tgl Pinjam</th>
                                 <th style="text-align: center;">Jatuh Tempo</th>
@@ -161,8 +172,8 @@
                                 <!-- 1. No -->
                                 <td style="text-align: center; font-weight: 600;">{{ loop.index }}</td>
 
-                                <!-- 2. ID Anggota -->
-                                <td class="nowrap-cell" style="text-align: center; font-weight: bold;">{{ p.id_anggota }}</td>
+                                <!-- 2. Nama Anggota -->
+                                <td class="nowrap-cell" style="font-weight: bold;">{{ p.nama_anggota or ('Anggota #' ~ p.id_anggota) }}</td>
 
                                 <!-- 3. Judul Buku -->
                                 <td class="judul-buku-cell" style="font-weight: 500;">{{ p.judul_buku or p.id_buku }}</td>
@@ -276,19 +287,60 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
-        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
-        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
-        function previewWaImage(e) {
-            const reader = new FileReader();
-            reader.onload = function() {
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
-            };
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        const KEY_FOTO_PROFIL_ADMIN = 'admin_foto_profil_permanen';
+
+        function terapkanFotoProfilAdmin(dataUrl) {
+            if (!dataUrl) return;
+
+            const sidebarBox = document.getElementById('sidebarAvatarPreview');
+            if (sidebarBox) {
+                sidebarBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+
+            const modalBox = document.getElementById('modalAvatarDisplay');
+            if (modalBox) {
+                modalBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
         }
-        function copyPhone() { 
-            navigator.clipboard.writeText("+62 856-9571-4264"); 
-            alert("Nomor disalin!"); 
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const fotoTersimpan = localStorage.getItem(KEY_FOTO_PROFIL_ADMIN);
+            if (fotoTersimpan) {
+                terapkanFotoProfilAdmin(fotoTersimpan);
+            }
+        });
+
+        function openWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function previewWaImage(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function () {
+                const hasil = reader.result;
+                try {
+                    localStorage.setItem(KEY_FOTO_PROFIL_ADMIN, hasil);
+                } catch (err) {
+                    alert('Foto terlalu besar untuk disimpan permanen. Coba pilih foto dengan ukuran lebih kecil.');
+                    console.warn(err);
+                }
+                terapkanFotoProfilAdmin(hasil);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function copyPhone() {
+            navigator.clipboard.writeText("+62 856-9571-4264");
+            alert("Nomor disalin!");
         }
 
         // FUNGSI PENCARIAN REAL-TIME TABEL PEMINJAM AKTIF

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Dashboard Admin - Perpustakaan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7.3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=7.4">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -19,24 +19,18 @@
                 </div>
                 <h3>{{ session.get('nama', 'Admin') }}</h3>
             </div>
-            
+
             <ul class="sidebar-menu">
                 <li><a href="/admin/dashboard" class="active"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
                 <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
                 <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
-                <li><a href="/admin/pembayaran" class="menu-pembayaran"><i class="fa-solid fa-money-bill-wave"></i>
-        <span>Pembayaran</span>
-        {% if jumlah_pembayaran_menunggu > 0 %}
-            <span class="payment-notification">{{ jumlah_pembayaran_menunggu }}</span>
-        {% endif %}
-    </a>
-</li>
+                <li><a href="/admin/pembayaran"><i class="fa-solid fa-money-bill-wave"></i> Pembayaran</a></li>
                 <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
             </ul>
         </div>
 
-       <!-- Tombol Log Out di Pojok Kiri Bawah Sidebar -->
+        <!-- Tombol Log Out di Pojok Kiri Bawah Sidebar -->
         <div class="sidebar-logout-box">
             <a href="/logout" class="btn-logout-sidebar">
                 <i class="fa-solid fa-right-from-bracket"></i> Log out
@@ -46,17 +40,17 @@
 
     <!-- MAIN CONTAINER -->
     <div class="main-container">
-        
-        <!-- TOPBAR (Tanpa kotak/bingkai luar, dipercantik dengan emoticon & sapaan) -->
+
+        <!-- TOPBAR -->
         <header class="topbar-admin">
             <div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px; flex-wrap: wrap;">
-                    <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Dashboard 👋</h2>
+                    <h2 style="color: #0d233a; margin: 0; font-size: 24px;">Dashboard 📊</h2>
                     <span id="tanggalHariIni" style="background: #ffffff; color: #0d233a; border: 1px solid #cbd5e1; padding: 4px 12px; border-radius: 20px; font-size: 11.5px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.03);"></span>
                 </div>
-                <p style="color: #475569; margin: 0; font-size: 13.5px;">📚 Selamat Datang, <strong style="color: #0d233a;">{{ session.get('nama', 'Admin') }}</strong>! Pantau aktivitas perpustakaan hari ini ✨</p>
+                <p style="color: #475569; margin: 0; font-size: 13.5px;">👋 Selamat Datang, <strong style="color: #0d233a;">{{ session.get('nama', 'Admin') }}</strong>! Pantau aktivitas perpustakaan hari ini ✨</p>
             </div>
-            
+
             <div style="display: flex; align-items: center; gap: 12px;">
                 <!-- Search Bar -->
                 <div class="topbar-search">
@@ -64,22 +58,98 @@
                     <input type="text" placeholder="Cari Buku..">
                 </div>
 
-                <!-- Notifikasi Permintaan Peminjaman -->
-                <a href="/admin/peminjaman" class="topbar-notif-icon" title="Permintaan peminjaman menunggu">
-                    <span>🔔</span>
-                    <span class="notif-dot">{{ peminjaman_menunggu if peminjaman_menunggu else 2 }}</span>
-                </a>
-                
+                <!-- Notifikasi Peminjaman & Pembayaran (Pop-up) -->
+                {% set jml_pinjam = peminjaman_menunggu or 0 %}
+                {% set jml_bayar = pembayaran_menunggu or 0 %}
+                {% set total_notif = jml_pinjam + jml_bayar %}
+                {% set daftar_pinjam = notif_peminjaman or [] %}
+                {% set daftar_bayar = notif_pembayaran or [] %}
+
+                <div class="notif-wrapper" id="notifWrapper">
+                    <button
+                        type="button"
+                        class="topbar-notif-icon"
+                        id="btnToggleNotif"
+                        aria-expanded="false"
+                        aria-controls="notifPopup"
+                        onclick="toggleNotifPopup(event)"
+                        title="Pengajuan pinjam buku: {{ jml_pinjam }} | Pembayaran menunggu: {{ jml_bayar }}"
+                    >
+                        <span>🔔</span>
+                        {% if total_notif > 0 %}
+                        <span class="notif-dot">{{ '99+' if total_notif > 99 else total_notif }}</span>
+                        {% endif %}
+                    </button>
+
+                    <div class="notif-popup" id="notifPopup" style="display: none;">
+                        <div class="notif-popup-header">
+                            <span>Notifikasi Terbaru</span>
+                            <span class="notif-count-badge">{{ total_notif }}</span>
+                        </div>
+
+                        <div class="notif-popup-body">
+                            <!-- Bagian Peminjaman -->
+                            <div class="notif-section-title">
+                                <span>Peminjaman Menunggu ({{ jml_pinjam }})</span>
+                                <a href="/admin/peminjaman">Lihat semua</a>
+                            </div>
+
+                            {% if daftar_pinjam %}
+                                {% for p in daftar_pinjam[:5] %}
+                                <a href="/admin/peminjaman" class="notif-item">
+                                    <div class="notif-item-icon pinjam">
+                                        <i class="fa-solid fa-hand-holding-hand"></i>
+                                    </div>
+                                    <div class="notif-item-content">
+                                        <div class="notif-item-title">Anggota #{{ p.id_anggota }} mengajukan pinjam</div>
+                                        <div class="notif-item-sub">{{ p.judul_buku or p.id_buku }} • {{ p.tgl_pinjam }}</div>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="notif-empty">Tidak ada pengajuan peminjaman baru.</div>
+                            {% endif %}
+
+                            <!-- Bagian Pembayaran -->
+                            <div class="notif-section-title notif-section-spaced">
+                                <span>Pembayaran / Denda ({{ jml_bayar }})</span>
+                                <a href="/admin/pembayaran">Lihat semua</a>
+                            </div>
+
+                            {% if daftar_bayar %}
+                                {% for b in daftar_bayar[:5] %}
+                                <a href="/admin/pembayaran" class="notif-item">
+                                    <div class="notif-item-icon bayar">
+                                        <i class="fa-solid fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="notif-item-content">
+                                        <div class="notif-item-title">{{ b.nama_lengkap or 'Anggota' }}</div>
+                                        <div class="notif-item-sub">
+                                            {{ b.judul_buku or '-' }}
+                                            {% if b.sisa_denda is defined %}
+                                                • Sisa Rp {{ "{:,.0f}".format((b.sisa_denda or 0)|float).replace(",", ".") }}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            {% else %}
+                                <div class="notif-empty">Tidak ada tagihan atau bukti bayar menunggu.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Badge Admin Kanan Atas -->
                 <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
-                    <span>👑</span> {{ session.get('nama', 'Admin') }}
+                    <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
                 </div>
             </div>
         </header>
 
         <!-- CONTENT BODY -->
         <div class="content-body">
-            
+
             <!-- 4 Kartu Statistik -->
             <div class="stat-grid-4">
                 <div class="stat-card-item">
@@ -118,7 +188,7 @@
             <!-- Bagian Ringkasan -->
             <div class="section-title">Ringkasan</div>
 
-            <!-- Grafik Peminjam per Bulan (Gridlines dihapus) -->
+            <!-- Grafik Peminjam per Bulan -->
             <div class="chart-box-container">
                 <h3 style="color: #0d233a; font-size: 16px; font-weight: bold; margin-bottom: 15px;">Peminjam per bulan</h3>
                 <div style="height: 200px; width: 100%;">
@@ -129,9 +199,7 @@
         </div>
     </div>
 
-    <!-- ========================================== -->
     <!-- MODAL POP-UP PROFIL ALA WHATSAPP -->
-    <!-- ========================================== -->
     <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
         <div class="modal-card-wa">
             <div class="wa-modal-header">
@@ -158,7 +226,22 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
-        // Tanggal otomatis di header dengan emoticon kalender
+        const KEY_FOTO_PROFIL_ADMIN = 'admin_foto_profil_permanen';
+
+        function terapkanFotoProfilAdmin(dataUrl) {
+            if (!dataUrl) return;
+
+            const sidebarBox = document.getElementById('sidebarAvatarPreview');
+            if (sidebarBox) {
+                sidebarBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+
+            const modalBox = document.getElementById('modalAvatarDisplay');
+            if (modalBox) {
+                modalBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+        }
+
         const tglHeader = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
         document.getElementById('tanggalHariIni').innerHTML = `📅 ${tglHeader}`;
 
@@ -181,8 +264,8 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
-                scales: { 
-                    y: { 
+                scales: {
+                    y: {
                         beginAtZero: true,
                         grid: { display: false },
                         ticks: {
@@ -190,10 +273,40 @@
                             precision: 0
                         }
                     },
-                    x: { 
-                        grid: { display: false } 
+                    x: {
+                        grid: { display: false }
                     }
                 }
+            }
+        });
+
+        function toggleNotifPopup(event) {
+            event.stopPropagation();
+            const popup = document.getElementById('notifPopup');
+            const btn = document.getElementById('btnToggleNotif');
+            if (!popup || !btn) return;
+
+            const isOpen = popup.style.display === 'block';
+            popup.style.display = isOpen ? 'none' : 'block';
+            btn.setAttribute('aria-expanded', String(!isOpen));
+        }
+
+        document.addEventListener('click', function (event) {
+            const wrapper = document.getElementById('notifWrapper');
+            const popup = document.getElementById('notifPopup');
+            const btn = document.getElementById('btnToggleNotif');
+            if (!wrapper || !popup) return;
+
+            if (!wrapper.contains(event.target)) {
+                popup.style.display = 'none';
+                if (btn) btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const fotoTersimpan = localStorage.getItem(KEY_FOTO_PROFIL_ADMIN);
+            if (fotoTersimpan) {
+                terapkanFotoProfilAdmin(fotoTersimpan);
             }
         });
 
@@ -206,15 +319,21 @@
         }
 
         function previewWaImage(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function() {
                 const result = reader.result;
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${result}">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${result}" style="width:100%; height:100%; object-fit:cover;">`;
+                try {
+                    localStorage.setItem(KEY_FOTO_PROFIL_ADMIN, result);
+                } catch (err) {
+                    alert('Foto terlalu besar untuk disimpan permanen. Coba pilih foto dengan ukuran lebih kecil.');
+                    console.warn(err);
+                }
+                terapkanFotoProfilAdmin(result);
             };
-            if(event.target.files[0]) {
-                reader.readAsDataURL(event.target.files[0]);
-            }
+            reader.readAsDataURL(file);
         }
 
         function copyPhone() {
@@ -222,5 +341,7 @@
             alert("Nomor telepon disalin!");
         }
     </script>
+    
 </body>
 </html>
+```[cite: 25]

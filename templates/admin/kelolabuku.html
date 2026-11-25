@@ -244,6 +244,22 @@
 
     <!-- SCRIPT JAVASCRIPT -->
     <script>
+        const KEY_FOTO_PROFIL_ADMIN = 'admin_foto_profil_permanen';
+
+        function terapkanFotoProfilAdmin(dataUrl) {
+            if (!dataUrl) return;
+
+            const sidebarBox = document.getElementById('sidebarAvatarPreview');
+            if (sidebarBox) {
+                sidebarBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+
+            const modalBox = document.getElementById('modalAvatarDisplay');
+            if (modalBox) {
+                modalBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+        }
+
         function openModalTambahBuku() {
             document.getElementById('modalTambahBuku').style.display = 'flex';
         }
@@ -251,6 +267,13 @@
         function closeModalTambahBuku() {
             document.getElementById('modalTambahBuku').style.display = 'none';
         }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const fotoTersimpan = localStorage.getItem(KEY_FOTO_PROFIL_ADMIN);
+            if (fotoTersimpan) {
+                terapkanFotoProfilAdmin(fotoTersimpan);
+            }
+        });
 
         // Script Profil WA
         function openWaProfile() { 
@@ -261,12 +284,21 @@
         }
 
         function previewWaImage(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
             const reader = new FileReader();
             reader.onload = function() {
-                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
-                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover;">`;
+                const result = reader.result;
+                try {
+                    localStorage.setItem(KEY_FOTO_PROFIL_ADMIN, result);
+                } catch (err) {
+                    alert('Foto terlalu besar untuk disimpan permanen. Coba pilih foto dengan ukuran lebih kecil.');
+                    console.warn(err);
+                }
+                terapkanFotoProfilAdmin(result);
             };
-            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+            reader.readAsDataURL(file);
         }
 
         function copyPhone() { 
@@ -274,7 +306,7 @@
             alert("Nomor disalin!"); 
         }
 
-// Tambahkan di dalam tag <script> bagian bawah:
+        // Tambahkan di dalam tag <script> bagian bawah:
         const searchInput = document.querySelector('.input-box-admin input[type="text"]');
         if (searchInput) {
             searchInput.addEventListener('input', function () {
@@ -287,7 +319,8 @@
                 });
             });
         }
-
     </script>
+    
 </body>
 </html>
+```[cite: 22]

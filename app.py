@@ -198,6 +198,48 @@ def admin_dashboard():
         total_denda = res_denda['total'] if res_denda and res_denda['total'] else 0
 
         # ==================================================
+        # NOTIFIKASI PEMINJAMAN & PEMBAYARAN (POP-UP LONCENG)
+        # ==================================================
+        cursor.execute("""
+            SELECT p.id_peminjaman, p.id_anggota, p.id_buku, p.tgl_pinjam,
+                   b.judul AS judul_buku, a.nama_lengkap
+            FROM peminjaman p
+            LEFT JOIN buku b ON p.id_buku = b.id_buku
+            LEFT JOIN anggota a ON p.id_anggota = a.id_anggota
+            WHERE p.status = 'menunggu'
+            ORDER BY p.id_peminjaman DESC
+        """)
+        notif_peminjaman = cursor.fetchall()
+        peminjaman_menunggu = len(notif_peminjaman)
+
+        cursor.execute("""
+            SELECT pg.id_pengembalian,
+                   a.nama_lengkap,
+                   b.judul AS judul_buku,
+                   (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                   COALESCE(pd.jumlah_bayar, 0) AS jumlah_bayar,
+                   GREATEST(
+                       (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) - COALESCE(pd.jumlah_bayar, 0),
+                       0
+                   ) AS sisa_denda,
+                   COALESCE(pd.status_pembayaran, 'belum_lunas') AS status_pembayaran
+            FROM pengembalian pg
+            JOIN peminjaman pm ON pg.id_peminjaman = pm.id_peminjaman
+            LEFT JOIN anggota a ON pm.id_anggota = a.id_anggota
+            LEFT JOIN buku b ON pm.id_buku = b.id_buku
+            LEFT JOIN pembayaran_denda pd ON pd.id_pengembalian = pg.id_pengembalian
+            WHERE ((COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+                   AND NOT (
+                       pd.status_pembayaran = 'lunas'
+                       OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                   ))
+               OR pd.status_pembayaran = 'menunggu'
+            ORDER BY pg.id_pengembalian DESC
+        """)
+        notif_pembayaran = cursor.fetchall()
+        pembayaran_menunggu = len(notif_pembayaran)
+
+        # ==================================================
         # JUMLAH PEMBAYARAN YANG MENUNGGU VERIFIKASI
         # ==================================================
 
@@ -260,7 +302,7 @@ def admin_dashboard():
 
         cursor.close()
         conn.close()
-
+        
         return render_template(
             'admin/dashboard.html',
             total_buku=total_buku,
@@ -269,10 +311,15 @@ def admin_dashboard():
             total_denda=total_denda,
             jumlah_pembayaran_menunggu=jumlah_pembayaran_menunggu,
             transaksi_terbaru=transaksi_terbaru,
-            data_peminjam_bulanan=data_peminjam_bulanan
+            data_peminjam_bulanan=data_peminjam_bulanan,
+            peminjaman_menunggu=peminjaman_menunggu,
+            pembayaran_menunggu=pembayaran_menunggu,
+            notif_peminjaman=notif_peminjaman,
+            notif_pembayaran=notif_pembayaran
         )
 
     return redirect(url_for('login'))
+    
 
 
 @app.route('/admin/kelolabuku', methods=['GET', 'POST'])
@@ -387,13 +434,16 @@ def admin_peminjaman():
             cursor.execute("""
                 SELECT
                     peminjaman.*,
+                    anggota.nama_lengkap AS nama_anggota,
                     buku.judul AS judul_buku,
                     COALESCE(admin_user.nama, admin_user.username, '-') AS nama_admin
                 FROM peminjaman
+                LEFT JOIN anggota ON peminjaman.id_anggota = anggota.id_anggota
                 LEFT JOIN buku ON peminjaman.id_buku = buku.id_buku
                 LEFT JOIN users AS admin_user ON peminjaman.diproses_oleh = admin_user.id_user
-                ORDER BY peminjaman.id_peminjaman DESC
+                ORDER BY peminjaman.id_peminjaman ASC
             """)
+
             peminjaman_list = cursor.fetchall()
 
             return render_template(
@@ -727,7 +777,7 @@ def admin_pembayaran():
                     THEN 0
                     ELSE 1
                 END,
-                pg.id_pengembalian DESC
+                pg.id_pengembalian ASC
         """)
         pembayaran_list = cursor.fetchall()
 

@@ -4,29 +4,62 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pembayaran Denda - FREX</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=8.1">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=33.0">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
 
-<aside class="sidebar">
+<!-- SIDEBAR USER -->
+<aside class="sidebar user-sidebar">
     <div>
         <div class="sidebar-profile">
             <div class="profile-img">
-                <i class="fa-solid fa-user"></i>
+                <i class="fa-solid fa-user-graduate"></i>
             </div>
-            <h3>{{ session.get('nama', 'Pengguna') }}</h3>
+            <h3>
+                {{ session.get('nama', 'USER') }}<br>
+                <span class="sidebar-kelas">{{ session.get('kelas', '-') }}</span>
+            </h3>
         </div>
 
+        <!-- MENU SIDEBAR -->
         <ul class="custom-sidebar-menu">
-            <li><a href="/user/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
-            <li><a href="/user/databuku"><i class="fa-solid fa-book"></i> Data Buku</a></li>
-            <li><a href="/user/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman Saya</a></li>
-            <li><a href="/user/pembayaran" class="active"><i class="fa-solid fa-wallet"></i> Pembayaran Denda</a></li>
-            <li><a href="/user/riwayat"><i class="fa-solid fa-clock-rotate-left"></i> Riwayat</a></li>
-            <li><a href="/user/biodata"><i class="fa-solid fa-user"></i> Biodata</a></li>
-            <li><a href="/user/laporan"><i class="fa-solid fa-comment-dots"></i> Laporan Bug &amp; Saran</a></li>
+            <li>
+                <a href="/user/dashboard" class="{% if request.path == '/user/dashboard' %}active{% endif %}">
+                    <i class="fa-solid fa-house"></i> Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="/user/databuku" class="{% if request.path == '/user/databuku' %}active{% endif %}">
+                    <i class="fa-solid fa-book"></i> Data Buku
+                </a>
+            </li>
+            <li>
+                <a href="/user/peminjaman" class="{% if request.path == '/user/peminjaman' %}active{% endif %}">
+                    <i class="fa-solid fa-hand-holding-hand"></i> Peminjaman Saya
+                </a>
+            </li>
+            <li>
+                <a href="/user/pembayaran" class="{% if request.path == '/user/pembayaran' %}active{% endif %}">
+                    <i class="fa-solid fa-wallet"></i> Pembayaran Denda
+                </a>
+            </li>
+            <li>
+                <a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}">
+                    <i class="fa-solid fa-rotate-left"></i> Riwayat
+                </a>
+            </li>
+            <li>
+                <a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}">
+                    <i class="fa-solid fa-users"></i> Biodata
+                </a>
+            </li>
+            <li>
+                <a href="/user/laporan" class="{% if request.path == '/user/laporan' %}active{% endif %}">
+                    <i class="fa-solid fa-comment-dots"></i> Laporan Bug &amp; Saran
+                </a>
+            </li>
         </ul>
     </div>
 
@@ -37,14 +70,12 @@
     </div>
 </aside>
 
-<div class="main-container">
+<!-- MAIN CONTAINER -->
+<div class="main-container main-container-user">
 
-    <header class="topbar-admin">
-        <h2 class="topbar-heading">Pembayaran Denda</h2>
-        <div class="admin-badge-top">
-            <i class="fa-solid fa-user"></i>
-            {{ session.get('nama', 'Pengguna') }}
-        </div>
+    <header class="page-header-user">
+        <h2>💳 Pembayaran Denda</h2>
+        <p>Kelola dan bayar denda keterlambatan atau kerusakan buku Anda 💰</p>
     </header>
 
     <main class="payment-content">

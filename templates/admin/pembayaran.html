@@ -8,26 +8,28 @@
 </head>
 <body class="admin-bayar-body">
 
+   <!-- SIDEBAR ADMIN -->
     <aside class="sidebar">
         <div>
-            <div class="sidebar-profile">
-                <div class="profile-img">
-                    <i class="fa-solid fa-user-shield"></i>
+            <!-- Bagian Profil & Nama Admin (Dinamis dari Session Flask) -->
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user text-slate-700" style="font-size: 26px;"></i>
                 </div>
                 <h3>{{ session.get('nama', 'Admin') }}</h3>
-                <p class="admin-role-subtitle">Administrator</p>
             </div>
-
+            
             <ul class="sidebar-menu">
                 <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
-                <li><a href="/admin/peminjaman"><i class="fa-solid fa-book-open"></i> Peminjaman</a></li>
+                <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
                 <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
                 <li><a href="/admin/pembayaran" class="active"><i class="fa-solid fa-money-bill-wave"></i> Pembayaran</a></li>
-                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata Anggota</a></li>
+                <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
             </ul>
         </div>
 
+       <!-- Tombol Log Out di Pojok Kiri Bawah Sidebar -->
         <div class="sidebar-logout-box">
             <a href="/logout" class="btn-logout-sidebar">
                 <i class="fa-solid fa-right-from-bracket"></i> Log out
@@ -35,153 +37,246 @@
         </div>
     </aside>
 
-    <div class="main-content">
-        <div class="page-title-box">
-            <h2><i class="fa-solid fa-money-bill-wave"></i> Pembayaran Denda</h2>
-            <span class="page-subtitle">Kelola pembayaran denda peminjaman (Tunai &amp; QRIS)</span>
-        </div>
+    <!-- MAIN CONTAINER -->
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0 0 6px 0; font-size: 24px;">Pembayaran Denda</h2>
+                <p style="color: #475569; margin: 0; font-size: 13.5px;">Kelola pembayaran denda peminjaman (Tunai &amp; QRIS)</p>
+            </div>
+            <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
+                <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Admin') }}
+            </div>
+        </header>
 
-        {% if request.args.get('qris_terkirim') %}
-        <div class="alert-qris-terkirim">
-            <i class="fa-solid fa-circle-check"></i> QRIS berhasil dikirim ke halaman pembayaran user. Menunggu user men-scan &amp; mengirim bukti pembayaran.
-        </div>
-        {% endif %}
+        <div class="content-body">
+            {% if request.args.get('qris_terkirim') %}
+            <div class="alert-qris-terkirim">
+                <i class="fa-solid fa-circle-check"></i> QRIS berhasil dikirim ke halaman pembayaran user. Menunggu user men-scan &amp; mengirim bukti pembayaran.
+            </div>
+            {% endif %}
 
-        <div class="grid-pembayaran">
-            <div class="card-panel">
-                <h3><i class="fa-solid fa-list"></i> Daftar Pengembalian Berdenda</h3>
-                <div class="table-responsive">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>Anggota</th>
-                                <th>Buku</th>
-                                <th>Total Denda</th>
-                                <th>Metode</th>
-                                <th>Status</th>
-                                <th>Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% if pembayaran_list %}
-                                {% for item in pembayaran_list %}
-                                {% set total_denda = (item.total_denda or 0)|float %}
-                                {% set sudah_bayar = (item.jumlah_bayar or 0)|float %}
-                                {% set sisa_denda = total_denda - sudah_bayar %}
-                                {% if sisa_denda < 0 %}{% set sisa_denda = 0 %}{% endif %}
+           <div class="grid-pembayaran">
+                <!-- 1. TABEL FULL KE SAMPING -->
+                <div class="card-panel">
+                    <h3><i class="fa-solid fa-list"></i> Daftar Pengembalian Berdenda</h3>
+                    <div class="table-responsive">
+                        <table>
+                            <thead>
                                 <tr>
-                                    <td>#{{ item.id_pengembalian }}</td>
-                                    <td>
-                                        <strong>{{ item.nama_lengkap or '-' }}</strong><br>
-                                        <small class="sub-teks">{{ item.kelas or '' }}</small>
-                                    </td>
-                                    <td>{{ item.judul_buku or '-' }}</td>
-                                    <td>
-                                        <strong>Rp {{ "{:,.0f}".format(total_denda).replace(",", ".") }}</strong><br>
-                                        <small class="sub-teks">Sisa: Rp {{ "{:,.0f}".format(sisa_denda).replace(",", ".") }}</small>
-                                    </td>
-                                    <td>{{ (item.metode_pembayaran or '-')|upper }}</td>
-                                    <td>
-                                        {% if item.status_pembayaran == 'lunas' %}
-                                            <span class="badge-lunas">Sudah Dibayar</span>
-                                        {% elif item.status_pembayaran == 'menunggu' %}
-                                            <span class="badge-menunggu">Menunggu Scan / Verifikasi</span>
-                                        {% else %}
-                                            <span class="badge-belum">Belum Dibayar</span>
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <button
-                                            type="button"
-                                            class="btn-pilih"
-                                            data-id="{{ item.id_pengembalian }}"
-                                            data-anggota="{{ item.nama_lengkap or '-' }}"
-                                            data-buku="{{ item.judul_buku or '-' }}"
-                                            data-total="{{ total_denda|int }}"
-                                            data-sisa="{{ sisa_denda|int }}"
-                                            data-metode="{{ item.metode_pembayaran or 'tunai' }}"
-                                            data-status="{{ item.status_pembayaran or 'belum_lunas' }}"
-                                            data-catatan="{{ item.catatan or '' }}"
-                                            onclick="pilihPengembalian(this)"
-                                        >
-                                            Pilih
-                                        </button>
-                                    </td>
+                                    <th>No</th>
+                                    <th>Anggota</th>
+                                    <th>Buku</th>
+                                    <th>Total Denda</th>
+                                    <th>Metode</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
                                 </tr>
-                                {% endfor %}
-                            {% else %}
-                                <tr>
-                                    <td colspan="7" class="baris-kosong">
-                                        Belum ada data pengembalian berdenda.
-                                    </td>
-                                </tr>
-                            {% endif %}
-                        </tbody>
-                    </table>
+                            </thead>
+                            <tbody>
+                                {% if pembayaran_list %}
+                                    {% for item in pembayaran_list %}
+                                    {% set total_denda = (item.total_denda or 0)|float %}
+                                    {% set sudah_bayar = (item.jumlah_bayar or 0)|float %}
+                                    {% set sisa_denda = total_denda - sudah_bayar %}
+                                    {% if sisa_denda < 0 %}{% set sisa_denda = 0 %}{% endif %}
+                                    <tr>
+                                        <td class="nowrap-cell">{{ loop.index }}</td>
+                                        <td class="nowrap-cell">
+                                            <strong>{{ item.nama_lengkap or '-' }}</strong><br>
+                                            <small class="sub-teks">ID Anggota: {{ item.id_anggota or '-' }}{% if item.kelas %} • {{ item.kelas }}{% endif %}</small>
+                                        </td>
+                                        <td class="judul-buku-cell">{{ item.judul_buku or '-' }}</td>
+                                        <td class="nowrap-cell">
+                                            <strong>Rp {{ "{:,.0f}".format(total_denda).replace(",", ".") }}</strong><br>
+                                            <small class="sub-teks">Sisa: Rp {{ "{:,.0f}".format(sisa_denda).replace(",", ".") }}</small>
+                                        </td>
+                                        <td class="nowrap-cell">{{ (item.metode_pembayaran or '-')|upper }}</td>
+                                        <td class="nowrap-cell">
+                                            {% if item.status_pembayaran == 'lunas' %}
+                                                <span class="badge-lunas">Sudah Dibayar</span>
+                                            {% elif item.status_pembayaran == 'menunggu' %}
+                                                <span class="badge-menunggu">Menunggu Scan / Verifikasi</span>
+                                            {% else %}
+                                                <span class="badge-belum">Belum Dibayar</span>
+                                            {% endif %}
+                                        </td>
+                                        <td class="nowrap-cell">
+                                            <button
+                                                type="button"
+                                                class="btn-pilih"
+                                                data-id="{{ item.id_pengembalian }}"
+                                                data-no="{{ loop.index }}"
+                                                data-id-anggota="{{ item.id_anggota or '-' }}"
+                                                data-anggota="{{ item.nama_lengkap or '-' }}"
+                                                data-buku="{{ item.judul_buku or '-' }}"
+                                                data-total="{{ total_denda|int }}"
+                                                data-sisa="{{ sisa_denda|int }}"
+                                                data-metode="{{ item.metode_pembayaran or 'tunai' }}"
+                                                data-status="{{ item.status_pembayaran or 'belum_lunas' }}"
+                                                data-catatan="{{ item.catatan or '' }}"
+                                                onclick="pilihPengembalian(this)"
+                                            >
+                                                Pilih
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="7" class="baris-kosong">
+                                            Belum ada data pengembalian berdenda.
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 2. BAGIAN PEMBAYARAN DI BAWAH TABEL -->
+                <div class="card-panel">
+                    <h3><i class="fa-solid fa-qrcode"></i> Proses Pembayaran &amp; QRIS</h3>
+
+                    <div class="info-tagihan-box" id="infoTagihan">
+                        Pilih baris pengembalian berdenda pada tabel di atas.
+                    </div>
+
+                    <form id="formKirimQris" method="POST" action="">
+                        <button type="submit" id="btnKirimQris" class="btn-kirim-qris" disabled>
+                            <i class="fa-solid fa-paper-plane"></i> Kirim QRIS kepada User
+                        </button>
+                    </form>
+
+                    <form id="formBayar" method="POST" action="">
+                        <div class="form-group">
+                            <label for="metodePembayaran">Jalur Transaksi</label>
+                            <select id="metodePembayaran" name="metode_pembayaran" class="form-control" onchange="toggleMetode()">
+                                <option value="tunai">Tunai</option>
+                                <option value="qris">QRIS</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" id="grupNominalTunai">
+                            <label for="nominalBayar">Nominal Bayar Tunai (Rp)</label>
+                            <input
+                                type="number"
+                                id="nominalBayar"
+                                name="nominal_bayar"
+                                class="form-control"
+                                min="0"
+                                step="100"
+                                placeholder="Masukkan nominal uang diterima"
+                                oninput="hitungKembalian()"
+                            >
+                            <div class="kembalian-text" id="infoKembalian">Kembalian: Rp 0</div>
+                        </div>
+
+                        <div class="qris-box" id="boxQris">
+                            <div class="qris-box-judul">Pembayaran QRIS / Bukti User</div>
+                            <div class="qris-preview-img" id="boxQrPreview" data-qris-tersedia="{{ '1' if qris_tersedia else '0' }}">
+                                {% if qris_tersedia %}
+                                    <img src="{{ url_for('static', filename='images/qris_perpustakaan.png') }}" alt="QRIS Perpustakaan">
+                                {% else %}
+                                    <span class="qris-belum-ada">Simpan gambar QRIS di static/images/qris_perpustakaan.png</span>
+                                {% endif %}
+                            </div>
+                            <div id="statusQrKanan" class="status-qr-kanan">
+                                Klik "Kirim QRIS kepada User" agar QRIS muncul di halaman user.
+                            </div>
+                        </div>
+
+                        <button type="submit" id="btnKonfirmasiBayar" class="btn-bayar" disabled>
+                            <i class="fa-solid fa-check-circle"></i> Konfirmasi Sudah Dibayar
+                        </button>
+                    </form>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card-panel">
-                <h3><i class="fa-solid fa-qrcode"></i> Proses Pembayaran &amp; QRIS</h3>
-
-                <div class="info-tagihan-box" id="infoTagihan">
-                    Pilih baris pengembalian berdenda pada tabel di sebelah kiri.
+    <!-- MODAL PROFIL WHATSAPP -->
+    <div id="waProfileModal" class="modal-overlay-wa" style="display: none;">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil Admin</h3>
+                <button type="button" class="wa-close-btn" onclick="closeWaProfile()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay">
+                    <i class="fa-solid fa-user" style="font-size: 60px; color: #8696a0;"></i>
                 </div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
 
-                <form id="formKirimQris" method="POST" action="">
-                    <button type="submit" id="btnKirimQris" class="btn-kirim-qris" disabled>
-                        <i class="fa-solid fa-paper-plane"></i> Kirim QRIS kepada User
-                    </button>
-                </form>
-
-                <form id="formBayar" method="POST" action="">
-                    <div class="form-group">
-                        <label for="metodePembayaran">Jalur Transaksi</label>
-                        <select id="metodePembayaran" name="metode_pembayaran" class="form-control" onchange="toggleMetode()">
-                            <option value="tunai">Tunai</option>
-                            <option value="qris">QRIS</option>
-                        </select>
+                <div class="wa-info-group" style="margin-top: 20px;">
+                    <div class="wa-info-label">Phone</div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value">+62 856-9571-4264</span>
+                        <i class="fa-regular fa-copy wa-edit-icon" onclick="copyPhone()" title="Salin nomor"></i>
                     </div>
-
-                    <div class="form-group" id="grupNominalTunai">
-                        <label for="nominalBayar">Nominal Bayar Tunai (Rp)</label>
-                        <input
-                            type="number"
-                            id="nominalBayar"
-                            name="nominal_bayar"
-                            class="form-control"
-                            min="0"
-                            step="100"
-                            placeholder="Masukkan nominal uang diterima"
-                            oninput="hitungKembalian()"
-                        >
-                        <div class="kembalian-text" id="infoKembalian">Kembalian: Rp 0</div>
-                    </div>
-
-                    <div class="qris-box" id="boxQris">
-                        <div class="qris-box-judul">Pembayaran QRIS / Bukti User</div>
-                        <div class="qris-preview-img" id="boxQrPreview" data-qris-tersedia="{{ '1' if qris_tersedia else '0' }}">
-                            {% if qris_tersedia %}
-                                <img src="{{ url_for('static', filename='images/qris_perpustakaan.png') }}" alt="QRIS Perpustakaan">
-                            {% else %}
-                                <span class="qris-belum-ada">Simpan gambar QRIS di static/images/qris_perpustakaan.png</span>
-                            {% endif %}
-                        </div>
-                        <div id="statusQrKanan" class="status-qr-kanan">
-                            Klik "Kirim QRIS kepada User" agar QRIS muncul di halaman user.
-                        </div>
-                    </div>
-
-                    <button type="submit" id="btnKonfirmasiBayar" class="btn-bayar" disabled>
-                        <i class="fa-solid fa-check-circle"></i> Konfirmasi Sudah Dibayar
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
+        const KEY_FOTO_PROFIL_ADMIN = 'admin_foto_profil_permanen';
+
+        function terapkanFotoProfilAdmin(dataUrl) {
+            if (!dataUrl) return;
+
+            const sidebarBox = document.getElementById('sidebarAvatarPreview');
+            if (sidebarBox) {
+                sidebarBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+
+            const modalBox = document.getElementById('modalAvatarDisplay');
+            if (modalBox) {
+                modalBox.innerHTML = `<img src="${dataUrl}" alt="Foto Profil Admin" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const fotoTersimpan = localStorage.getItem(KEY_FOTO_PROFIL_ADMIN);
+            if (fotoTersimpan) {
+                terapkanFotoProfilAdmin(fotoTersimpan);
+            }
+        });
+
+        function openWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeWaProfile() {
+            const modal = document.getElementById('waProfileModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function previewWaImage(e) {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function () {
+                const hasil = reader.result;
+                try {
+                    localStorage.setItem(KEY_FOTO_PROFIL_ADMIN, hasil);
+                } catch (err) {
+                    alert('Foto terlalu besar untuk disimpan permanen. Coba pilih foto dengan ukuran lebih kecil.');
+                    console.warn(err);
+                }
+                terapkanFotoProfilAdmin(hasil);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function copyPhone() {
+            navigator.clipboard.writeText("+62 856-9571-4264");
+            alert("Nomor disalin!");
+        }
+
         let sisaAktif = 0;
 
         function formatRupiah(angka) {
@@ -190,6 +285,8 @@
 
         function pilihPengembalian(btn) {
             const id = btn.dataset.id;
+            const no = btn.dataset.no;
+            const idAnggota = btn.dataset.idAnggota || '-';
             const anggota = btn.dataset.anggota;
             const buku = btn.dataset.buku;
             const total = Number(btn.dataset.total || 0);
@@ -204,7 +301,7 @@
             document.getElementById('formBayar').action = `/admin/bayar_pengembalian/${id}`;
 
             document.getElementById('infoTagihan').innerHTML = `
-                <div><strong>Pengembalian #${id}</strong> — ${anggota} (${buku})</div>
+                <div><strong>No. ${no}</strong> — ${anggota} (ID Anggota: ${idAnggota}) • ${buku}</div>
                 <div class="info-tagihan-detail">Total Denda: <strong>${formatRupiah(total)}</strong> | Sisa Tagihan: <strong>${formatRupiah(sisa)}</strong></div>
             `;
 
@@ -275,5 +372,7 @@
 
         toggleMetode();
     </script>
+    
 </body>
 </html>
+```[cite: 20]
