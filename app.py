@@ -1769,35 +1769,58 @@ def user_batal_peminjaman(id_peminjaman):
     return redirect(url_for('user_peminjaman'))
 
 
+
 @app.route('/user/update_biodata', methods=['POST'])
 def user_update_biodata():
     if session.get('role') in ['siswa', 'user']:
         user_id = session.get('id_user')
+
         nama = request.form.get('nama', '').strip()
         email = request.form.get('email', '').strip()
+        kelas = request.form.get('kelas', '').strip()
+
         telepon_raw = request.form.get('telepon', '').strip()
         no_hp = None if not telepon_raw or telepon_raw == '-' else telepon_raw
 
-        if not nama or not email:
+        if not nama or not email or not kelas:
             return redirect(url_for('user_biodata'))
 
         conn = buat_koneksi()
         cursor = conn.cursor(buffered=True)
+
         try:
-            cursor.execute(
-                "UPDATE anggota SET nama_lengkap = %s, email = %s, no_hp = %s WHERE id_anggota = %s",
-                (nama, email, no_hp, user_id)
-            )
-            cursor.execute("UPDATE users SET nama = %s, email = %s WHERE id_user = %s", (nama, email, user_id))
+            cursor.execute("""
+                UPDATE anggota
+                SET
+                    nama_lengkap = %s,
+                    email = %s,
+                    no_hp = %s,
+                    kelas = %s
+                WHERE id_anggota = %s
+            """, (nama, email, no_hp, kelas, user_id))
+
+            cursor.execute("""
+                UPDATE users
+                SET nama = %s, email = %s
+                WHERE id_user = %s
+            """, (nama, email, user_id))
+
             conn.commit()
+
             session['nama'] = nama
+
         except Exception as e:
             conn.rollback()
             print(f"Error update biodata: {e}")
-        cursor.close()
-        conn.close()
+
+        finally:
+            cursor.close()
+            conn.close()
+
         return redirect(url_for('user_biodata'))
+
     return redirect(url_for('login'))
+
 
 
 @app.route('/logout')

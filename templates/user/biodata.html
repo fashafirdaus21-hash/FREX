@@ -346,51 +346,7 @@
         </div>
     </div>
 
-    <!-- MODAL POP-UP EDIT BIODATA -->
-    <div id="modalEditBiodata" class="modal-edit-biodata-overlay">
-        <div class="modal-edit-biodata-card">
-            <div class="modal-edit-header">
-                <h3>Edit Biodata Anggota</h3>
-                <button class="wa-close-btn" onclick="closeEditBiodataModal()" style="position: absolute; right: 20px; top: 18px; background:transparent; border:none; color:white; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-            
-            <!-- PERBAIKAN 2: Mengarahkan form ke backend Flask (/user/update_biodata) -->
-            <form action="/user/update_biodata" method="POST">
-                <div class="modal-edit-body">
-                    <div class="modal-form-group">
-                        <label>Nama Lengkap</label>
-                        <input type="text" name="nama" id="inputNama" required>
-                    </div>
-                    <div class="modal-form-group">
-                        <label>Email</label>
-                        <input type="email" name="email" id="inputEmail" required>
-                    </div>
-                    <div class="modal-form-group">
-                        <label>No. Telepon (Opsional)</label>
-                        <input type="text" name="telepon" id="inputTelepon">
-                    </div>
-
-
-<div class="modal-form-group">
-    <label>Kelas</label>
-    <input
-        type="text"
-        name="kelas"
-        id="inputKelas"
-        maxlength="50"
-        placeholder="Contoh: RT-1"
-        required>
-</div>
-
-
-                    <div class="modal-edit-footer">
-                        <button type="button" class="btn-modal-batal" onclick="closeEditBiodataModal()">Batal</button>
-                        <button type="submit" class="btn-modal-simpan">Simpan Perubahan</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
+    
 
    
 <!-- MODAL PROFIL DAN EDIT BIODATA -->
@@ -436,26 +392,7 @@
         });
 
        
-function openEditBiodataModal() {
-    document.getElementById('inputNama').value =
-        document.getElementById('valNama').innerText.replace(': ', '').trim();
 
-    document.getElementById('inputEmail').value =
-        document.getElementById('valEmail').innerText.replace(': ', '').trim();
-
-    document.getElementById('inputTelepon').value =
-        document.getElementById('valTelepon').innerText.replace(': ', '').trim();
-
-    document.getElementById('inputKelas').value =
-        document.getElementById('valKelas').innerText.replace(': ', '').trim();
-
-    document.getElementById('modalEditBiodata').style.display = 'flex';
-}
-
-
-        function closeEditBiodataModal() {
-            document.getElementById('modalEditBiodata').style.display = 'none';
-        }
 
         function previewBiodataImage(e) {
             if (e.target.files && e.target.files[0]) {
