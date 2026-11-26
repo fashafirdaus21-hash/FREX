@@ -1191,24 +1191,67 @@ def user_ajukan_peminjaman():
         conn.close()
 
 
+
 @app.route('/user/peminjaman')
 def user_peminjaman():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
-        user_id = session.get('id_user')
-        cursor.execute("""
-            SELECT peminjaman.*, buku.judul, buku.penulis
-            FROM peminjaman
-            JOIN buku ON peminjaman.id_buku = buku.id_buku
-            WHERE peminjaman.id_anggota = %s
-            AND peminjaman.status IN ('menunggu', 'dipinjam')
-        """, (user_id,))
-        peminjaman_list = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return render_template('user/peminjaman.html', peminjaman_list=peminjaman_list)
+
+        try:
+            user_id = session.get('id_user')
+
+            cursor.execute("""
+                SELECT
+                    peminjaman.*,
+                    buku.judul,
+                    buku.penulis,
+                    buku.cover,
+                    buku.penerbit,
+                    buku.tahun_terbit,
+                    buku.jumlah_total,
+                    buku.jumlah_tersedia,
+                    kategori.nama_kategori AS kategori,
+
+                    UNIX_TIMESTAMP(
+                        DATE_ADD(
+                            peminjaman.created_at,
+                            INTERVAL 24 HOUR
+                        )
+                    ) AS batas_persetujuan_ts
+
+                FROM peminjaman
+
+                JOIN buku
+                    ON peminjaman.id_buku = buku.id_buku
+
+                LEFT JOIN kategori
+                    ON buku.id_kategori = kategori.id_kategori
+
+                WHERE peminjaman.id_anggota = %s
+                  AND peminjaman.status IN ('menunggu', 'dipinjam')
+
+                ORDER BY peminjaman.id_peminjaman DESC
+            """, (user_id,))
+
+            peminjaman_list = cursor.fetchall()
+
+            return render_template(
+                'user/peminjaman.html',
+                peminjaman_list=peminjaman_list
+            )
+
+        except Exception as e:
+            print("Gagal memuat peminjaman user:", e)
+            return "Gagal memuat data peminjaman.", 500
+
+        finally:
+            cursor.close()
+            conn.close()
+
     return redirect(url_for('login'))
+
+
 
 
 @app.route('/user/riwayat')
@@ -1216,19 +1259,52 @@ def user_riwayat():
     if session.get('role') in ['siswa', 'user']:
         conn = buat_koneksi()
         cursor = conn.cursor(dictionary=True, buffered=True)
-        user_id = session.get('id_user')
-        cursor.execute("""
-            SELECT peminjaman.*, buku.judul, buku.penulis
-            FROM peminjaman
-            JOIN buku ON peminjaman.id_buku = buku.id_buku
-            WHERE peminjaman.id_anggota = %s
-            ORDER BY peminjaman.id_peminjaman DESC
-        """, (user_id,))
-        riwayat_list = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return render_template('user/riwayat.html', riwayat_list=riwayat_list)
+
+        try:
+            user_id = session.get('id_user')
+
+            cursor.execute("""
+                SELECT
+                    peminjaman.*,
+                    buku.judul,
+                    buku.penulis,
+                    buku.cover,
+                    buku.penerbit,
+                    buku.tahun_terbit,
+                    buku.jumlah_total,
+                    buku.jumlah_tersedia,
+                    kategori.nama_kategori AS kategori
+
+                FROM peminjaman
+
+                JOIN buku
+                    ON peminjaman.id_buku = buku.id_buku
+
+                LEFT JOIN kategori
+                    ON buku.id_kategori = kategori.id_kategori
+
+                WHERE peminjaman.id_anggota = %s
+
+                ORDER BY peminjaman.id_peminjaman DESC
+            """, (user_id,))
+
+            riwayat_list = cursor.fetchall()
+
+            return render_template(
+                'user/riwayat.html',
+                riwayat_list=riwayat_list
+            )
+
+        except Exception as e:
+            print("Gagal memuat riwayat user:", e)
+            return "Gagal memuat data riwayat.", 500
+
+        finally:
+            cursor.close()
+            conn.close()
+
     return redirect(url_for('login'))
+
 
 
 def _ambil_data_pembayaran_user(cursor, user_id):

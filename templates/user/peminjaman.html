@@ -421,7 +421,7 @@
                         class="tombol-cover-peminjaman"
                         data-judul="{{ item.judul }}"
                         data-penulis="{{ item.penulis or '-' }}"
-                        data-cover="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'default_cover.jpg')) }}"
+                        data-cover="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'frex_cover_1.jpg')) }}"
                         data-penerbit="{{ item.penerbit or '-' }}"
                         data-tahun="{{ item.tahun_terbit or '-' }}"
                         data-kategori="{{ item.kategori or '-' }}"
@@ -431,10 +431,10 @@
                         title="Klik untuk melihat detail buku">
 
                         <img
-                            src="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'default_cover.jpg')) }}"
+                            src="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'frex_cover_1.jpg')) }}"
                             alt="Cover {{ item.judul }}"
                             class="cover-peminjaman"
-                            onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}'">
+                            onerror="this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}'">
 
                     </button>
 

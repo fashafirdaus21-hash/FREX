@@ -485,12 +485,12 @@
             data-pernah="{{ buku.total_pernah_dipinjam }}"
             data-sedang="{{ buku.sedang_dipinjam }}"
             data-status="{{ status_peminjaman.get(buku.id_buku, '') }}"
-            data-cover="{{ url_for('static', filename='uploads/covers/' + (buku.cover if buku.cover else 'default_cover.jpg')) }}">
+            data-cover="{{ url_for('static', filename='uploads/covers/' + (buku.cover if buku.cover else 'frex_cover_1.jpg')) }}">
 
         <img class="cover-katalog"
-             src="{{ url_for('static', filename='uploads/covers/' + (buku.cover if buku.cover else 'default_cover.jpg')) }}"
+             src="{{ url_for('static', filename='uploads/covers/' + (buku.cover if buku.cover else 'frex_cover_1.jpg')) }}"
              alt="Cover {{ buku.judul }}"
-             onerror="this.src='{{ url_for('static', filename='uploads/covers/default_cover.jpg') }}'">
+             onerror="this.onerror=null; this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}'">
 
         <div class="judul-katalog">{{ buku.judul }}</div>
         <div class="penulis-katalog">{{ buku.penulis }}</div>

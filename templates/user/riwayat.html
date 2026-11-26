@@ -247,7 +247,7 @@
                         data-status="{{ item.status | lower }}"
                          data-judul="{{ item.judul }}"
                          data-penulis="{{ item.penulis or '-' }}"
-                            data-cover="{{ url_for('static', filename='uploads/covers/' ~ (item.cover if item.cover else 'default_cover.jpg')) }}"
+                            data-cover="{{ url_for('static', filename='uploads/covers/' ~ (item.cover if item.cover else 'frex_cover_1.jpg')) }}"
                      data-status-detail="{{ item.status | title }}"
                       data-dibuat="{{ item.created_at or '-' }}"
                   data-pinjam="{{ item.tgl_pinjam or '-' }}"
