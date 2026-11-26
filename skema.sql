@@ -396,6 +396,34 @@ ALTER TABLE `pembayaran_denda`
   ADD CONSTRAINT `fk_bayar_anggota` FOREIGN KEY (`id_anggota`) REFERENCES `anggota` (`id_anggota`) ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_bayar_peminjaman` FOREIGN KEY (`id_peminjaman`) REFERENCES `peminjaman` (`id_peminjaman`) ON DELETE CASCADE ON UPDATE CASCADE,
   ADD CONSTRAINT `fk_bayar_pengembalian` FOREIGN KEY (`id_pengembalian`) REFERENCES `pengembalian` (`id_pengembalian`) ON DELETE SET NULL ON UPDATE CASCADE;
+
+
+-- ==========================================
+-- STRUKTUR TABEL LAPORAN BUG & SARAN
+-- ==========================================
+
+CREATE TABLE `laporan_bug` (
+    `id_laporan` INT(11) NOT NULL AUTO_INCREMENT,
+    `id_anggota` INT(11) NOT NULL,
+    `jenis` ENUM('bug','saran') NOT NULL,
+    `judul` VARCHAR(150) NOT NULL,
+    `isi_laporan` TEXT NOT NULL,
+    `foto_bukti` VARCHAR(255) DEFAULT NULL,
+    `status` ENUM('baru','diproses','selesai') NOT NULL DEFAULT 'baru',
+    `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    PRIMARY KEY (`id_laporan`),
+    KEY `fk_laporan_anggota` (`id_anggota`),
+
+    CONSTRAINT `fk_laporan_anggota`
+        FOREIGN KEY (`id_anggota`)
+        REFERENCES `anggota` (`id_anggota`)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+) ENGINE=InnoDB
+DEFAULT CHARSET=utf8mb4
+COLLATE=utf8mb4_general_ci;
+
 COMMIT;
 
 --
