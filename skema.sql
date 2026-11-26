@@ -196,10 +196,12 @@ CREATE TABLE `pengembalian` (
   `id_pengembalian` int(11) NOT NULL,
   `id_peminjaman` int(11) NOT NULL,
   `tgl_kembali` date NOT NULL,
-  `kondisi_buku` enum('baik','rusak ringan','rusak berat') NOT NULL,
+  `kondisi_buku` enum('baik','rusak ringan','rusak berat','hilang') NOT NULL,
   `denda_telat` decimal(10,2) DEFAULT 0.00,
   `denda_rusak` decimal(10,2) DEFAULT 0.00,
+  `biaya_hilang` decimal(10,2) DEFAULT 0.00,
   `diproses_oleh` int(11) DEFAULT NULL,
+  `foto_bukti` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

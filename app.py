@@ -12,12 +12,17 @@ app.secret_key = 'kunci_rahasia_perpustakaan'
 # ==========================================
 UPLOAD_FOLDER = 'static/uploads/covers'
 BUKTI_BAYAR_FOLDER = 'static/uploads/bukti_bayar'
+LAPORAN_FOLDER = 'static/uploads/laporan'
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['BUKTI_BAYAR_FOLDER'] = BUKTI_BAYAR_FOLDER
+app.config['LAPORAN_FOLDER'] = LAPORAN_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(BUKTI_BAYAR_FOLDER, exist_ok=True)
+os.makedirs(LAPORAN_FOLDER, exist_ok=True)
 os.makedirs('static/images', exist_ok=True)
 
 
@@ -193,7 +198,17 @@ def admin_dashboard():
         res_user = cursor.fetchone()
         total_pengguna = res_user['total'] if res_user and res_user['total'] else 0
 
-        cursor.execute("SELECT SUM(denda_telat + denda_rusak) as total FROM pengembalian")
+        cursor.execute("""
+            SELECT
+                COALESCE(
+                    SUM(
+                        COALESCE(denda_telat, 0) +
+                        COALESCE(denda_rusak, 0)
+                    ),
+                    0
+                ) AS total
+            FROM pengembalian
+        """)
         res_denda = cursor.fetchone()
         total_denda = res_denda['total'] if res_denda and res_denda['total'] else 0
 
@@ -1711,12 +1726,107 @@ def user_biodata():
     return redirect(url_for('login'))
 
 
-@app.route('/user/laporan')
+
+@app.route('/user/laporan', methods=['GET', 'POST'])
 def user_laporan():
     if session.get('role') not in ['siswa', 'user']:
         return redirect(url_for('login'))
 
+    if request.method == 'POST':
+        user_id = session.get('id_user')
+
+        jenis = request.form.get('jenis', '').strip()
+        judul = request.form.get('judul', '').strip()
+        isi_laporan = request.form.get('isi_laporan', '').strip()
+
+        foto = request.files.get('foto')
+        nama_file = None
+        lokasi_file = None
+
+        # Validasi jenis laporan
+        if jenis not in ['bug', 'saran']:
+            return redirect(url_for(
+                'user_laporan', status='tidak_valid'
+            ))
+
+        # Validasi judul dan isi
+        if not judul or not isi_laporan:
+            return redirect(url_for(
+                'user_laporan', status='tidak_valid'
+            ))
+
+        if len(judul) > 150:
+            return redirect(url_for(
+                'user_laporan', status='judul_panjang'
+            ))
+
+        # Validasi foto
+        if foto and foto.filename:
+            if not allowed_file(foto.filename):
+                return redirect(url_for(
+                    'user_laporan', status='format_foto'
+                ))
+
+            foto.stream.seek(0, os.SEEK_END)
+            ukuran_file = foto.stream.tell()
+            foto.stream.seek(0)
+
+            if ukuran_file > 5 * 1024 * 1024:
+                return redirect(url_for(
+                    'user_laporan', status='foto_besar'
+                ))
+
+            nama_asli = secure_filename(foto.filename)
+            nama_file = f"laporan_{user_id}_{time.time_ns()}_{nama_asli}"
+
+            lokasi_file = os.path.join(
+                app.config['LAPORAN_FOLDER'],
+                nama_file
+            )
+
+        conn = buat_koneksi()
+        cursor = conn.cursor()
+
+        try:
+            if foto and foto.filename:
+                foto.save(lokasi_file)
+
+            cursor.execute("""
+                INSERT INTO laporan_bug
+                (id_anggota, jenis, judul, isi_laporan, foto_bukti)
+                VALUES (%s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                jenis,
+                judul,
+                isi_laporan,
+                nama_file
+            ))
+
+            conn.commit()
+
+            return redirect(url_for(
+                'user_laporan', status='berhasil'
+            ))
+
+        except Exception as e:
+            conn.rollback()
+
+            if lokasi_file and os.path.exists(lokasi_file):
+                os.remove(lokasi_file)
+
+            print('Error kirim laporan:', e)
+
+            return redirect(url_for(
+                'user_laporan', status='gagal'
+            ))
+
+        finally:
+            cursor.close()
+            conn.close()
+
     return render_template('user/laporan.html')
+
 
 
 @app.route('/user/batal-peminjaman/<int:id_peminjaman>', methods=['POST'])

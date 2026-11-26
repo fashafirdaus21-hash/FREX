@@ -250,6 +250,12 @@
                 <div class="alert-laporan alert-error">
                     Format foto tidak didukung. Gunakan JPG, JPEG, PNG, atau WEBP.
                 </div>
+
+            {% elif request.args.get('status') == 'foto_besar' %}
+    <div class="alert-laporan alert-error">
+        Ukuran foto maksimal 5 MB.
+    </div>
+
             {% endif %}
 
 
