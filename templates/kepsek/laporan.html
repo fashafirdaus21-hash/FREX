@@ -26,7 +26,7 @@
 
         <!-- TOMBOL LOGOUT (TAG DIV DIPERBAIKI) -->
         <div class="sidebar-logout-box">
-            <a href="/login" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+            <a href="/logout" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
         </div>
     </aside>
 
@@ -37,21 +37,37 @@
                 <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Laporan Transaksi</h2>
                 <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Daftar lengkap transaksi peminjaman perpustakaan</p>
             </div>
+            <!-- Badge Kepsek Kanan Atas -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
+                    <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Kepsek') }}
+                </div>
+            </div>
         </header>
 
         <div class="content-body">
             <!-- Filter Bar -->
-            <div class="kepsek-filter-bar">
-                <div class="kepsek-btn-filter"><i class="fa-solid fa-search"></i> Cari peminjam atau Judul</div>
-                <div class="kepsek-btn-filter">Status: <i class="fa-solid fa-chevron-down"></i></div>
-                <div class="kepsek-btn-filter"><i class="fa-regular fa-calendar"></i> 01/10 - 10/10/2026</div>
-                <button class="kepsek-btn-filter" onclick="window.print()" style="background-color: #0d233a; color: #f6c90e; border: 2px solid #f6c90e; cursor: pointer;">
+            <form method="get" action="/kepsek/laporan" class="kepsek-filter-bar" autocomplete="off">
+                <input type="text" id="inputCariKepsek" name="q" value="{{ q }}" placeholder="Cari peminjam atau Judul" autocomplete="off" class="kepsek-btn-filter">
+                <select name="status" class="kepsek-btn-filter">
+                    <option value="">Status: Semua</option>
+                    <option value="menunggu" {{ 'selected' if status == 'menunggu' }}>Menunggu</option>
+                    <option value="dipinjam" {{ 'selected' if status == 'dipinjam' }}>Dipinjam (Disetujui)</option>
+                    <option value="dikembalikan" {{ 'selected' if status == 'dikembalikan' }}>Selesai</option>
+                    <option value="ditolak" {{ 'selected' if status == 'ditolak' }}>Ditolak</option>
+                    <option value="dibatalkan" {{ 'selected' if status == 'dibatalkan' }}>Dibatalkan</option>
+                </select>
+                <input type="date" name="tgl_awal" value="{{ tgl_awal }}" class="kepsek-btn-filter">
+                <input type="date" name="tgl_akhir" value="{{ tgl_akhir }}" class="kepsek-btn-filter">
+                <button type="submit" class="kepsek-btn-filter" style="cursor: pointer;"><i class="fa-solid fa-filter"></i> Terapkan</button>
+                <a href="/kepsek/laporan" class="kepsek-btn-filter" style="text-decoration:none;"><i class="fa-solid fa-rotate-left"></i> Reset</a>
+                <button type="button" class="kepsek-btn-filter" onclick="window.print()" style="background-color: #0d233a; color: #f6c90e; border: 2px solid #f6c90e; cursor: pointer;">
                     <i class="fa-solid fa-print"></i> Cetak
                 </button>
-            </div>
+            </form>
 
             <!-- Tabel Transaksi -->
-            <div class="table-box-container" style="border: 2px solid #0d233a;">
+            <div class="table-box-container kepsek-table-scroll" style="border: 2px solid #0d233a;">
                 <table class="custom-table-admin">
                     <thead>
                         <tr>
@@ -63,48 +79,45 @@
                             <th>Status</th>
                             <th>Denda Telat</th>
                             <th>Denda Rusak</th>
+                            <th>Biaya Hilang</th>
+                            <th>Total Denda</th>
+                            <th>Status Bayar</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {% for r in laporan_list %}
                         <tr>
-                            <td style="font-weight: bold; color: #0d233a;">Nama A</td>
-                            <td style="font-weight: bold; color: #0d233a;">Judul Buku</td>
-                            <td>1/10/2026</td>
-                            <td>8/10/2026</td>
-                            <td>-</td>
-                            <td>Dipinjam</td>
-                            <td>-</td>
-                            <td>-</td>
+                            <td style="font-weight: bold; color: #0d233a;">{{ r.nama_peminjam }}</td>
+                            <td style="font-weight: bold; color: #0d233a;">{{ r.judul }}</td>
+                            <td>{{ r.tgl_pinjam.strftime('%d/%m/%Y') if r.tgl_pinjam else '-' }}</td>
+                            <td>{{ r.jatuh_tempo.strftime('%d/%m/%Y') if r.jatuh_tempo else '-' }}</td>
+                            <td>{{ r.tgl_kembali.strftime('%d/%m/%Y') if r.tgl_kembali else '-' }}</td>
+                            <td>
+                                {% if r.status == 'dikembalikan' %}
+                                    {% if r.kondisi_buku == 'hilang' %}Selesai (Hilang){% else %}Selesai{% endif %}
+                                {% elif r.status == 'dipinjam' %}
+                                    Dipinjam (Disetujui)
+                                {% else %}{{ r.status|capitalize }}{% endif %}
+                            </td>
+                            <td>{{ r.denda_telat|rupiah if r.denda_telat|float > 0 else '-' }}</td>
+                            <td>{{ r.denda_rusak|rupiah if r.denda_rusak|float > 0 else '-' }}</td>
+                            <td>{{ r.biaya_hilang|rupiah if r.biaya_hilang|float > 0 else '-' }}</td>
+                            <td style="font-weight: bold;">{{ r.total_denda|rupiah if r.total_denda|float > 0 else '-' }}</td>
+                            <td>{{ r.status_bayar_denda or '-' }}</td>
                         </tr>
+                        {% else %}
                         <tr>
-                            <td>Nama B</td>
-                            <td>Judul Buku</td>
-                            <td>20/9/2026</td>
-                            <td>27/9/2026</td>
-                            <td>30/9/2026</td>
-                            <td>Selesai</td>
-                            <td>Rp3.000</td>
-                            <td>-</td>
+                            <td colspan="11" style="text-align: center; color: #475569;">Belum ada transaksi.</td>
                         </tr>
-                        <tr>
-                            <td>Nama C</td>
-                            <td>Judul Buku</td>
-                            <td>15/9/2026</td>
-                            <td>22/9/2026</td>
-                            <td>22/9/2026</td>
-                            <td>Selesai</td>
-                            <td>-</td>
-                            <td>Rp25.000</td>
-                        </tr>
+                        {% endfor %}
                         <tr style="background-color: #f8fafc; font-weight: bold;">
                             <td>Total Denda</td>
+                            <td></td><td></td><td></td><td></td><td></td>
+                            <td style="color: #0d233a;">{{ total_telat|rupiah }}</td>
+                            <td style="color: #0d233a;">{{ total_rusak|rupiah }}</td>
+                            <td style="color: #0d233a;">{{ total_hilang|rupiah }}</td>
+                            <td style="color: #0d233a;">{{ total_semua|rupiah }}</td>
                             <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td></td>
-                            <td style="color: #0d233a;">Rp3.000</td>
-                            <td style="color: #0d233a;">Rp25.000</td>
                         </tr>
                     </tbody>
                 </table>

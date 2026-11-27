@@ -440,6 +440,12 @@ ALTER TABLE pengembalian
 ALTER TABLE `pembayaran_denda`
   MODIFY COLUMN `status_pembayaran` ENUM('belum_lunas','menunggu','lunas') NOT NULL DEFAULT 'belum_lunas';
 
+--
+-- Tambah status 'dibatalkan' (dipakai user_batal_peminjaman)
+--
+ALTER TABLE `peminjaman`
+  MODIFY COLUMN `status` ENUM('menunggu','dipinjam','dikembalikan','ditolak','dibatalkan') DEFAULT 'menunggu';
+
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

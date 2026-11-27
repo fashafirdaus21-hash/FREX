@@ -1216,6 +1216,49 @@ body {
     gap: 8px;
 }
 
+.kepsek-filter-bar select[name="status"],
+.kepsek-filter-bar input[type="date"],
+.kepsek-filter-bar .kepsek-kolom-biru,
+.kepsek-filter-bar .kepsek-input-cari {
+    background-color: #0d233a;
+    color: #f6c90e;
+    border: 2px solid #1e3a5f;
+}
+
+.kepsek-filter-bar input[name="q"]::placeholder,
+.kepsek-filter-bar .kepsek-input-cari::placeholder {
+    color: #f6c90e;
+    opacity: 0.75;
+    font-weight: normal;
+}
+
+.kepsek-filter-bar select[name="status"] option,
+.kepsek-filter-bar .kepsek-kolom-biru option {
+    background-color: #0d233a;
+    color: #f6c90e;
+}
+
+/* Tabel Kepsek menyesuaikan data & bisa digeser ke samping jika tidak muat */
+.kepsek-filter-bar + .table-box-container,
+.table-box-container.kepsek-tabel-wrap {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+}
+
+.kepsek-filter-bar + .table-box-container .custom-table-admin,
+.custom-table-admin.kepsek-tabel-data {
+    width: max-content;
+    min-width: 100%;
+}
+
+.kepsek-filter-bar + .table-box-container .custom-table-admin th,
+.kepsek-filter-bar + .table-box-container .custom-table-admin td,
+.custom-table-admin.kepsek-tabel-data th,
+.custom-table-admin.kepsek-tabel-data td {
+    white-space: nowrap;
+}
+
 /* Grafik Per Minggu */
 .chart-container-kepsek {
     background-color: #0d233a;

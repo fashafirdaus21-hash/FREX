@@ -5,6 +5,7 @@
     <title>Dashboard - Kepala Sekolah</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=17.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -25,7 +26,7 @@
         </div>
 
         <div class="sidebar-logout-box">
-            <a href="/login" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+            <a href="/logout" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
         </div>
     </aside>
 
@@ -36,35 +37,22 @@
                 <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Dashboard</h2>
                 <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Ringkasan Statistik Perpustakaan</p>
             </div>
+            <!-- Badge Kepsek Kanan Atas -->
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
+                    <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Kepsek') }}
+                </div>
+            </div>
         </header>
 
         <div class="content-body">
             <h3 style="color: #0d233a; margin-bottom: 20px;">Ringkasan</h3>
 
-            <!-- GRAFIK PEMINJAM PER MINGGU -->
-            <div class="chart-container-kepsek">
-                <div class="chart-title">Peminjam per Minggu (Bulan Ini)</div>
-                <div class="weekly-bars">
-                    <div class="bar-item">
-                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">12</span>
-                        <div class="bar-fill" style="height: 60px;"></div>
-                        <span class="bar-label">Minggu 1</span>
-                    </div>
-                    <div class="bar-item">
-                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">25</span>
-                        <div class="bar-fill" style="height: 120px;"></div>
-                        <span class="bar-label">Minggu 2</span>
-                    </div>
-                    <div class="bar-item">
-                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">18</span>
-                        <div class="bar-fill" style="height: 90px;"></div>
-                        <span class="bar-label">Minggu 3</span>
-                    </div>
-                    <div class="bar-item">
-                        <span style="font-size: 11px; color: #f6c90e; font-weight: bold;">30</span>
-                        <div class="bar-fill" style="height: 150px;"></div>
-                        <span class="bar-label">Minggu 4</span>
-                    </div>
+            <!-- GRAFIK PEMINJAM PER BULAN (sama dengan dashboard admin) -->
+            <div class="chart-box-container" style="background: #0d233a;">
+                <h3 style="color: #f6c90e; font-size: 16px; font-weight: bold; margin-bottom: 15px;">Peminjam per bulan {{ tahun_ini }}</h3>
+                <div style="height: 200px; width: 100%;">
+                    <canvas id="chartKepsekDashboard" data-bulanan='{{ data_peminjam_bulanan | default([0,0,0,0,0,0,0,0,0,0,0,0]) | tojson }}'></canvas>
                 </div>
             </div>
 
@@ -80,18 +68,28 @@
                         </tr>
                     </thead>
                     <tbody>
+                        {% for t in transaksi_terbaru|default([]) %}
                         <tr>
-                            <td style="font-weight: bold; color: #0d233a;">Nama A</td>
-                            <td style="font-weight: bold; color: #0d233a;">Laskar Pelangi</td>
-                            <td>01/10/2026</td>
-                            <td><span style="color: #2563eb; font-weight: bold;">Dipinjam</span></td>
+                            <td style="font-weight: bold; color: #0d233a;">{{ t.nama_peminjam }}</td>
+                            <td style="font-weight: bold; color: #0d233a;">{{ t.judul }}</td>
+                            <td>{{ t.tgl_pinjam.strftime('%d/%m/%Y') if t.tgl_pinjam else '-' }}</td>
+                            <td>
+                                {% if t.status == 'dipinjam' %}
+                                    <span style="color: #2563eb; font-weight: bold;">Dipinjam</span>
+                                {% elif t.status == 'dikembalikan' %}
+                                    <span style="color: #16a34a; font-weight: bold;">Selesai</span>
+                                {% elif t.status == 'menunggu' %}
+                                    <span style="color: #d97706; font-weight: bold;">Menunggu</span>
+                                {% else %}
+                                    <span style="color: #dc2626; font-weight: bold;">{{ t.status|capitalize }}</span>
+                                {% endif %}
+                            </td>
                         </tr>
+                        {% else %}
                         <tr>
-                            <td>Nama B</td>
-                            <td>Bumi Manusia</td>
-                            <td>20/09/2026</td>
-                            <td><span style="color: #16a34a; font-weight: bold;">Selesai</span></td>
+                            <td colspan="4" style="text-align: center; color: #475569;">Belum ada transaksi.</td>
                         </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
@@ -134,6 +132,50 @@
             if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
         }
         function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
+    </script>
+
+    <script>
+        const canvasKepsek = document.getElementById('chartKepsekDashboard');
+        const dataBulanan = JSON.parse(canvasKepsek.dataset.bulanan || '[0,0,0,0,0,0,0,0,0,0,0,0]');
+
+        new Chart(canvasKepsek.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                datasets: [{
+                    label: 'Anggota Meminjam',
+                    data: dataBulanan,
+                    backgroundColor: '#f6c90e',
+                    borderRadius: 6,
+                    maxBarThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function (c) { return c.parsed.y + ' anggota meminjam'; }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        suggestedMax: 5,
+                        grid: { color: '#1e3a5f', drawBorder: false },
+                        border: { display: false },
+                        ticks: { stepSize: 1, precision: 0, color: '#cbd5e1' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#cbd5e1' }
+                    }
+                }
+            }
+        });
     </script>
 </body>
 </html>

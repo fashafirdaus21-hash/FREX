@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, j
 from koneksi import buat_koneksi
 import os
 import time
+from datetime import date
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
@@ -33,6 +34,15 @@ def allowed_file(filename):
 def has_pengembalian_status_denda(cursor):
     cursor.execute("SHOW COLUMNS FROM pengembalian LIKE 'status_denda'")
     return cursor.fetchone() is not None
+
+
+@app.template_filter('rupiah')
+def format_rupiah(nilai):
+    try:
+        angka = int(float(nilai or 0))
+    except (TypeError, ValueError):
+        angka = 0
+    return 'Rp' + f"{angka:,}".replace(',', '.')
 
 
 @app.context_processor
@@ -203,7 +213,8 @@ def admin_dashboard():
                 COALESCE(
                     SUM(
                         COALESCE(denda_telat, 0) +
-                        COALESCE(denda_rusak, 0)
+                        COALESCE(denda_rusak, 0) +
+                        COALESCE(biaya_hilang, 0)
                     ),
                     0
                 ) AS total
@@ -231,10 +242,10 @@ def admin_dashboard():
             SELECT pg.id_pengembalian,
                    a.nama_lengkap,
                    b.judul AS judul_buku,
-                   (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                   (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda,
                    COALESCE(pd.jumlah_bayar, 0) AS jumlah_bayar,
                    GREATEST(
-                       (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) - COALESCE(pd.jumlah_bayar, 0),
+                       (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) - COALESCE(pd.jumlah_bayar, 0),
                        0
                    ) AS sisa_denda,
                    COALESCE(pd.status_pembayaran, 'belum_lunas') AS status_pembayaran
@@ -243,10 +254,10 @@ def admin_dashboard():
             LEFT JOIN anggota a ON pm.id_anggota = a.id_anggota
             LEFT JOIN buku b ON pm.id_buku = b.id_buku
             LEFT JOIN pembayaran_denda pd ON pd.id_pengembalian = pg.id_pengembalian
-            WHERE ((COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+            WHERE ((COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) > 0
                    AND NOT (
                        pd.status_pembayaran = 'lunas'
-                       OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                       OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0))
                    ))
                OR pd.status_pembayaran = 'menunggu'
             ORDER BY pg.id_pengembalian DESC
@@ -281,6 +292,7 @@ def admin_dashboard():
                    COUNT(DISTINCT id_anggota) AS jumlah_peminjam
             FROM peminjaman
             WHERE tgl_pinjam IS NOT NULL
+              AND YEAR(tgl_pinjam) = YEAR(CURDATE())
             GROUP BY MONTH(tgl_pinjam)
         """)
 
@@ -317,7 +329,7 @@ def admin_dashboard():
 
         cursor.close()
         conn.close()
-        
+
         return render_template(
             'admin/dashboard.html',
             total_buku=total_buku,
@@ -334,7 +346,6 @@ def admin_dashboard():
         )
 
     return redirect(url_for('login'))
-    
 
 
 @app.route('/admin/kelolabuku', methods=['GET', 'POST'])
@@ -605,24 +616,34 @@ def admin_pengembalian():
                 if peminjaman:
                     id_buku = peminjaman['id_buku']
 
-                    denda_telat = total_denda if kondisi_buku == 'Baik' else 0
-                    denda_rusak = total_denda if kondisi_buku != 'Baik' else 0
+                    kondisi_norm = (kondisi_buku or '').strip().lower()
 
-                    kondisi_enum = (
-                        'baik' if kondisi_buku == 'Baik'
-                        else ('rusak ringan' if kondisi_buku == 'Rusak Ringan' else 'rusak berat')
-                    )
+                    if kondisi_norm == 'baik':
+                        kondisi_enum = 'baik'
+                        denda_telat, denda_rusak, biaya_hilang = total_denda, 0, 0
+                    elif kondisi_norm == 'rusak ringan':
+                        kondisi_enum = 'rusak ringan'
+                        denda_telat, denda_rusak, biaya_hilang = 0, total_denda, 0
+                    elif kondisi_norm == 'hilang':
+                        kondisi_enum = 'hilang'
+                        denda_telat, denda_rusak, biaya_hilang = 0, 0, total_denda
+                    else:
+                        kondisi_enum = 'rusak berat'
+                        denda_telat, denda_rusak, biaya_hilang = 0, total_denda, 0
 
                     cursor.execute("""
                         INSERT INTO pengembalian (
                             id_peminjaman, tgl_kembali, kondisi_buku,
-                            denda_telat, denda_rusak, diproses_oleh
+                            denda_telat, denda_rusak, biaya_hilang, diproses_oleh
                         )
-                        VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (id_peminjaman, tgl_kembali, kondisi_enum, denda_telat, denda_rusak, admin_id))
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (id_peminjaman, tgl_kembali, kondisi_enum, denda_telat, denda_rusak, biaya_hilang, admin_id))
 
                     cursor.execute("UPDATE peminjaman SET status = 'dikembalikan' WHERE id_peminjaman = %s", (id_peminjaman,))
-                    cursor.execute("UPDATE buku SET jumlah_tersedia = jumlah_tersedia + 1 WHERE id_buku = %s", (id_buku,))
+
+                    # Buku hilang tidak kembali ke rak, stok tersedia tidak bertambah
+                    if kondisi_enum != 'hilang':
+                        cursor.execute("UPDATE buku SET jumlah_tersedia = jumlah_tersedia + 1 WHERE id_buku = %s", (id_buku,))
 
                     conn.commit()
 
@@ -755,7 +776,7 @@ def admin_pembayaran():
                 pg.kondisi_buku,
                 COALESCE(pg.denda_telat, 0) AS denda_telat,
                 COALESCE(pg.denda_rusak, 0) AS denda_rusak,
-                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda,
                 a.nama_lengkap,
                 a.kelas,
                 b.judul AS judul_buku,
@@ -766,7 +787,7 @@ def admin_pembayaran():
                 pd.catatan,
                 CASE
                     WHEN pd.status_pembayaran = 'lunas'
-                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0))
                     THEN 'lunas'
                     WHEN pd.status_pembayaran = 'menunggu'
                     THEN 'menunggu'
@@ -781,12 +802,12 @@ def admin_pembayaran():
                 ON pm.id_buku = b.id_buku
             LEFT JOIN pembayaran_denda pd
                 ON pd.id_pengembalian = pg.id_pengembalian
-            WHERE (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+            WHERE (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) > 0
                OR pd.id_pembayaran IS NOT NULL
             ORDER BY
                 CASE
                     WHEN pd.status_pembayaran = 'lunas'
-                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0))
                     THEN 2
                     WHEN pd.status_pembayaran = 'menunggu'
                     THEN 0
@@ -827,7 +848,7 @@ def admin_kirim_qris(id_pengembalian):
                 pg.id_pengembalian,
                 pg.id_peminjaman,
                 pm.id_anggota,
-                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda
             FROM pengembalian pg
             JOIN peminjaman pm
                 ON pg.id_peminjaman = pm.id_peminjaman
@@ -919,7 +940,7 @@ def admin_bayar_pengembalian(id_pengembalian):
                 pg.id_pengembalian,
                 pg.id_peminjaman,
                 pm.id_anggota,
-                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda
             FROM pengembalian pg
             JOIN peminjaman pm
                 ON pg.id_peminjaman = pm.id_peminjaman
@@ -1206,7 +1227,6 @@ def user_ajukan_peminjaman():
         conn.close()
 
 
-
 @app.route('/user/peminjaman')
 def user_peminjaman():
     if session.get('role') in ['siswa', 'user']:
@@ -1267,8 +1287,6 @@ def user_peminjaman():
     return redirect(url_for('login'))
 
 
-
-
 @app.route('/user/riwayat')
 def user_riwayat():
     if session.get('role') in ['siswa', 'user']:
@@ -1321,7 +1339,6 @@ def user_riwayat():
     return redirect(url_for('login'))
 
 
-
 def _ambil_data_pembayaran_user(cursor, user_id):
     has_status_denda = has_pengembalian_status_denda(cursor)
 
@@ -1334,13 +1351,13 @@ def _ambil_data_pembayaran_user(cursor, user_id):
                 pg.tgl_kembali,
                 COALESCE(pg.denda_telat, 0) AS denda_telat,
                 COALESCE(pg.denda_rusak, 0) AS denda_rusak,
-                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda,
                 pd.id_pembayaran,
                 pd.metode_pembayaran,
                 pd.catatan,
                 CASE
                     WHEN pd.status_pembayaran = 'lunas'
-                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0))
                     THEN 'lunas'
                     WHEN pd.status_pembayaran = 'menunggu' OR pg.status_denda = 'menunggu'
                     THEN 'menunggu'
@@ -1354,10 +1371,10 @@ def _ambil_data_pembayaran_user(cursor, user_id):
             LEFT JOIN pembayaran_denda pd
                 ON pd.id_pengembalian = pg.id_pengembalian
             WHERE p.id_anggota = %s
-              AND (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+              AND (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) > 0
               AND NOT (
                     pd.status_pembayaran = 'lunas'
-                    OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                    OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0))
                   )
             ORDER BY pg.tgl_kembali DESC, pg.id_pengembalian DESC
         """, (user_id,))
@@ -1370,7 +1387,7 @@ def _ambil_data_pembayaran_user(cursor, user_id):
                 pg.tgl_kembali,
                 COALESCE(pg.denda_telat, 0) AS denda_telat,
                 COALESCE(pg.denda_rusak, 0) AS denda_rusak,
-                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda,
                 pd.id_pembayaran,
                 pd.metode_pembayaran,
                 pd.catatan,
@@ -1386,10 +1403,10 @@ def _ambil_data_pembayaran_user(cursor, user_id):
             LEFT JOIN pembayaran_denda pd
                 ON pd.id_pengembalian = pg.id_pengembalian
             WHERE p.id_anggota = %s
-              AND (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) > 0
+              AND (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) > 0
               AND NOT (
                     pd.status_pembayaran = 'lunas'
-                    OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0))
+                    OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0))
                   )
             ORDER BY pg.tgl_kembali DESC, pg.id_pengembalian DESC
         """, (user_id,))
@@ -1552,7 +1569,7 @@ def ajukan_pembayaran():
             SELECT
                 pg.id_pengembalian,
                 pg.id_peminjaman,
-                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0)) AS total_denda
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda
             FROM pengembalian pg
             JOIN peminjaman p
                 ON pg.id_peminjaman = p.id_peminjaman
@@ -1726,7 +1743,6 @@ def user_biodata():
     return redirect(url_for('login'))
 
 
-
 @app.route('/user/laporan', methods=['GET', 'POST'])
 def user_laporan():
     if session.get('role') not in ['siswa', 'user']:
@@ -1828,7 +1844,6 @@ def user_laporan():
     return render_template('user/laporan.html')
 
 
-
 @app.route('/user/batal-peminjaman/<int:id_peminjaman>', methods=['POST'])
 def user_batal_peminjaman(id_peminjaman):
     if session.get('role') not in ['siswa', 'user']:
@@ -1877,7 +1892,6 @@ def user_batal_peminjaman(id_peminjaman):
         conn.close()
 
     return redirect(url_for('user_peminjaman'))
-
 
 
 @app.route('/user/update_biodata', methods=['POST'])
@@ -1931,6 +1945,147 @@ def user_update_biodata():
 
     return redirect(url_for('login'))
 
+
+# ==========================================================
+# ===================== DASHBOARD KEPSEK ====================
+# ==========================================================
+
+@app.route('/kepsek/dashboard')
+def kepsek_dashboard():
+    if session.get('role') != 'kepsek':
+        return redirect(url_for('login'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        # Peminjam per bulan, hanya tahun berjalan (logika sama dengan admin)
+        cursor.execute("""
+            SELECT MONTH(tgl_pinjam) AS bulan,
+                   COUNT(DISTINCT id_anggota) AS jumlah_peminjam
+            FROM peminjaman
+            WHERE tgl_pinjam IS NOT NULL
+              AND YEAR(tgl_pinjam) = YEAR(CURDATE())
+            GROUP BY MONTH(tgl_pinjam)
+        """)
+        rows_bulanan = cursor.fetchall()
+
+        data_peminjam_bulanan = [0] * 12
+        for r in rows_bulanan:
+            idx_bulan = int(r['bulan']) - 1
+            if 0 <= idx_bulan < 12:
+                data_peminjam_bulanan[idx_bulan] = int(r['jumlah_peminjam'])
+
+        # Transaksi terbaru (sama persis dengan dashboard admin)
+        cursor.execute("""
+            SELECT peminjaman.*,
+                   anggota.nama_lengkap as nama_peminjam,
+                   buku.judul
+            FROM peminjaman
+            JOIN anggota
+                ON peminjaman.id_anggota = anggota.id_anggota
+            JOIN buku
+                ON peminjaman.id_buku = buku.id_buku
+            ORDER BY peminjaman.id_peminjaman DESC
+            LIMIT 5
+        """)
+        transaksi_terbaru = cursor.fetchall()
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'kepsek/dashboard.html',
+        data_peminjam_bulanan=data_peminjam_bulanan,
+        transaksi_terbaru=transaksi_terbaru,
+        tahun_ini=date.today().year
+    )
+
+
+@app.route('/kepsek/laporan')
+def kepsek_laporan():
+    if session.get('role') != 'kepsek':
+        return redirect(url_for('login'))
+
+    q = request.args.get('q', '').strip()
+    status = request.args.get('status', '').strip()
+    tgl_awal = request.args.get('tgl_awal', '').strip()
+    tgl_akhir = request.args.get('tgl_akhir', '').strip()
+
+    kondisi = []
+    params = []
+
+    if q:
+        kondisi.append("(a.nama_lengkap LIKE %s OR b.judul LIKE %s)")
+        params += [f"%{q}%", f"%{q}%"]
+    if status in ['menunggu', 'dipinjam', 'dikembalikan', 'ditolak', 'dibatalkan']:
+        kondisi.append("pm.status = %s")
+        params.append(status)
+    if tgl_awal:
+        kondisi.append("pm.tgl_pinjam >= %s")
+        params.append(tgl_awal)
+    if tgl_akhir:
+        kondisi.append("pm.tgl_pinjam <= %s")
+        params.append(tgl_akhir)
+
+    where_sql = ("WHERE " + " AND ".join(kondisi)) if kondisi else ""
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        # Sumber data sama dengan admin: peminjaman + pengembalian + pembayaran_denda
+        cursor.execute(f"""
+            SELECT
+                pm.id_peminjaman,
+                pm.tgl_pinjam,
+                pm.jatuh_tempo,
+                pm.status,
+                a.nama_lengkap AS nama_peminjam,
+                b.judul,
+                pg.tgl_kembali,
+                pg.kondisi_buku,
+                COALESCE(pg.denda_telat, 0) AS denda_telat,
+                COALESCE(pg.denda_rusak, 0) AS denda_rusak,
+                COALESCE(pg.biaya_hilang, 0) AS biaya_hilang,
+                (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) AS total_denda,
+                COALESCE(pd.jumlah_bayar, 0) AS jumlah_bayar,
+                CASE
+                    WHEN (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) <= 0 THEN '-'
+                    WHEN pd.status_pembayaran = 'lunas'
+                         OR COALESCE(pd.jumlah_bayar, 0) >= (COALESCE(pg.denda_telat, 0) + COALESCE(pg.denda_rusak, 0) + COALESCE(pg.biaya_hilang, 0)) THEN 'Lunas'
+                    WHEN pd.status_pembayaran = 'menunggu' THEN 'Menunggu'
+                    ELSE 'Belum Lunas'
+                END AS status_bayar_denda
+            FROM peminjaman pm
+            JOIN anggota a ON pm.id_anggota = a.id_anggota
+            JOIN buku b ON pm.id_buku = b.id_buku
+            LEFT JOIN pengembalian pg ON pg.id_peminjaman = pm.id_peminjaman
+            LEFT JOIN pembayaran_denda pd ON pd.id_pengembalian = pg.id_pengembalian
+            {where_sql}
+            ORDER BY pm.id_peminjaman DESC
+        """, tuple(params))
+        laporan_list = cursor.fetchall()
+
+        total_telat = sum(float(r['denda_telat'] or 0) for r in laporan_list)
+        total_rusak = sum(float(r['denda_rusak'] or 0) for r in laporan_list)
+        total_hilang = sum(float(r['biaya_hilang'] or 0) for r in laporan_list)
+        total_semua = total_telat + total_rusak + total_hilang
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'kepsek/laporan.html',
+        laporan_list=laporan_list,
+        total_telat=total_telat,
+        total_rusak=total_rusak,
+        total_hilang=total_hilang,
+        total_semua=total_semua,
+        q=q, status=status, tgl_awal=tgl_awal, tgl_akhir=tgl_akhir
+    )
 
 
 @app.route('/logout')
