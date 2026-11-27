@@ -55,7 +55,7 @@
                 <!-- Search Bar -->
                 <div class="topbar-search">
                     <i class="fa-solid fa-search" style="color: #f6c90e; font-size: 13px;"></i>
-                    <input type="text" placeholder="Cari Buku..">
+                    <input type="text" id="searchDashboardInput" placeholder="Cari Buku..">
                 </div>
 
                 <!-- Notifikasi Peminjaman & Pembayaran (Pop-up) -->
@@ -245,6 +245,19 @@
         const tglHeader = new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
         document.getElementById('tanggalHariIni').innerHTML = `📅 ${tglHeader}`;
 
+        const searchDashboardInput = document.getElementById('searchDashboardInput');
+        if (searchDashboardInput) {
+            searchDashboardInput.addEventListener('keydown', function (event) {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const keyword = this.value.trim();
+                    window.location.href = keyword
+                        ? `/admin/kelolabuku?q=${encodeURIComponent(keyword)}`
+                        : '/admin/kelolabuku';
+                }
+            });
+        }
+
         const canvasEl = document.getElementById('chartAdminDashboard');
         const ctx = canvasEl.getContext('2d');
         const dataBulanan = JSON.parse(canvasEl.dataset.bulanan || '[0,0,0,0,0,0,0,0,0,0,0,0]');
@@ -318,8 +331,8 @@
             document.getElementById('waProfileModal').style.display = 'none';
         }
 
-        function previewWaImage(event) {
-            const file = event.target.files && event.target.files[0];
+        function previewWaImage(e) {
+            const file = e.target.files && e.target.files[0];
             if (!file) return;
 
             const reader = new FileReader();
@@ -344,4 +357,3 @@
     
 </body>
 </html>
-```[cite: 25]

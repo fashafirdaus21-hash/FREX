@@ -442,16 +442,15 @@
 </div>
 
 {% elif request.args.get('pinjam') == 'duplikat' %}
+<div style="background:#fef3c7; color:#92400e; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
+    Kamu sudah memiliki pengajuan atau peminjaman aktif untuk buku ini.
+</div>
 
 {% elif request.args.get('pinjam') == 'kuota_penuh' %}
 <div style="background:#fee2e2; color:#991b1b; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
     Batas peminjaman maksimal 3 buku telah tercapai.
     Silakan kembalikan salah satu buku terlebih dahulu
     untuk mengajukan peminjaman kembali.
-</div>
-
-<div style="background:#fef3c7; color:#92400e; padding:12px 18px; border-radius:10px; margin-bottom:20px;">
-    Kamu sudah memiliki pengajuan atau peminjaman aktif untuk buku ini.
 </div>
 
 {% elif request.args.get('pinjam') == 'gagal' %}

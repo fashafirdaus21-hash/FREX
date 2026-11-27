@@ -742,6 +742,7 @@ function editName() {
 
 document.addEventListener("DOMContentLoaded", function () {
     const daftarCountdown = document.querySelectorAll(".hitung-mundur");
+    let sudahMemuatUlang = false;
 
     daftarCountdown.forEach(function (elemen) {
         const deadline = Number(elemen.dataset.deadline) * 1000;
@@ -755,9 +756,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
                 clearInterval(interval);
 
-                setTimeout(function () {
-                    window.location.reload();
-                }, 1500);
+                if (!sudahMemuatUlang) {
+                    sudahMemuatUlang = true;
+                    setTimeout(function () {
+                        window.location.reload();
+                    }, 1500);
+                }
 
                 return;
             }

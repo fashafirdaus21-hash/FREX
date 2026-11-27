@@ -8,22 +8,25 @@ from werkzeug.utils import secure_filename
 app = Flask(__name__)
 app.secret_key = 'kunci_rahasia_perpustakaan'
 
-# ==========================================
-# KONFIGURASI FOLDER UPLOAD COVER BUKU & BUKTI BAYAR
-# ==========================================
+# ==========================================================
+# KONFIGURASI FOLDER UPLOAD COVER BUKU, BUKTI BAYAR & LAPORAN
+# ==========================================================
 UPLOAD_FOLDER = 'static/uploads/covers'
 BUKTI_BAYAR_FOLDER = 'static/uploads/bukti_bayar'
 LAPORAN_FOLDER = 'static/uploads/laporan'
+BUKTI_KEMBALI_FOLDER = 'static/uploads/bukti_kembali'
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp'}
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['BUKTI_BAYAR_FOLDER'] = BUKTI_BAYAR_FOLDER
 app.config['LAPORAN_FOLDER'] = LAPORAN_FOLDER
+app.config['BUKTI_KEMBALI_FOLDER'] = BUKTI_KEMBALI_FOLDER
 
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 os.makedirs(BUKTI_BAYAR_FOLDER, exist_ok=True)
 os.makedirs(LAPORAN_FOLDER, exist_ok=True)
+os.makedirs(BUKTI_KEMBALI_FOLDER, exist_ok=True)
 os.makedirs('static/images', exist_ok=True)
 
 
@@ -223,9 +226,7 @@ def admin_dashboard():
         res_denda = cursor.fetchone()
         total_denda = res_denda['total'] if res_denda and res_denda['total'] else 0
 
-        # ==================================================
-        # NOTIFIKASI PEMINJAMAN & PEMBAYARAN (POP-UP LONCENG)
-        # ==================================================
+        # Notifikasi peminjaman & pembayaran (pop-up lonceng)
         cursor.execute("""
             SELECT p.id_peminjaman, p.id_anggota, p.id_buku, p.tgl_pinjam,
                    b.judul AS judul_buku, a.nama_lengkap
@@ -265,28 +266,20 @@ def admin_dashboard():
         notif_pembayaran = cursor.fetchall()
         pembayaran_menunggu = len(notif_pembayaran)
 
-        # ==================================================
-        # JUMLAH PEMBAYARAN YANG MENUNGGU VERIFIKASI
-        # ==================================================
-
+        # Jumlah pembayaran yang menunggu verifikasi
         cursor.execute("""
             SELECT COUNT(*) AS total
             FROM pembayaran_denda
             WHERE status_pembayaran = 'menunggu'
         """)
-
         res_pembayaran = cursor.fetchone()
-
         jumlah_pembayaran_menunggu = (
             res_pembayaran['total']
             if res_pembayaran and res_pembayaran['total']
             else 0
         )
 
-        # ==================================================
-        # DATA PEMINJAM PER BULAN
-        # ==================================================
-
+        # Data peminjam per bulan
         cursor.execute("""
             SELECT MONTH(tgl_pinjam) AS bulan,
                    COUNT(DISTINCT id_anggota) AS jumlah_peminjam
@@ -295,23 +288,15 @@ def admin_dashboard():
               AND YEAR(tgl_pinjam) = YEAR(CURDATE())
             GROUP BY MONTH(tgl_pinjam)
         """)
-
         rows_bulanan = cursor.fetchall()
 
         data_peminjam_bulanan = [0] * 12
-
         for r in rows_bulanan:
             idx_bulan = int(r['bulan']) - 1
-
             if 0 <= idx_bulan < 12:
-                data_peminjam_bulanan[idx_bulan] = int(
-                    r['jumlah_peminjam']
-                )
+                data_peminjam_bulanan[idx_bulan] = int(r['jumlah_peminjam'])
 
-        # ==================================================
-        # TRANSAKSI TERBARU
-        # ==================================================
-
+        # Transaksi terbaru
         cursor.execute("""
             SELECT peminjaman.*,
                    anggota.nama_lengkap as nama_peminjam,
@@ -324,7 +309,6 @@ def admin_dashboard():
             ORDER BY peminjaman.id_peminjaman DESC
             LIMIT 5
         """)
-
         transaksi_terbaru = cursor.fetchall()
 
         cursor.close()
@@ -535,13 +519,8 @@ def admin_proses_pengajuan(id_peminjaman):
                 FROM pengaturan
                 WHERE kunci = 'lama_pinjam_hari'
             """)
-
             pengaturan = cursor.fetchone()
-
-            lama_pinjam = (
-                int(pengaturan['nilai'])
-                if pengaturan else 7
-            )
+            lama_pinjam = int(pengaturan['nilai']) if pengaturan else 7
 
             cursor.execute("""
                 UPDATE buku
@@ -610,12 +589,17 @@ def admin_pengembalian():
                 total_denda = float(request.form.get('denda', 0))
                 admin_id = session.get('id_user')
 
+                foto_bukti = request.files.get('foto_bukti')
+                if foto_bukti and foto_bukti.filename != '' and allowed_file(foto_bukti.filename):
+                    filename_bukti = secure_filename(foto_bukti.filename)
+                    nama_bukti_kembali = f"kembali_{id_peminjaman}_{int(time.time())}_{filename_bukti}"
+                    foto_bukti.save(os.path.join(app.config['BUKTI_KEMBALI_FOLDER'], nama_bukti_kembali))
+
                 cursor.execute("SELECT * FROM peminjaman WHERE id_peminjaman = %s", (id_peminjaman,))
                 peminjaman = cursor.fetchone()
 
                 if peminjaman:
                     id_buku = peminjaman['id_buku']
-
                     kondisi_norm = (kondisi_buku or '').strip().lower()
 
                     if kondisi_norm == 'baik':
@@ -1146,7 +1130,6 @@ def user_ajukan_peminjaman():
             FROM buku
             WHERE id_buku = %s
         """, (id_buku,))
-
         buku = cursor.fetchone()
 
         if not buku or buku['jumlah_tersedia'] <= 0:
@@ -1164,7 +1147,6 @@ def user_ajukan_peminjaman():
             AND status IN ('menunggu', 'dipinjam')
             LIMIT 1
         """, (user_id, id_buku))
-
         transaksi = cursor.fetchone()
 
         if transaksi:
@@ -1179,13 +1161,8 @@ def user_ajukan_peminjaman():
             FROM pengaturan
             WHERE kunci = 'lama_pinjam_hari'
         """)
-
         pengaturan = cursor.fetchone()
-
-        lama_pinjam = (
-            int(pengaturan['nilai'])
-            if pengaturan else 7
-        )
+        lama_pinjam = int(pengaturan['nilai']) if pengaturan else 7
 
         cursor.execute("""
             INSERT INTO peminjaman (
@@ -1576,7 +1553,6 @@ def ajukan_pembayaran():
             WHERE pg.id_pengembalian = %s
             AND p.id_anggota = %s
         """, (id_pengembalian, user_id))
-
         denda = cursor.fetchone()
 
         if not denda:
@@ -1679,7 +1655,6 @@ def user_biodata():
                 FROM anggota
                 WHERE id_anggota = %s
             """, (user_id,))
-
             biodata = cursor.fetchone()
 
             if not biodata:
@@ -1723,7 +1698,6 @@ def user_biodata():
                 FROM peminjaman
                 WHERE id_anggota = %s
             """, (user_id,))
-
             statistik = cursor.fetchone()
 
             return render_template(
@@ -1759,13 +1733,11 @@ def user_laporan():
         nama_file = None
         lokasi_file = None
 
-        # Validasi jenis laporan
         if jenis not in ['bug', 'saran']:
             return redirect(url_for(
                 'user_laporan', status='tidak_valid'
             ))
 
-        # Validasi judul dan isi
         if not judul or not isi_laporan:
             return redirect(url_for(
                 'user_laporan', status='tidak_valid'
@@ -1776,7 +1748,6 @@ def user_laporan():
                 'user_laporan', status='judul_panjang'
             ))
 
-        # Validasi foto
         if foto and foto.filename:
             if not allowed_file(foto.filename):
                 return redirect(url_for(
@@ -1862,7 +1833,6 @@ def user_batal_peminjaman(id_peminjaman):
               AND id_anggota = %s
             FOR UPDATE
         """, (id_peminjaman, user_id))
-
         peminjaman = cursor.fetchone()
 
         if peminjaman and peminjaman['status'] == 'menunggu':
@@ -2086,6 +2056,149 @@ def kepsek_laporan():
         total_semua=total_semua,
         q=q, status=status, tgl_awal=tgl_awal, tgl_akhir=tgl_akhir
     )
+
+
+# ==========================================================
+# ============= LAPORAN BUG & SARAN (KEPSEK) ===============
+# ==========================================================
+
+@app.route('/uploads/laporan/<path:filename>')
+def lihat_foto_laporan(filename):
+    if session.get('role') not in ['kepsek', 'admin']:
+        return redirect(url_for('login'))
+    return send_from_directory(app.config['LAPORAN_FOLDER'], filename)
+
+
+@app.route('/kepsek/masukan')
+def kepsek_masukan():
+    if session.get('role') != 'kepsek':
+        return redirect(url_for('login'))
+
+    jenis_filter = request.args.get('jenis', '').strip().lower()
+    status_filter = request.args.get('status', '').strip().lower()
+
+    kondisi = []
+    params = []
+
+    if jenis_filter in ['bug', 'saran']:
+        kondisi.append("lb.jenis = %s")
+        params.append(jenis_filter)
+
+    if status_filter in ['baru', 'diproses', 'selesai']:
+        kondisi.append("lb.status = %s")
+        params.append(status_filter)
+
+    where_sql = ("WHERE " + " AND ".join(kondisi)) if kondisi else ""
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        cursor.execute(f"""
+            SELECT
+                lb.id_laporan,
+                lb.id_anggota,
+                lb.jenis,
+                lb.judul,
+                lb.isi_laporan,
+                lb.foto_bukti,
+                lb.status,
+                lb.created_at,
+                COALESCE(a.nama_lengkap, u.nama, u.username, 'User') AS nama_pelapor,
+                COALESCE(a.kelas, '-') AS kelas_pelapor
+            FROM laporan_bug lb
+            LEFT JOIN anggota a ON lb.id_anggota = a.id_anggota
+            LEFT JOIN users u ON lb.id_anggota = u.id_user
+            {where_sql}
+            ORDER BY
+                CASE lb.status
+                    WHEN 'baru' THEN 0
+                    WHEN 'diproses' THEN 1
+                    ELSE 2
+                END,
+                lb.created_at DESC,
+                lb.id_laporan DESC
+        """, tuple(params))
+        daftar_laporan = cursor.fetchall()
+
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total_semua,
+                SUM(CASE WHEN jenis = 'bug' THEN 1 ELSE 0 END) AS total_bug,
+                SUM(CASE WHEN jenis = 'saran' THEN 1 ELSE 0 END) AS total_saran,
+                SUM(CASE WHEN status = 'baru' THEN 1 ELSE 0 END) AS total_baru
+            FROM laporan_bug
+        """)
+        ringkasan = cursor.fetchone() or {}
+
+    finally:
+        cursor.close()
+        conn.close()
+
+    return render_template(
+        'kepsek/laporan dan masukan.html',
+        daftar_laporan=daftar_laporan,
+        ringkasan=ringkasan,
+        jenis_filter=jenis_filter,
+        status_filter=status_filter
+    )
+
+
+@app.route('/kepsek/masukan/status/<int:id_laporan>', methods=['POST'])
+def kepsek_update_status_masukan(id_laporan):
+    if session.get('role') != 'kepsek':
+        return redirect(url_for('login'))
+
+    status_baru = request.form.get('status', '').strip().lower()
+    if status_baru not in ['baru', 'diproses', 'selesai']:
+        return redirect(url_for('kepsek_masukan'))
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(buffered=True)
+
+    try:
+        cursor.execute("""
+            UPDATE laporan_bug
+            SET status = %s
+            WHERE id_laporan = %s
+        """, (status_baru, id_laporan))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print("Gagal update status laporan:", e)
+    finally:
+        cursor.close()
+        conn.close()
+
+    return redirect(url_for('kepsek_masukan'))
+
+
+@app.route('/kepsek/masukan/cek-realtime')
+def kepsek_masukan_realtime():
+    if session.get('role') != 'kepsek':
+        return jsonify({'authenticated': False}), 401
+
+    conn = buat_koneksi()
+    cursor = conn.cursor(dictionary=True, buffered=True)
+
+    try:
+        cursor.execute("""
+            SELECT
+                COUNT(*) AS total_semua,
+                SUM(CASE WHEN status = 'baru' THEN 1 ELSE 0 END) AS total_baru,
+                MAX(id_laporan) AS id_terbaru
+            FROM laporan_bug
+        """)
+        row = cursor.fetchone() or {}
+        return jsonify({
+            'authenticated': True,
+            'total_semua': int(row.get('total_semua') or 0),
+            'total_baru': int(row.get('total_baru') or 0),
+            'id_terbaru': int(row.get('id_terbaru') or 0)
+        })
+    finally:
+        cursor.close()
+        conn.close()
 
 
 @app.route('/logout')

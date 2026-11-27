@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Laporan Bug & Saran - Kepala Sekolah</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=21.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div>
+            <div class="sidebar-profile" onclick="openWaProfile()" title="Klik untuk lihat profil">
+                <div class="profile-img" id="sidebarAvatarPreview">
+                    <i class="fa-solid fa-user-tie text-slate-700" style="font-size: 24px;"></i>
+                </div>
+                <h3>Kepsek</h3>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li><a href="/kepsek/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
+                <li><a href="/kepsek/laporan"><i class="fa-solid fa-file-lines"></i> Laporan Transaksi</a></li>
+                <li><a href="/kepsek/masukan" class="active"><i class="fa-solid fa-bug"></i> Bug & Saran</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-logout-box">
+            <a href="/logout" class="btn-logout-sidebar"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
+        </div>
+    </aside>
+
+    <div class="main-container">
+        <header class="topbar-admin">
+            <div>
+                <h2 style="color: #0d233a; margin: 0; font-size: 22px;">Laporan Bug & Saran User</h2>
+                <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Pantauan laporan kendala sistem dan kritik/saran secara langsung</p>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <div class="admin-badge-top" onclick="openWaProfile()" style="cursor: pointer;" title="Klik untuk lihat profil">
+                    <i class="fa-solid fa-user"></i> {{ session.get('nama', 'Kepsek') }}
+                </div>
+            </div>
+        </header>
+
+        <div class="content-body">
+            <div id="bannerLaporanBaru" style="display: none; background: #fef9c3; border: 1px solid #eab308; color: #713f12; padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 13px; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-bell"></i> Ada laporan baru masuk dari user.</span>
+                <button type="button" onclick="window.location.reload()" style="background: #0d233a; color: #f6c90e; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">Muat Ulang</button>
+            </div>
+
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; font-size: 13px;">
+                <div style="background: #0d233a; color: #fff; padding: 10px 16px; border-radius: 8px;">
+                    Total Masuk: <strong>{{ ringkasan.total_semua or 0 }}</strong>
+                </div>
+                <div style="background: #fee2e2; color: #991b1b; padding: 10px 16px; border-radius: 8px;">
+                    Bug: <strong>{{ ringkasan.total_bug or 0 }}</strong>
+                </div>
+                <div style="background: #e0f2fe; color: #075985; padding: 10px 16px; border-radius: 8px;">
+                    Kritik & Saran: <strong>{{ ringkasan.total_saran or 0 }}</strong>
+                </div>
+                <div style="background: #fef3c7; color: #92400e; padding: 10px 16px; border-radius: 8px;">
+                    Status Baru: <strong>{{ ringkasan.total_baru or 0 }}</strong>
+                </div>
+            </div>
+
+            <form method="get" action="/kepsek/masukan" class="kepsek-filter-bar" style="margin-bottom: 16px;">
+                <select name="jenis" class="kepsek-btn-filter">
+                    <option value="">Jenis: Semua</option>
+                    <option value="bug" {{ 'selected' if jenis_filter == 'bug' }}>Bug</option>
+                    <option value="saran" {{ 'selected' if jenis_filter == 'saran' }}>Kritik & Saran</option>
+                </select>
+                <select name="status" class="kepsek-btn-filter">
+                    <option value="">Status: Semua</option>
+                    <option value="baru" {{ 'selected' if status_filter == 'baru' }}>Baru</option>
+                    <option value="diproses" {{ 'selected' if status_filter == 'diproses' }}>Diproses</option>
+                    <option value="selesai" {{ 'selected' if status_filter == 'selesai' }}>Selesai</option>
+                </select>
+                <button type="submit" class="kepsek-btn-filter" style="cursor: pointer;"><i class="fa-solid fa-filter"></i> Filter</button>
+                <a href="/kepsek/masukan" class="kepsek-btn-filter" style="text-decoration: none;"><i class="fa-solid fa-rotate-left"></i> Reset</a>
+            </form>
+
+            <div class="table-box-container kepsek-table-scroll" style="border: 2px solid #0d233a;">
+                <table class="custom-table-admin">
+                    <thead>
+                        <tr>
+                            <th>Waktu</th>
+                            <th>Pelapor</th>
+                            <th>Jenis</th>
+                            <th>Judul & Isi Laporan</th>
+                            <th>Bukti</th>
+                            <th>Status</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in daftar_laporan %}
+                        <tr>
+                            <td style="white-space: nowrap; font-size: 12px;">
+                                {{ item.created_at.strftime('%d/%m/%Y %H:%M') if item.created_at else '-' }}
+                            </td>
+                            <td>
+                                <div style="font-weight: bold; color: #0d233a;">{{ item.nama_pelapor }}</div>
+                                <div style="font-size: 12px; color: #64748b;">Kelas: {{ item.kelas_pelapor }}</div>
+                            </td>
+                            <td>
+                                {% if item.jenis == 'bug' %}
+                                    <span style="background: #fee2e2; color: #991b1b; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 12px;">Bug</span>
+                                {% else %}
+                                    <span style="background: #e0f2fe; color: #075985; padding: 3px 8px; border-radius: 6px; font-weight: bold; font-size: 12px;">Saran</span>
+                                {% endif %}
+                            </td>
+                            <td style="max-width: 340px;">
+                                <div style="font-weight: bold; color: #0d233a; margin-bottom: 4px;">{{ item.judul }}</div>
+                                <div style="font-size: 13px; color: #334155; white-space: pre-line;">{{ item.isi_laporan }}</div>
+                            </td>
+                            <td>
+                                {% if item.foto_bukti %}
+                                    <a href="{{ url_for('lihat_foto_laporan', filename=item.foto_bukti) }}" target="_blank" style="color: #2563eb; font-size: 12px; font-weight: bold; text-decoration: none;">
+                                        <i class="fa-solid fa-image"></i> Lihat Foto
+                                    </a>
+                                {% else %}
+                                    <span style="color: #94a3b8; font-size: 12px;">-</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if item.status == 'baru' %}
+                                    <span style="color: #d97706; font-weight: bold;">Baru</span>
+                                {% elif item.status == 'diproses' %}
+                                    <span style="color: #2563eb; font-weight: bold;">Diproses</span>
+                                {% else %}
+                                    <span style="color: #16a34a; font-weight: bold;">Selesai</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form method="post" action="{{ url_for('kepsek_update_status_masukan', id_laporan=item.id_laporan) }}" style="display: flex; gap: 6px; align-items: center;">
+                                    <select name="status" style="padding: 4px 6px; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 12px;">
+                                        <option value="baru" {{ 'selected' if item.status == 'baru' }}>Baru</option>
+                                        <option value="diproses" {{ 'selected' if item.status == 'diproses' }}>Diproses</option>
+                                        <option value="selesai" {{ 'selected' if item.status == 'selesai' }}>Selesai</option>
+                                    </select>
+                                    <button type="submit" style="background: #0d233a; color: #f6c90e; border: none; padding: 5px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: bold;">Simpan</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: #475569; padding: 20px;">Belum ada laporan bug atau saran dari user.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="waProfileModal" class="modal-overlay-wa">
+        <div class="modal-card-wa">
+            <div class="wa-modal-header">
+                <h3>Profil Kepsek</h3>
+                <button class="wa-close-btn" onclick="closeWaProfile()" style="background:transparent; border:none; color:white; font-size:18px; cursor:pointer;"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="wa-body">
+                <div class="wa-avatar-container" id="modalAvatarDisplay">
+                    <i class="fa-solid fa-user-tie" style="font-size: 60px; color: #8696a0;"></i>
+                </div>
+                <label for="waUploadInput" class="wa-upload-label"><i class="fa-solid fa-camera"></i> Ganti Foto Profil</label>
+                <input type="file" id="waUploadInput" accept="image/*" style="display: none;" onchange="previewWaImage(event)">
+                <div class="wa-info-group">
+                    <div class="wa-info-label">Name</div>
+                    <div class="wa-info-row">
+                        <span class="wa-info-value" id="textName">Kepsek</span>
+                        <i class="fa-solid fa-pen wa-edit-icon" onclick="editName()"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openWaProfile() { document.getElementById('waProfileModal').style.display = 'flex'; }
+        function closeWaProfile() { document.getElementById('waProfileModal').style.display = 'none'; }
+        function previewWaImage(e) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                document.getElementById('modalAvatarDisplay').innerHTML = `<img src="${reader.result}">`;
+                document.getElementById('sidebarAvatarPreview').innerHTML = `<img src="${reader.result}" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">`;
+            };
+            if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
+        }
+        function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
+
+        const idTerbaruAwal = {{ (daftar_laporan[0].id_laporan if daftar_laporan else 0) | int }};
+        setInterval(async () => {
+            try {
+                const res = await fetch('/kepsek/masukan/cek-realtime');
+                if (!res.ok) return;
+                const data = await res.json();
+                if (data.authenticated && Number(data.id_terbaru || 0) > idTerbaruAwal) {
+                    const banner = document.getElementById('bannerLaporanBaru');
+                    if (banner) banner.style.display = 'flex';
+                }
+            } catch (_) {}
+        }, 15000);
+    </script>
+</body>
+</html>

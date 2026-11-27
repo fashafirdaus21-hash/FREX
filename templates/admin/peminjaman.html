@@ -72,7 +72,7 @@
                             <select name="id_anggota" class="custom-select-user" required style="width: 100%; border: none; background: transparent; outline: none;">
                                 <option value="" disabled selected>-- Pilih Anggota --</option>
                                 {% for ag in anggota_list %}
-                                <option value="{{ ag.id_anggota }}">{{ ag.id_anggota }} - {{ ag.nama }}</option>
+                                <option value="{{ ag.id_anggota }}">{{ ag.id_anggota }} - {{ ag.nama or ag.nama_lengkap or ag.username }}</option>
                                 {% endfor %}
                             </select>
                         </div>

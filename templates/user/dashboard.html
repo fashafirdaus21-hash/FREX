@@ -59,6 +59,26 @@
 
 
 /* =====================================================
+   EFEK POP-UP TERANGKAT KARTU STATISTIK
+===================================================== */
+
+.stat-card-link {
+    text-decoration: none;
+    display: block;
+}
+
+.stat-card-link .stat-card-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card-link:hover .stat-card-item {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 22px rgba(13, 35, 58, 0.22);
+    border-color: #f6c90e !important;
+}
+
+
+/* =====================================================
    REKOMENDASI BUKU
 ===================================================== */
 
@@ -379,7 +399,7 @@
             </div>
 
             <div class="stat-grid-4" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-                <a href="/user/riwayat" class="stat-card-link">
+                <a href="/user/peminjaman" class="stat-card-link">
                     <div class="stat-card-item" style="background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; height: 100%; box-sizing: border-box;">
                         <div style="font-size: 32px;">📖</div>
                         <div class="stat-card-info">
@@ -399,13 +419,15 @@
                     </div>
                 </a>
 
-                <div class="stat-card-item" style="background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; height: 100%; box-sizing: border-box;">
-                    <div style="font-size: 32px;">💰</div>
-                    <div class="stat-card-info">
-                        <span class="stat-card-title" style="color: #f6c90e; font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Total Denda</span>
-                        <span class="stat-card-value" style="color: #ffffff; font-size: 24px; font-weight: bold;">Rp {{ "{:,}".format(total_denda or 0).replace(",", ".") }}</span>
+                <a href="/user/pembayaran" class="stat-card-link">
+                    <div class="stat-card-item" style="background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 16px; padding: 25px; display: flex; align-items: center; gap: 20px; height: 100%; box-sizing: border-box;">
+                        <div style="font-size: 32px;">💰</div>
+                        <div class="stat-card-info">
+                            <span class="stat-card-title" style="color: #f6c90e; font-size: 13px; font-weight: bold; display: block; margin-bottom: 4px;">Total Denda ↗</span>
+                            <span class="stat-card-value" style="color: #ffffff; font-size: 24px; font-weight: bold;">Rp {{ "{:,}".format(total_denda or 0).replace(",", ".") }}</span>
+                        </div>
                     </div>
-                </div>
+                </a>
             </div>
         </div>
     

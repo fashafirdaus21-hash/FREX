@@ -22,9 +22,25 @@
             <ul class="sidebar-menu">
                 <li><a href="/admin/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/admin/kelolabuku"><i class="fa-solid fa-book"></i> Kelola Buku</a></li>
-                <li><a href="/admin/peminjaman"><i class="fa-solid fa-hand-holding-hand"></i> Peminjaman</a></li>
+                <li>
+                    <a href="/admin/peminjaman">
+                        <i class="fa-solid fa-hand-holding-hand"></i>
+                        <span>Peminjaman</span>
+                        {% if (peminjaman_menunggu or 0) > 0 %}
+                        <span class="sidebar-notif-badge">{{ '99+' if (peminjaman_menunggu or 0) > 99 else peminjaman_menunggu }}</span>
+                        {% endif %}
+                    </a>
+                </li>
                 <li><a href="/admin/pengembalian"><i class="fa-solid fa-rotate-left"></i> Pengembalian</a></li>
-                <li><a href="/admin/pembayaran" class="active"><i class="fa-solid fa-money-bill-wave"></i> Pembayaran</a></li>
+                <li>
+                    <a href="/admin/pembayaran" class="active">
+                        <i class="fa-solid fa-money-bill-wave"></i>
+                        <span>Pembayaran</span>
+                        {% if (pembayaran_menunggu or 0) > 0 %}
+                        <span class="sidebar-notif-badge">{{ '99+' if (pembayaran_menunggu or 0) > 99 else pembayaran_menunggu }}</span>
+                        {% endif %}
+                    </a>
+                </li>
                 <li><a href="/admin/biodataagt"><i class="fa-solid fa-users"></i> Biodata</a></li>
             </ul>
         </div>
@@ -375,4 +391,3 @@
     
 </body>
 </html>
-```[cite: 20]

@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -121,6 +120,12 @@
         .btn-kirim-laporan:hover {
             background: #193b5c;
             transform: translateY(-2px);
+        }
+
+        .btn-kirim-laporan:disabled {
+            opacity: 0.65;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .alert-laporan {
@@ -261,7 +266,8 @@
 
             <form method="POST"
       action="{{ url_for('user_laporan') }}"
-      enctype="multipart/form-data">
+      enctype="multipart/form-data"
+      onsubmit="return validasiKirimLaporan(this);">
 
                 <div class="form-group">
                     <label for="jenis">Jenis Laporan</label>
@@ -346,6 +352,25 @@
                 terapkanAvatarKeSemua(tersimpan);
             }
         });
+
+        function validasiKirimLaporan(form) {
+            if (!form) return true;
+            if (form.dataset.submitting === "1") return false;
+
+            const inputFoto = document.getElementById('foto');
+            if (inputFoto && inputFoto.files && inputFoto.files[0]) {
+                const maksBytes = 5 * 1024 * 1024;
+                if (inputFoto.files[0].size > maksBytes) {
+                    alert("Ukuran foto maksimal 5 MB.");
+                    return false;
+                }
+            }
+
+            form.dataset.submitting = "1";
+            const btn = form.querySelector('button[type="submit"]');
+            if (btn) btn.disabled = true;
+            return true;
+        }
 
         function openWaProfile() {
             const modal = document.getElementById('waProfileModal');

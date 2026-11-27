@@ -2,8 +2,8 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Riwayat - User Perpustakaan</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=32.0">
+    <title>Riwayat Peminjaman - User Perpustakaan</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=30.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         .custom-sidebar-menu { list-style: none; padding: 0 15px; margin: 0; }
@@ -14,48 +14,187 @@
             border: 2px solid transparent; background-color: #0d233a; transition: all 0.2s;
         }
         .custom-sidebar-menu a:hover, .custom-sidebar-menu a.active { border-color: #f6c90e; color: #f6c90e; }
-        
-        /* Gaya Filter & Kartu Sesuai Desain Baru */
-        .filter-btn-group { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
-        .filter-chip {
-            background-color: #0d233a; color: #f6c90e; border: 2px solid #1e3a5f;
-            padding: 8px 20px; border-radius: 25px; font-weight: bold; font-size: 12px; cursor: pointer; transition: all 0.2s;
+
+        .canva-search-box {
+            background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 20px;
+            padding: 10px 20px; display: flex; align-items: center; gap: 10px; color: #f6c90e; font-weight: bold; font-size: 13px; margin-bottom: 20px;
         }
-        .filter-chip:hover, .filter-chip.active { background-color: #f6c90e; color: #0d233a; border-color: #f6c90e; }
-        
-        .riwayat-card-custom {
-            background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 18px; padding: 20px;
-            margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; color: white;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        .canva-search-box input { background: transparent; border: none; color: #f6c90e; outline: none; width: 100%; }
+        .canva-search-box input::placeholder { color: #f6c90e; opacity: 0.7; }
+
+        .filter-chips { display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .chip-btn {
+            padding: 8px 18px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer;
+            border: 2px solid #0d233a; background-color: #ffffff; color: #0d233a; transition: all 0.2s;
         }
-        .book-avatar-box {
-    width: 75px;
-    height: 105px;
-    border-radius: 10px;
-    background: #e2e8f0;
+        .chip-btn.active { background-color: #0d233a; color: #f6c90e; }
+
+/* RIWAYAT PEMINJAMAN */
+.daftar-riwayat {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+    width: 100%;
+}
+
+.kartu-riwayat {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    background: #ffffff;
+    border: 2px solid #0d233a;
+    border-radius: 16px;
+    padding: 22px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kartu-riwayat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(13,35,58,0.12);
+}
+
+.riwayat-identitas {
     display: flex;
     align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    font-size: 22px;
-    font-weight: bold;
-    color: #0d233a;
+    gap: 20px;
+    margin-bottom: 18px;
+}
+
+.cover-riwayat {
     flex-shrink: 0;
-    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    width: 100px;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 9px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
 }
 
-.riwayat-card-custom {
-    cursor: pointer;
-    transition: transform 0.2s, border-color 0.2s;
+.riwayat-info-utama {
+    min-width: 0;
 }
 
-.riwayat-card-custom:hover {
-    transform: translateY(-3px);
-    border-color: #f6c90e;
+.riwayat-info-utama h3 {
+    color: #0d233a;
+    font-size: 18px;
+    margin: 0 0 8px;
+    overflow-wrap: anywhere;
 }
+
+.penulis-riwayat {
+    color: #64748b;
+    font-size: 13px;
+    margin: 0 0 12px;
+}
+
+.badge-riwayat {
+    display: inline-block;
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: bold;
+}
+
+.status-menunggu {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-dipinjam {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.status-dikembalikan {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-terlambat {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-ditolak,
+.status-dibatalkan,
+.status-kedaluwarsa {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.petunjuk-riwayat {
+    font-size: 11px;
+    color: #64748b;
+    margin-top: 12px;
+}
+
+.riwayat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.riwayat-data {
+    min-width: 0;
+}
+
+.riwayat-data span {
+    display: block;
+    color: #64748b;
+    font-size: 10px;
+    margin-bottom: 7px;
+}
+
+.riwayat-data strong {
+    color: #0d233a;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+}
+
+.riwayat-kosong {
+    background: white;
+    padding: 50px 20px;
+    border: 2px solid #cbd5e1;
+    border-radius: 16px;
+    text-align: center;
+    color: #64748b;
+}
+
+.riwayat-kosong i {
+    font-size: 45px;
+    margin-bottom: 15px;
+    color: #cbd5e1;
+}
+
+@media (max-width: 750px) {
+    .riwayat-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 550px) {
+    .riwayat-identitas {
+        align-items: flex-start;
+        gap: 13px;
+    }
+
+    .cover-riwayat {
+        width: 78px;
+        height: 112px;
+    }
+
+    .riwayat-info-utama h3 {
+        font-size: 15px;
+    }
+}
+
 
 /* POPUP DETAIL RIWAYAT */
-.modal-riwayat {
+.modal-riwayat-overlay {
     display: none;
     position: fixed;
     inset: 0;
@@ -68,7 +207,7 @@
 
 .modal-riwayat-card {
     width: 100%;
-    max-width: 600px;
+    max-width: 650px;
     max-height: 90vh;
     overflow-y: auto;
     background: white;
@@ -81,18 +220,18 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
 }
 
 .modal-riwayat-header h3 {
-    margin: 0;
     color: #0d233a;
+    margin: 0;
 }
 
 .modal-riwayat-header button {
-    border: none;
     background: none;
-    font-size: 28px;
+    border: none;
+    font-size: 30px;
     cursor: pointer;
     color: #64748b;
 }
@@ -105,26 +244,28 @@
 }
 
 .modal-riwayat-identitas img {
-    width: 100px;
-    height: 140px;
+    width: 115px;
+    height: 165px;
     object-fit: cover;
-    border-radius: 9px;
+    border-radius: 10px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.2);
 }
 
 .modal-riwayat-identitas h2 {
     color: #0d233a;
-    font-size: 19px;
+    font-size: 20px;
+    margin: 0 0 6px;
 }
 
 .modal-riwayat-identitas p {
     color: #64748b;
-    font-size: 13px;
+    margin: 0;
 }
 
 .modal-riwayat-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
+    gap: 15px;
     background: #f1f5f9;
     padding: 18px;
     border-radius: 12px;
@@ -132,44 +273,49 @@
 
 .modal-riwayat-grid span {
     display: block;
-    color: #64748b;
     font-size: 11px;
+    color: #64748b;
     margin-bottom: 5px;
 }
 
 .modal-riwayat-grid strong {
-    color: #0d233a;
     font-size: 13px;
-    overflow-wrap: anywhere;
+    color: #0d233a;
 }
 
 .btn-tutup-riwayat {
-    width: 100%;
     margin-top: 20px;
+    width: 100%;
     padding: 12px;
-    border: none;
-    border-radius: 9px;
     background: #0d233a;
     color: #f6c90e;
+    border: none;
+    border-radius: 9px;
     font-weight: bold;
     cursor: pointer;
 }
 
 @media (max-width: 500px) {
+    .modal-riwayat-identitas img {
+        width: 85px;
+        height: 125px;
+    }
+
+    .modal-riwayat-identitas h2 {
+        font-size: 16px;
+    }
+
     .modal-riwayat-grid {
         grid-template-columns: 1fr;
     }
 }
-
-    </style>
+   </style>
 </head>
 <body style="background-color: #f8fafc;">
 
-    <!-- SIDEBAR KIRI -->
     <aside class="sidebar" style="background-color: #0c2340; width: 260px; height: 100vh; position: fixed; left: 0; top: 0; display: flex; flex-direction: column; justify-content: space-between; padding-bottom: 20px;">
         <div>
-            <!-- Profil Header -->
-           <div class="sidebar-profile"
+            <div class="sidebar-profile"
      onclick="openWaProfile()"
      title="Klik untuk lihat profil"
      style="padding: 25px 20px; text-align: center; cursor: pointer;">
@@ -200,7 +346,7 @@
     <li><a href="/user/riwayat" class="{% if request.path == '/user/riwayat' %}active{% endif %}"><i class="fa-solid fa-rotate-left"></i> Riwayat</a></li>
     <li><a href="/user/biodata" class="{% if request.path == '/user/biodata' %}active{% endif %}"><i class="fa-solid fa-users"></i> Biodata</a></li>
 
-    <li>
+                <li>
     <a href="/user/laporan"
        class="{% if request.path == '/user/laporan' %}active{% endif %}">
         <i class="fa-solid fa-comment-dots"></i> Laporan Bug & Saran
@@ -208,249 +354,151 @@
 </li>
 
 </ul>
-
         </div>
 
-        <!-- Tombol Log Out Orisinil (Tanpa Emotikon) -->
         <div class="sidebar-logout-box" style="padding: 0 15px;">
             <a href="/logout" class="btn-logout-sidebar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background-color: #f6c90e; color: #0d233a; padding: 10px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 13px;"><i class="fa-solid fa-right-from-bracket"></i> Log out</a>
         </div>
     </aside>
 
-    <!-- MAIN CONTAINER -->
     <div class="main-container" style="margin-left: 260px; padding: 30px;">
         <header style="margin-bottom: 25px;">
-            <h2 style="color: #0d233a; margin: 0; font-size: 24px; font-weight: bold;">📜 Riwayat Peminjaman Buku</h2>
-            <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Daftar buku yang pernah Anda pinjam ✨</p>
+            <h2 style="color: #0d233a; margin: 0; font-size: 24px; font-weight: bold;">📜 Riwayat Peminjaman</h2>
+            <p style="color: #475569; margin: 4px 0 0 0; font-size: 13px;">Arsip histori peminjaman dan pengembalian buku anda 🕒</p>
         </header>
 
         <div class="content-body">
-            <!-- Search Bar -->
-            <div style="background-color: #0d233a; border: 2px solid #1e3a5f; border-radius: 20px; padding: 12px 20px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-                <i class="fa-solid fa-search" style="color: #f6c90e;"></i>
-                <input type="text" id="searchRiwayat" placeholder="Cari judul atau penulis..." onkeyup="filterRiwayat()" style="background: transparent; border: none; color: #f6c90e; outline: none; width: 100%; font-weight: bold; font-size: 13px;">
+            <div class="canva-search-box">
+                <i class="fa-solid fa-search"></i>
+                <input type="text" id="searchRiwayat" placeholder="Cari riwayat berdasarkan judul buku..." onkeyup="filterRiwayat()">
             </div>
 
-            <!-- Filter Kategori Tombol (Semua, Sedang dipinjam, dll) -->
-            <div class="filter-btn-group">
-                <button class="filter-chip active" onclick="filterStatus('semua', this)">Semua</button>
-                <button class="filter-chip" onclick="filterStatus('dipinjam', this)">Sedang dipinjam</button>
-                <button class="filter-chip" onclick="filterStatus('dikembalikan', this)">Sudah Dikembalikan</button>
-                
+            <div class="filter-chips">
+                <button class="chip-btn active" data-filter="semua" onclick="setFilterChip(this)">Semua</button>
+                <button class="chip-btn" data-filter="dipinjam" onclick="setFilterChip(this)">Sedang dipinjam</button>
+                <button class="chip-btn" data-filter="dikembalikan" onclick="setFilterChip(this)">Sudah Dikembalikan</button>
             </div>
 
-            <!-- List Card Riwayat atau Tampilan Kosong -->
-            <div id="containerRiwayat">
-                {% if riwayat_list %}
+            {% if riwayat_list %}
+                <div class="daftar-riwayat" id="daftarRiwayat">
                     {% for item in riwayat_list %}
-                    <div class="riwayat-card-custom"
-                        data-status="{{ item.status | lower }}"
-                         data-judul="{{ item.judul }}"
-                         data-penulis="{{ item.penulis or '-' }}"
-                            data-cover="{{ url_for('static', filename='uploads/covers/' ~ (item.cover if item.cover else 'frex_cover_1.jpg')) }}"
-                     data-status-detail="{{ item.status | title }}"
-                      data-dibuat="{{ item.created_at or '-' }}"
-                  data-pinjam="{{ item.tgl_pinjam or '-' }}"
-                  data-tempo="{{ item.jatuh_tempo or '-' }}"
-                     data-kembali="{{ item.tgl_kembali or '-' }}"
-                  onclick="bukaDetailRiwayat(this)"
-                 title="Klik untuk melihat detail riwayat">
-                  <div style="display: flex; align-items: center; gap: 20px;">
-                <div class="book-avatar-box">
-                 {% if item.cover %}
-                <img
-                    src="{{ url_for('static', filename='uploads/covers/' ~ item.cover) }}"
-                    alt="Cover {{ item.judul }}"
-                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';"
-                    style="width: 100%; height: 100%; object-fit: cover; border-radius: 10px;"
-                >
-                <span style="display:none; width:100%; height:100%; align-items:center; justify-content:center;">
-                    {{ item.judul[:2] | upper }}
-                </span>
-               {% else %}
-                {{ item.judul[:2] | upper }}
-              {% endif %}
-               </div>
-                            <div>
-                                <h3 style="color: #f6c90e; margin: 0 0 4px 0; font-size: 16px;" class="judul-buku">📖 {{ item.judul }}</h3>
-                                <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 13px;" class="penulis-buku">✍️ {{ item.penulis }}</p>
-                                <p style="margin: 0 0 10px; color: #cbd5e1; font-size: 11px;">
-                                  <i class="fa-regular fa-clock"></i>
-                                  Permintaan dibuat: {{ item.created_at or '-' }}
+                    <div class="kartu-riwayat"
+                         data-status="{{ item.status }}"
+                         data-judul="{{ item.judul | lower }}"
+                         data-penulis="{{ (item.penulis or '') | lower }}"
+                         onclick="bukaDetailRiwayat(this)"
+                         data-judul-asli="{{ item.judul }}"
+                         data-penulis-asli="{{ item.penulis or '-' }}"
+                         data-cover="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'frex_cover_1.jpg')) }}"
+                         data-status-label="{{ item.status | title }}"
+                         data-dibuat="{{ item.created_at or '-' }}"
+                         data-pinjam="{{ item.tgl_pinjam or '-' }}"
+                         data-tempo="{{ item.jatuh_tempo or '-' }}"
+                         data-kembali="{{ item.tgl_kembali or '-' }}">
+
+                        <div class="riwayat-identitas">
+                            <img src="{{ url_for('static', filename='uploads/covers/' + (item.cover if item.cover else 'frex_cover_1.jpg')) }}"
+                                 alt="Cover {{ item.judul }}"
+                                 class="cover-riwayat"
+                                 onerror="this.src='{{ url_for('static', filename='uploads/covers/frex_cover_1.jpg') }}'">
+
+                            <div class="riwayat-info-utama">
+                                <h3>{{ item.judul }}</h3>
+                                <p class="penulis-riwayat">
+                                    <i class="fa-solid fa-user-pen"></i>
+                                    {{ item.penulis or '-' }}
                                 </p>
-                                <div style="display: flex; gap: 25px; font-size: 12px; color: #cbd5e1;">
-                                    <div><span style="color: #f6c90e;">DIPINJAM:</span> {{ item.tgl_pinjam }}</div>
-                                    <div><span style="color: #f6c90e;">JATUH TEMPO:</span> {{ item.jatuh_tempo }}</div>
-                                    <div><span style="color: #f6c90e;">DIKEMBALIKAN:</span> {{ item.tgl_kembali or '-' }}</div>
-                                </div>
+                                <span class="badge-riwayat status-{{ item.status }}">
+                                    {{ item.status | upper }}
+                                </span>
+                                <p class="petunjuk-riwayat">
+                                    <i class="fa-solid fa-hand-pointer"></i>
+                                    Klik kartu untuk melihat detail riwayat
+                                </p>
                             </div>
                         </div>
-                        
-<div>
-    <span style="
-        background-color:
-        {% if item.status == 'menunggu' %}
-            #f59e0b
-        {% elif item.status == 'dipinjam' %}
-            #3b82f6
-        {% elif item.status == 'dikembalikan' %}
-            #10b981
-        {% elif item.status == 'terlambat' %}
-            #ef4444
-        {% elif item.status == 'ditolak' %}
-            #dc2626
-        {% elif item.status == 'dibatalkan' %}
-            #64748b
-        {% elif item.status == 'kedaluwarsa' %}
-            #94a3b8
-        {% else %}
-            #64748b
-        {% endif %};
 
-        color: white;
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 12px;
-        display: inline-block;
-    ">
-        {% if item.status == 'menunggu' %}
-            Menunggu
-        {% elif item.status == 'dipinjam' %}
-            Sedang Dipinjam
-        {% elif item.status == 'dikembalikan' %}
-            Dikembalikan
-        {% elif item.status == 'terlambat' %}
-            Terlambat
-        {% elif item.status == 'ditolak' %}
-            Ditolak
-        {% elif item.status == 'dibatalkan' %}
-            Dibatalkan
-        {% elif item.status == 'kedaluwarsa' %}
-            Kedaluwarsa
-        {% else %}
-            {{ item.status | title }}
-        {% endif %}
-    </span>
-</div>
-
+                        <div class="riwayat-grid">
+                            <div class="riwayat-data">
+                                <span>TANGGAL PINJAM</span>
+                                <strong><i class="fa-regular fa-calendar"></i> {{ item.tgl_pinjam or '-' }}</strong>
+                            </div>
+                            <div class="riwayat-data">
+                                <span>JATUH TEMPO</span>
+                                <strong><i class="fa-regular fa-clock"></i> {{ item.jatuh_tempo or '-' }}</strong>
+                            </div>
+                            <div class="riwayat-data">
+                                <span>TANGGAL KEMBALI</span>
+                                <strong><i class="fa-solid fa-calendar-check"></i> {{ item.tgl_kembali or '-' }}</strong>
+                            </div>
+                        </div>
                     </div>
                     {% endfor %}
-                {% else %}
-                    <!-- Tampilan Kosong Sesuai Desain Kamu -->
-                    <div style="background: white; border: 2px solid #cbd5e1; border-radius: 16px; padding: 50px; text-align: center; color: #94a3b8;">
-                        <i class="fa-solid fa-clock-rotate-left" style="font-size: 45px; margin-bottom: 15px; color: #cbd5e1;"></i>
-                        <p style="margin: 0; font-weight: bold; font-size: 15px; color: #64748b;">Belum ada riwayat peminjaman buku.</p>
-                    </div>
-                {% endif %}
-            </div>
+                </div>
+
+                <div class="riwayat-kosong" id="pesanKosongFilter" style="display:none;">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <p>Tidak ada riwayat yang cocok dengan filter atau pencarian.</p>
+                </div>
+            {% else %}
+                <div class="riwayat-kosong">
+                    <i class="fa-solid fa-clock-rotate-left"></i>
+                    <p>Belum ada riwayat peminjaman buku.</p>
+                </div>
+            {% endif %}
         </div>
     </div>
 
+    <!-- MODAL DETAIL RIWAYAT -->
+    <div id="modalDetailRiwayat"
+         class="modal-riwayat-overlay"
+         onclick="tutupDetailRiwayat(event)">
+        <div class="modal-riwayat-card" onclick="event.stopPropagation()">
+            <div class="modal-riwayat-header">
+                <h3>Detail Riwayat Peminjaman</h3>
+                <button type="button" onclick="tutupDetailRiwayat()">&times;</button>
+            </div>
 
+            <div class="modal-riwayat-identitas">
+                <img id="detailRiwayatCover" src="" alt="Cover Buku">
+                <div>
+                    <h2 id="detailRiwayatJudul"></h2>
+                    <p id="detailRiwayatPenulis"></p>
+                    <span id="detailRiwayatStatusBadge" class="badge-riwayat" style="margin-top:10px;"></span>
+                </div>
+            </div>
 
-<!-- MODAL DETAIL RIWAYAT -->
-<div id="modalDetailRiwayat"
-     class="modal-riwayat"
-     onclick="tutupDetailRiwayat()">
+            <div class="modal-riwayat-grid">
+                <div>
+                    <span>Tanggal Pengajuan</span>
+                    <strong id="detailRiwayatDibuat">-</strong>
+                </div>
+                <div>
+                    <span>Tanggal Pinjam</span>
+                    <strong id="detailRiwayatPinjam">-</strong>
+                </div>
+                <div>
+                    <span>Jatuh Tempo</span>
+                    <strong id="detailRiwayatTempo">-</strong>
+                </div>
+                <div>
+                    <span>Tanggal Kembali</span>
+                    <strong id="detailRiwayatKembali">-</strong>
+                </div>
+            </div>
 
-    <div class="modal-riwayat-card"
-         onclick="event.stopPropagation()">
-
-        <div class="modal-riwayat-header">
-            <h3>Detail Riwayat Peminjaman</h3>
-            <button type="button" onclick="tutupDetailRiwayat()">
-                &times;
+            <button type="button" class="btn-tutup-riwayat" onclick="tutupDetailRiwayat()">
+                Tutup Detail
             </button>
         </div>
-
-        <div class="modal-riwayat-identitas">
-            <img id="riwayatDetailCover"
-                 src=""
-                 alt="Cover Buku"
-                 onerror="this.style.display='none'">
-
-            <div>
-                <h2 id="riwayatDetailJudul"></h2>
-                <p id="riwayatDetailPenulis"></p>
-                <strong id="riwayatDetailStatus"></strong>
-            </div>
-        </div>
-
-        <div class="modal-riwayat-grid">
-
-            <div>
-                <span>Permintaan Dibuat</span>
-                <strong id="riwayatDetailDibuat"></strong>
-            </div>
-
-            <div>
-                <span>Tanggal Dipinjam</span>
-                <strong id="riwayatDetailPinjam"></strong>
-            </div>
-
-            <div>
-                <span>Jatuh Tempo</span>
-                <strong id="riwayatDetailTempo"></strong>
-            </div>
-
-            <div>
-                <span>Tanggal Dikembalikan</span>
-                <strong id="riwayatDetailKembali"></strong>
-            </div>
-
-        </div>
-
-        <button type="button"
-                class="btn-tutup-riwayat"
-                onclick="tutupDetailRiwayat()">
-            Tutup Detail
-        </button>
-
     </div>
-</div>
 
+    <!-- MODAL PROFIL DAN EDIT BIODATA -->
+    {% include 'user/_modal_profil.html' %}
+    {% include 'user/_modal_edit_biodata.html' %}
 
-<!-- MODAL PROFIL DAN EDIT BIODATA -->
-{% include 'user/_modal_profil.html' %}
-{% include 'user/_modal_edit_biodata.html' %}
-
-
-
-
-   <script>
-        let statusAktif = 'semua';
-
-        function terapkanFilterRiwayat() {
-            const input = document.getElementById('searchRiwayat').value.toLowerCase().trim();
-            const cards = document.getElementsByClassName('riwayat-card-custom');
-
-            for (let i = 0; i < cards.length; i++) {
-                const judul = cards[i].querySelector('.judul-buku').textContent.toLowerCase();
-                const penulis = cards[i].querySelector('.penulis-buku').textContent.toLowerCase();
-                const cardStatus = (cards[i].getAttribute('data-status') || '').toLowerCase();
-
-                const cocokStatus = (statusAktif === 'semua') || cardStatus.includes(statusAktif);
-                const cocokCari = !input || judul.includes(input) || penulis.includes(input);
-
-                cards[i].style.display = (cocokStatus && cocokCari) ? 'flex' : 'none';
-            }
-        }
-
-        function filterRiwayat() {
-            terapkanFilterRiwayat();
-        }
-
-        function filterStatus(status, btn) {
-            const chips = document.getElementsByClassName('filter-chip');
-            for (let c of chips) { c.classList.remove('active'); }
-            btn.classList.add('active');
-            statusAktif = status;
-            terapkanFilterRiwayat();
-        }
-
-        
-const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}");
+    <script>
+        const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('username') or session.get('nama', 'default') }}");
 
         function terapkanAvatarKeSemua(dataUrl) {
             if (!dataUrl) return;
@@ -471,101 +519,119 @@ const akunKey = "userAvatar_" + ("{{ session.get('id_user') or session.get('user
             }
         });
 
-        
-// MENYIMPAN DAN MENGUBAH FOTO PROFIL
-function simpanDanPreviewAvatar(file) {
-    if (!file) return;
+        let statusAktif = 'semua';
 
-    const reader = new FileReader();
-
-    reader.onload = function () {
-        try {
-            localStorage.setItem(akunKey, reader.result);
-        } catch (err) {
-            console.warn("Gagal menyimpan avatar:", err);
+        function setFilterChip(btn) {
+            document.querySelectorAll('.chip-btn').forEach(function (el) {
+                el.classList.remove('active');
+            });
+            btn.classList.add('active');
+            statusAktif = btn.dataset.filter || 'semua';
+            filterRiwayat();
         }
 
-        terapkanAvatarKeSemua(reader.result);
-    };
+        function filterRiwayat() {
+            const inputEl = document.getElementById('searchRiwayat');
+            const keyword = inputEl ? inputEl.value.toLowerCase().trim() : '';
+            const kartuList = document.querySelectorAll('.kartu-riwayat');
+            const pesanKosong = document.getElementById('pesanKosongFilter');
 
-    reader.readAsDataURL(file);
-}
+            let tampilCount = 0;
 
-// MEMBUKA POPUP PROFIL
-function openWaProfile() {
-    document.getElementById('waProfileModal').style.display = 'flex';
-}
+            kartuList.forEach(function (kartu) {
+                const statusKartu = (kartu.dataset.status || '').toLowerCase();
+                const judulKartu = (kartu.dataset.judul || '').toLowerCase();
+                const penulisKartu = (kartu.dataset.penulis || '').toLowerCase();
 
-// MENUTUP POPUP PROFIL
-function closeWaProfile() {
-    document.getElementById('waProfileModal').style.display = 'none';
-}
+                const cocokStatus = (statusAktif === 'semua') || (statusKartu === statusAktif);
+                const cocokCari = !keyword || judulKartu.includes(keyword) || penulisKartu.includes(keyword);
 
-// MENGGANTI FOTO PROFIL
-function previewWaImage(e) {
-    if (e.target.files && e.target.files[0]) {
-        simpanDanPreviewAvatar(e.target.files[0]);
-    }
-}
+                if (cocokStatus && cocokCari) {
+                    kartu.style.display = '';
+                    tampilCount++;
+                } else {
+                    kartu.style.display = 'none';
+                }
+            });
 
-// MENGUBAH ABOUT
-function editAbout() {
-    let v = prompt(
-        "Status baru:",
-        document.getElementById('textAbout').innerText
-    );
+            if (pesanKosong) {
+                pesanKosong.style.display = (kartuList.length > 0 && tampilCount === 0) ? 'block' : 'none';
+            }
+        }
 
-    if (v) {
-        document.getElementById('textAbout').innerText = v;
-    }
-}
+        function bukaDetailRiwayat(el) {
+            const d = el.dataset;
+            document.getElementById('detailRiwayatCover').src = d.cover || '';
+            document.getElementById('detailRiwayatJudul').textContent = d.judulAsli || '-';
+            document.getElementById('detailRiwayatPenulis').textContent = d.penulisAsli || '-';
+            document.getElementById('detailRiwayatDibuat').textContent = d.dibuat || '-';
+            document.getElementById('detailRiwayatPinjam').textContent = d.pinjam || '-';
+            document.getElementById('detailRiwayatTempo').textContent = d.tempo || '-';
+            document.getElementById('detailRiwayatKembali').textContent = d.kembali || '-';
 
-// MENGUBAH NAMA
-function editName() {
-    let v = prompt(
-        "Nama baru:",
-        document.getElementById('textName').innerText
-    );
+            const badge = document.getElementById('detailRiwayatStatusBadge');
+            const statusLower = (d.status || '').toLowerCase();
+            badge.className = 'badge-riwayat status-' + statusLower;
+            badge.textContent = (d.status || '-').toUpperCase();
 
-    if (v) {
-        document.getElementById('textName').innerText = v;
-    }
-}
+            document.getElementById('modalDetailRiwayat').style.display = 'flex';
+        }
 
-// MEMBUKA DETAIL RIWAYAT
-function bukaDetailRiwayat(element) {
-    const data = element.dataset;
+        function tutupDetailRiwayat(event) {
+            if (!event || event.target.id === 'modalDetailRiwayat') {
+                document.getElementById('modalDetailRiwayat').style.display = 'none';
+            }
+        }
 
-    document.getElementById('riwayatDetailCover').style.display = 'block';
-    document.getElementById('riwayatDetailCover').src = data.cover;
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape') {
+                tutupDetailRiwayat();
+            }
+        });
 
-    document.getElementById('riwayatDetailJudul').textContent = data.judul;
-    document.getElementById('riwayatDetailPenulis').textContent = data.penulis;
-    document.getElementById('riwayatDetailStatus').textContent = 'Status: ' + data.statusDetail;
+        function simpanDanPreviewAvatar(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function () {
+                try {
+                    localStorage.setItem(akunKey, reader.result);
+                } catch (err) {
+                    console.warn("Gagal menyimpan avatar:", err);
+                }
+                terapkanAvatarKeSemua(reader.result);
+            };
+            reader.readAsDataURL(file);
+        }
 
-    document.getElementById('riwayatDetailDibuat').textContent = data.dibuat;
-    document.getElementById('riwayatDetailPinjam').textContent = data.pinjam;
-    document.getElementById('riwayatDetailTempo').textContent = data.tempo;
-    document.getElementById('riwayatDetailKembali').textContent = data.kembali;
+        function openWaProfile() {
+            document.getElementById('waProfileModal').style.display = 'flex';
+        }
 
-    document.getElementById('modalDetailRiwayat').style.display = 'flex';
-}
+        function closeWaProfile() {
+            document.getElementById('waProfileModal').style.display = 'none';
+        }
 
-// MENUTUP DETAIL RIWAYAT
-function tutupDetailRiwayat() {
-    document.getElementById('modalDetailRiwayat').style.display = 'none';
-}
+        function previewWaImage(e) {
+            if (e.target.files && e.target.files[0]) {
+                simpanDanPreviewAvatar(e.target.files[0]);
+            }
+        }
 
-// MENUTUP DENGAN TOMBOL ESC
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        tutupDetailRiwayat();
-    }
-});
+        function editAbout() {
+            let v = prompt("Status baru:", document.getElementById('textAbout').innerText);
+            if (v) {
+                document.getElementById('textAbout').innerText = v;
+            }
+        }
 
+        function editName() {
+            let v = prompt("Nama baru:", document.getElementById('textName').innerText);
+            if (v) {
+                document.getElementById('textName').innerText = v;
+            }
+        }
     </script>
 
-<script src="{{ url_for('static', filename='js/user-profile.js') }}?v=1"></script>
-
+    <script src="{{ url_for('static', filename='js/user-profile.js') }}?v=1"></script>
 </body>
 </html>

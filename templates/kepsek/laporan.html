@@ -5,6 +5,117 @@
     <title>Laporan Transaksi - Kepala Sekolah</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}?v=21.0">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        #judulCetakKepsek {
+            display: none;
+        }
+
+        #infoCetakKepsek {
+            display: none;
+            margin-top: 14px;
+            font-size: 12px;
+            color: #0d233a;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        @media print {
+            @page {
+                size: auto;
+                margin: 10mm;
+            }
+
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .sidebar,
+            .topbar-admin,
+            .kepsek-filter-bar,
+            #waProfileModal {
+                display: none !important;
+            }
+
+            .main-container {
+                margin-left: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                padding: 0 !important;
+            }
+
+            .content-body {
+                padding: 0 !important;
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            #judulCetakKepsek {
+                display: block !important;
+                width: 100% !important;
+                box-sizing: border-box;
+                background: #0d233a !important;
+                color: #f6c90e !important;
+                padding: 12px 16px;
+                border-left: 6px solid #eab308;
+                border-radius: 6px;
+                margin-bottom: 12px;
+                text-align: center !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            #judulCetakKepsek h1 {
+                margin: 0 auto;
+                font-size: 20px;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+                text-align: center !important;
+            }
+
+            #judulCetakKepsek p {
+                margin: 4px auto 0 auto;
+                font-size: 11px;
+                color: #e2e8f0 !important;
+                font-weight: 400;
+                text-align: center !important;
+            }
+
+            .table-box-container,
+            .kepsek-table-scroll {
+                overflow: visible !important;
+                max-height: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-sizing: border-box;
+                border: 1.5px solid #0d233a !important;
+                border-radius: 4px !important;
+                padding: 0 !important;
+            }
+
+            .custom-table-admin {
+                width: 100% !important;
+                max-width: 100% !important;
+                table-layout: fixed !important;
+                font-size: 8.5px !important;
+                border-collapse: collapse !important;
+            }
+
+            .custom-table-admin th,
+            .custom-table-admin td {
+                padding: 5px 4px !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+                line-height: 1.25;
+            }
+
+            #infoCetakKepsek {
+                display: block !important;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -21,6 +132,7 @@
             <ul class="sidebar-menu">
                 <li><a href="/kepsek/dashboard"><i class="fa-solid fa-house"></i> Dashboard</a></li>
                 <li><a href="/kepsek/laporan" class="active"><i class="fa-solid fa-file-lines"></i> Laporan Transaksi</a></li>
+                <li><a href="/kepsek/masukan"><i class="fa-solid fa-bug"></i> Bug & Saran</a></li>
             </ul>
         </div>
 
@@ -46,6 +158,12 @@
         </header>
 
         <div class="content-body">
+            <!-- JUDUL KHUSUS CETAK (DI-HIGHLIGHT, DIPERBESAR & DITENGAHKAN) -->
+            <div id="judulCetakKepsek">
+                <h1>LAPORAN TRANSAKSI</h1>
+                <p>Rekapitulasi Peminjaman, Pengembalian & Denda Perpustakaan</p>
+            </div>
+
             <!-- Filter Bar -->
             <form method="get" action="/kepsek/laporan" class="kepsek-filter-bar" autocomplete="off">
                 <input type="text" id="inputCariKepsek" name="q" value="{{ q }}" placeholder="Cari peminjam atau Judul" autocomplete="off" class="kepsek-btn-filter">
@@ -61,7 +179,7 @@
                 <input type="date" name="tgl_akhir" value="{{ tgl_akhir }}" class="kepsek-btn-filter">
                 <button type="submit" class="kepsek-btn-filter" style="cursor: pointer;"><i class="fa-solid fa-filter"></i> Terapkan</button>
                 <a href="/kepsek/laporan" class="kepsek-btn-filter" style="text-decoration:none;"><i class="fa-solid fa-rotate-left"></i> Reset</a>
-                <button type="button" class="kepsek-btn-filter" onclick="window.print()" style="background-color: #0d233a; color: #f6c90e; border: 2px solid #f6c90e; cursor: pointer;">
+                <button type="button" class="kepsek-btn-filter" onclick="cetakLaporanKepsek()" style="background-color: #0d233a; color: #f6c90e; border: 2px solid #f6c90e; cursor: pointer;">
                     <i class="fa-solid fa-print"></i> Cetak
                 </button>
             </form>
@@ -122,6 +240,12 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- KETERANGAN WAKTU & TEMPAT CETAK REAL-TIME -->
+            <div id="infoCetakKepsek">
+                <span id="teksTempatTanggalCetak">Jakarta, 28 November 2026</span>
+                <span id="teksJamCetak"></span>
+            </div>
         </div>
     </div>
 
@@ -161,6 +285,31 @@
             if(e.target.files[0]) reader.readAsDataURL(e.target.files[0]);
         }
         function editName() { let v = prompt("Nama baru:", document.getElementById('textName').innerText); if(v) document.getElementById('textName').innerText = v; }
+
+        function perbaruiWaktuCetak() {
+            const sekarang = new Date();
+            const bulanIndo = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+            const tanggalStr = `Jakarta, ${sekarang.getDate()} ${bulanIndo[sekarang.getMonth()]} ${sekarang.getFullYear()}`;
+            const jam = String(sekarang.getHours()).padStart(2, '0');
+            const menit = String(sekarang.getMinutes()).padStart(2, '0');
+            const detik = String(sekarang.getSeconds()).padStart(2, '0');
+
+            const elTgl = document.getElementById('teksTempatTanggalCetak');
+            const elJam = document.getElementById('teksJamCetak');
+            if (elTgl) elTgl.textContent = tanggalStr;
+            if (elJam) elJam.textContent = ` • ${jam}:${menit}:${detik} WIB`;
+        }
+
+        function cetakLaporanKepsek() {
+            perbaruiWaktuCetak();
+            window.print();
+        }
+
+        window.addEventListener('beforeprint', perbaruiWaktuCetak);
+        document.addEventListener('DOMContentLoaded', perbaruiWaktuCetak);
     </script>
 </body>
 </html>
